@@ -49,9 +49,9 @@ if ($licenseData['signature'] !== $expectedSig || $licenseData['device_id'] !== 
     exit;
 }
 
-// Dynamic Revocation Check (Every 5 minutes)
+// Dynamic Revocation Check (Every 30 detik)
 $lastCheck = $_SESSION['last_license_check'] ?? 0;
-if (time() - $lastCheck > 300) {
+if (time() - $lastCheck > 30) {
     $url = "https://firestore.googleapis.com/v1/projects/database-luar-negeri/databases/(default)/documents/aktivasi/" . urlencode($licenseData['code']);
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
