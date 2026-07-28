@@ -8,6 +8,9 @@
  * Guides the user through first-time setup.
  */
 
+// --- Security: Hardware/License Guard First ---
+require_once __DIR__ . '/license_guard.php';
+
 // --- Security: Block access if already installed ---
 $rootPath = dirname(__DIR__);
 $lockFile = $rootPath . '/config/installed.lock';

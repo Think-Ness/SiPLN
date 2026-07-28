@@ -12,78 +12,13 @@ use Yiisoft\Yii\Runner\Http\HttpApplicationRunner;
 
 $root = dirname(__DIR__);
 
+// --- Hardware/License Guard (Dynamic Revocation) ---
+require_once __DIR__ . '/license_guard.php';
+
 // --- Installation Guard ---
 if (!file_exists($root . '/config/installed.lock')) {
     header('Location: install.php');
     exit;
-}
-
-// --- Hardware/License Guard (Dynamic Revocation) ---
-session_start();
-function redirectActivate() {
-    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
-    $host = $_SERVER['HTTP_HOST'];
-    $baseDir = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'])), '/');
-    header("Location: $protocol://$host$baseDir/activate.php");
-    exit;
-}
-
-$licensePath = $root . '/config/license.json';
-if (!file_exists($licensePath)) {
-    redirectActivate();
-}
-
-$licenseData = json_decode(file_get_contents($licensePath), true);
-if (!$licenseData) {
-    redirectActivate();
-}
-
-// Get HWID
-$output = @shell_exec('wmic csproduct get uuid');
-if ($output) {
-    $lines = explode("\n", trim($output));
-    $hwid = isset($lines[1]) ? trim($lines[1]) : md5(php_uname('n') . php_uname('a'));
-} else {
-    $hwid = md5(php_uname('n') . php_uname('a'));
-}
-
-$expectedSig = hash_hmac('sha256', $licenseData['code'] . $hwid, 'SiPLN_Secret_Salt_2026');
-if ($licenseData['signature'] !== $expectedSig || $licenseData['device_id'] !== $hwid) {
-    // Copied to another PC or tampered!
-    @unlink($licensePath);
-    redirectActivate();
-}
-
-// Dynamic Revocation Check (Every 30 detik)
-$lastCheck = $_SESSION['last_license_check'] ?? 0;
-if (time() - $lastCheck > 30) {
-    $url = "https://firestore.googleapis.com/v1/projects/database-luar-negeri/databases/(default)/documents/aktivasi/" . urlencode($licenseData['code']);
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 3); // Quick timeout to not block UI completely if offline
-    $response = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-    
-    if ($httpCode === 200) {
-        $data = json_decode($response, true);
-        $fields = $data['fields'] ?? [];
-        $status = isset($fields['status']['booleanValue']) ? $fields['status']['booleanValue'] : true;
-        
-        if (!$status) {
-            // Revoked by admin!
-            @unlink($licensePath);
-            session_destroy();
-            redirectActivate();
-        }
-    } else if ($httpCode === 404) {
-        // Document deleted by admin!
-        @unlink($licensePath);
-        session_destroy();
-        redirectActivate();
-    }
-    
-    $_SESSION['last_license_check'] = time();
 }
 // ----------------------------------------------------
 
