@@ -20,16 +20,22 @@ if (!file_exists($root . '/config/installed.lock')) {
 
 // --- Hardware/License Guard (Dynamic Revocation) ---
 session_start();
+function redirectActivate() {
+    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'];
+    $baseDir = rtrim(str_replace('\', '/', dirname($_SERVER['SCRIPT_NAME'])), '/');
+    header("Location: $protocol://$host$baseDir/activate.php");
+    exit;
+}
+
 $licensePath = $root . '/config/license.json';
 if (!file_exists($licensePath)) {
-    header('Location: activate.php');
-    exit;
+    redirectActivate();
 }
 
 $licenseData = json_decode(file_get_contents($licensePath), true);
 if (!$licenseData) {
-    header('Location: activate.php');
-    exit;
+    redirectActivate();
 }
 
 // Get HWID
@@ -45,8 +51,7 @@ $expectedSig = hash_hmac('sha256', $licenseData['code'] . $hwid, 'SiPLN_Secret_S
 if ($licenseData['signature'] !== $expectedSig || $licenseData['device_id'] !== $hwid) {
     // Copied to another PC or tampered!
     @unlink($licensePath);
-    header('Location: activate.php');
-    exit;
+    redirectActivate();
 }
 
 // Dynamic Revocation Check (Every 30 detik)
@@ -69,15 +74,13 @@ if (time() - $lastCheck > 30) {
             // Revoked by admin!
             @unlink($licensePath);
             session_destroy();
-            header('Location: activate.php');
-            exit;
+            redirectActivate();
         }
     } else if ($httpCode === 404) {
         // Document deleted by admin!
         @unlink($licensePath);
         session_destroy();
-        header('Location: activate.php');
-        exit;
+        redirectActivate();
     }
     
     $_SESSION['last_license_check'] = time();
@@ -170,3 +173,4 @@ $runner = new HttpApplicationRunner(
     ),
 );
 $runner->run();
+
