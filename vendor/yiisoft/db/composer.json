@@ -1,0 +1,114 @@
+{
+    "name": "yiisoft/db",
+    "type": "library",
+    "description": "Database abstraction layer and query builder",
+    "keywords": [
+        "yii",
+        "sql",
+        "database",
+        "query-builder",
+        "dbal"
+    ],
+    "homepage": "https://www.yiiframework.com/",
+    "license": "BSD-3-Clause",
+    "support": {
+        "issues": "https://github.com/yiisoft/db/issues/issues?state=open",
+        "source": "https://github.com/yiisoft/db",
+        "forum": "https://www.yiiframework.com/forum/",
+        "wiki": "https://www.yiiframework.com/wiki/",
+        "irc": "ircs://irc.libera.chat:6697/yii",
+        "chat": "https://t.me/yii3en"
+    },
+    "funding": [
+        {
+            "type": "opencollective",
+            "url": "https://opencollective.com/yiisoft"
+        },
+        {
+            "type": "github",
+            "url": "https://github.com/sponsors/yiisoft"
+        }
+    ],
+    "require": {
+        "php": "8.1 - 8.5",
+        "ext-pdo": "*",
+        "psr/log": "^2.0|^3.0",
+        "psr/simple-cache": "^2.0|^3.0",
+        "psr/simple-cache-implementation": "*",
+        "yiisoft/db-implementation": "1.0.0"
+    },
+    "require-dev": {
+        "bamarni/composer-bin-plugin": "^1.8.3",
+        "friendsofphp/php-cs-fixer": "^3.89.1",
+        "maglnet/composer-require-checker": "^4.7.1",
+        "phpunit/phpunit": "^10.5.45",
+        "rector/rector": "^2.0.10",
+        "spatie/phpunit-watcher": "^1.24",
+        "yiisoft/aliases": "^3.0",
+        "yiisoft/di": "^1.3",
+        "yiisoft/dummy-provider": "^1.1",
+        "yiisoft/event-dispatcher": "^1.1",
+        "yiisoft/log": "^2.1",
+        "yiisoft/psr-dummy-provider": "^1.0",
+        "yiisoft/test-support": "^3.0",
+        "yiisoft/var-dumper": "^1.7",
+        "yiisoft/yii-debug": "dev-master"
+    },
+    "autoload": {
+        "psr-4": {
+            "Yiisoft\\Db\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Yiisoft\\ActiveRecord\\": "vendor/yiisoft/active-record/src",
+            "Yiisoft\\Db\\Migration\\": "vendor/yiisoft/db-migration/src",
+            "Yiisoft\\Db\\Mssql\\": "vendor/yiisoft/db-mssql/src",
+            "Yiisoft\\Db\\Mysql\\": "vendor/yiisoft/db-mysql/src",
+            "Yiisoft\\Db\\Oracle\\": "vendor/yiisoft/db-oracle/src",
+            "Yiisoft\\Db\\Pgsql\\": "vendor/yiisoft/db-pgsql/src",
+            "Yiisoft\\Db\\Sqlite\\": "vendor/yiisoft/db-sqlite/src",
+            "Yiisoft\\Db\\Tests\\": "tests",
+            "Yiisoft\\ActiveRecord\\Tests\\": "vendor/yiisoft/active-record/tests",
+            "Yiisoft\\Db\\Mssql\\Tests\\": "vendor/yiisoft/db-mssql/tests",
+            "Yiisoft\\Db\\Mysql\\Tests\\": "vendor/yiisoft/db-mysql/tests",
+            "Yiisoft\\Db\\Oracle\\Tests\\": "vendor/yiisoft/db-oracle/tests",
+            "Yiisoft\\Db\\Pgsql\\Tests\\": "vendor/yiisoft/db-pgsql/tests",
+            "Yiisoft\\Db\\Sqlite\\Tests\\": "vendor/yiisoft/db-sqlite/tests",
+            "Yiisoft\\Db\\Migration\\Tests\\": "vendor/yiisoft/db-migration/tests",
+            "Yiisoft\\Db\\Migration\\Tests\\NonExistsDirectory\\": "vendor/yiisoft/db-migration/tests/non-exists-directory",
+            "Yiisoft\\Db\\Migration\\Tests\\ForTest\\": "vendor/yiisoft/db-migration/tests/Support",
+            "Yiisoft\\Db\\Migration\\Tests\\Support\\": "vendor/yiisoft/db-migration/tests/Support",
+            "Yiisoft\\Db\\Migration\\Tests\\Support\\MigrationsExtra\\": [
+                "vendor/yiisoft/db-migration/tests/Support/MigrationsExtra",
+                "vendor/yiisoft/db-migration/tests/Support/MigrationsExtra2"
+            ]
+        }
+    },
+    "extra": {
+        "bamarni-bin": {
+            "bin-links": true,
+            "target-directory": "tools",
+            "forward-command": true
+        },
+        "config-plugin-options": {
+            "source-directory": "config"
+        },
+        "config-plugin": {
+            "params": "params.php",
+            "di": "di.php"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "bamarni/composer-bin-plugin": true,
+            "composer/package-versions-deprecated": true,
+            "yiisoft/config": false
+        }
+    },
+    "scripts": {
+        "test": "phpunit --testdox --no-interaction",
+        "test-watch": "phpunit-watcher watch"
+    }
+}

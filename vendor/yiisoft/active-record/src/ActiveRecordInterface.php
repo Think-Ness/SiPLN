@@ -1,0 +1,874 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Yiisoft\ActiveRecord;
+
+use ReflectionException;
+use Throwable;
+use Yiisoft\Db\Connection\ConnectionInterface;
+use Yiisoft\Db\Exception\Exception;
+use InvalidArgumentException;
+use Yiisoft\Db\Exception\InvalidCallException;
+use Yiisoft\Db\Exception\InvalidConfigException;
+use Yiisoft\Db\Expression\ExpressionInterface;
+use Yiisoft\Db\Query\QueryInterface;
+use Yiisoft\Db\Schema\Column\ColumnInterface;
+use Yiisoft\Db\Schema\TableSchemaInterface;
+
+/**
+ * @psalm-import-type ModelClass from ActiveQuery
+ * @psalm-import-type RawFrom from QueryInterface
+ */
+interface ActiveRecordInterface
+{
+    /**
+     * Returns the list of property names mapped to column names of the table associated with this active record class.
+     *
+     * @return array List of property names.
+     *
+     * @psalm-return string[]
+     */
+    public function propertyNames(): array;
+
+    /**
+     * @return ColumnInterface The column instance of the property.
+     */
+    public function column(string $propertyName): ColumnInterface;
+
+    /**
+     * Create {@see ActiveQueryInterface} instance for the given model class.
+     *
+     * @param ActiveRecordInterface|string|null $modelClass The class name of the related record, or an instance
+     * of the related record. If `null`, the current model will be used.
+     *
+     * @psalm-param ModelClass|null $modelClass
+     */
+    public function createQuery(self|string|null $modelClass = null): ActiveQueryInterface;
+
+    /**
+     * Returns the database connection used by the Active Record instance.
+     */
+    public function db(): ConnectionInterface;
+
+    /**
+     * Deletes the table row corresponding to this active record.
+     *
+     * @throws OptimisticLockException If the instance implements {@see OptimisticLockInterface} and the data being
+     * deleted is outdated.
+     * @throws Throwable In case delete failed.
+     *
+     * @return int The number of rows deleted.
+     *
+     * Note that it's possible the number of rows deleted is 0, even though the deletion execution is successful.
+     */
+    public function delete(): int;
+
+    /**
+     * Deletes rows in the table using the provided conditions.
+     *
+     * For example, to delete all customers whose status is 3:
+     *
+     * ```php
+     * $customer = new Customer();
+     * $customer->deleteAll('status = 3');
+     * ```
+     *
+     * > Warning: If you don't specify any condition, this method will delete **all** rows in the table.
+     *
+     * ```php
+     * $customers = Customer::query()->where('status = 3')->all();
+     * foreach ($customers as $customer) {
+     *     $customer->delete();
+     * }
+     * ```
+     *
+     * For a large set of models you might consider using {@see ActiveQuery::each()} to keep memory usage within limits.
+     *
+     * @param array $condition The conditions that will be put in the `WHERE` part of the `DELETE` SQL. Please refer to
+     * {@see Query::where()} on how to specify this parameter.
+     *
+     * @throws Exception
+     * @throws InvalidConfigException
+     * @throws Throwable
+     *
+     * @return int The number of rows deleted.
+     */
+    public function deleteAll(array $condition = []): int;
+
+    /**
+     * Returns a value indicating whether the given active record is the same as the current one.
+     *
+     * The comparison is made by comparing the table names and the primary key values of the two active records. If one
+     * of the records {@see ActiveRecordInterface::isNew()} they're also considered not equal.
+     *
+     * @param self $record Record to compare to.
+     *
+     * @return bool Whether the two active records refer to the same row in the same database table.
+     */
+    public function equals(self $record): bool;
+
+    /**
+     * Returns the named property value.
+     *
+     * If this record is the result of a query and the property isn't loaded, `null` will be returned.
+     *
+     * @param string $propertyName The property name.
+     *
+     * @return mixed The property value. `null` if the property isn't set or doesn't exist.
+     *
+     * @see ActiveRecordInterface::hasProperty()
+     */
+    public function get(string $propertyName): mixed;
+
+    /**
+     * Returns property values.
+     *
+     * @param array|null $names List of property names whose value needs to be returned. Defaults to `null`, meaning all
+     * properties listed in {@see ActiveRecordInterface::propertyNames()} will be returned.
+     * @param array $except List of property names whose value shouldn't be returned.
+     *
+     * @throws Exception
+     * @throws InvalidConfigException
+     *
+     * @return array Property values (name => value).
+     *
+     * @psalm-return array<string, mixed>
+     */
+    public function propertyValues(?array $names = null, array $except = []): array;
+
+    /**
+     * Returns a value indicating whether the current record is new (not saved in the database).
+     *
+     * @return bool Whether the record is new and should be inserted when calling {@see ActiveRecordInterface::save()}.
+     */
+    public function isNew(): bool;
+
+    /**
+     * Returns the old value of the named property.
+     *
+     * If this record is the result of a query and the property is not loaded, `null` will be returned.
+     *
+     * @param string $propertyName The property name.
+     *
+     * @return mixed The old property value. `null` if the property is not loaded before or doesn't exist.
+     *
+     * @see ActiveRecordInterface::hasProperty()
+     */
+    public function oldValue(string $propertyName): mixed;
+
+    /**
+     * Returns the old value of the primary key as a scalar.
+     *
+     * This refers to the primary key value that is populated into the record after data is retrieved from the database
+     * by an instance of {@see ActiveQueryInterface}.
+     *
+     * The value remains unchanged while the record will not be {@see ActiveRecordInterface::update() updated}.
+     *
+     * @throw Exception If multiple primary keys or no primary key.
+     *
+     * @see ActiveRecordInterface::primaryKeyOldValues()
+     */
+    public function primaryKeyOldValue(): float|int|string|null;
+
+    /**
+     * Returns the old values of the primary key as an array with property names as keys and property values as values.
+     *
+     * This refers to the primary key values that are populated into the record after data is retrieved from the database
+     * by an instance of {@see ActiveQueryInterface}.
+     *
+     * The value remains unchanged while the record will not be {@see ActiveRecordInterface::update() updated}.
+     *
+     * @throw Exception If no primary key or multiple primary keys.
+     *
+     * @see ActiveRecordInterface::primaryKeyOldValues()
+     *
+     * @psalm-return array<string, float|int|string|bool|null>
+     */
+    public function primaryKeyOldValues(): array;
+
+    /**
+     * Returns the scalar value of the primary key.
+     *
+     * @throw Exception If multiple primary keys or no primary key.
+     *
+     * @see ActiveRecordInterface::primaryKeyValues()
+     */
+    public function primaryKeyValue(): float|int|string|null;
+
+    /**
+     * Returns the values of the primary key as an array with property names as keys and property values as values.
+     *
+     * @see ActiveRecordInterface::primaryKeyValue()
+     *
+     * @psalm-return array<string, float|int|string|bool|null>
+     */
+    public function primaryKeyValues(): array;
+
+    /**
+     * Return the name of the table associated with this AR class.
+     *
+     * ```php
+     * final class User extends ActiveRecord
+     * {
+     *     public string const TABLE_NAME = 'user';
+     *
+     *     public function tableName(): string
+     *     {
+     *          return self::TABLE_NAME;
+     *     }
+     * }
+     */
+    public function tableName(): string;
+
+    /**
+     * Returns the schema information of the DB table associated with this AR class.
+     *
+     * @throws InvalidConfigException If the table for the AR class doesn't exist.
+     *
+     * @return TableSchemaInterface The schema information of the DB table associated with this AR class.
+     */
+    public function tableSchema(): TableSchemaInterface;
+
+    /**
+     * Loads default values from database table schema.
+     *
+     * You may call this method to load default values after creating a new instance:
+     *
+     * ```php
+     * // class Customer extends ActiveRecord
+     * $customer = new Customer();
+     * $customer->loadDefaultValues();
+     * ```
+     *
+     * @param bool $skipIfSet Whether existing value should be preserved. This will only set defaults for properties
+     * that are `null`.
+     *
+     * @throws Exception
+     * @throws InvalidConfigException
+     *
+     * @return static The active record instance itself.
+     */
+    public function loadDefaultValues(bool $skipIfSet = true): static;
+
+    /**
+     * Returns all populated related records.
+     *
+     * @return array An array of related records indexed by relation names.
+     *
+     * @see ActiveRecordInterface::relationQuery()
+     */
+    public function relatedRecords(): array;
+
+    /**
+     * Returns a value indicating whether the record has a property with the specified name.
+     *
+     * @param string $name The name of the property.
+     */
+    public function hasProperty(string $name): bool;
+
+    /**
+     * Declares a `has-many` relation.
+     *
+     * The declaration is returned in terms of a relational {@see ActiveQuery} instance through which the related
+     * record can be queried and retrieved back.
+     *
+     * A `has-many` relation means that there are multiple related records matching the criteria set by this relation,
+     * e.g., a customer has many orders.
+     *
+     * For example, to declare the `orders` relation for `Customer` class, you can write the following code in the
+     * `Customer` class:
+     *
+     * ```php
+     * public function getOrdersQuery()
+     * {
+     *     return $this->hasMany(Order::className(), ['customer_id' => 'id']);
+     * }
+     * ```
+     *
+     * Note that the `customer_id` key in the `$link` parameter refers to a property name in the related
+     * class `Order`, while the 'id' value refers to a property name in the current active record class.
+     *
+     * Call methods declared in {@see ActiveQuery} to further customize the relation.
+     *
+     * @param ActiveRecordInterface|string $modelClass The class name of the related record, or an instance of
+     * the related record.
+     * @param array $link The primary-foreign key constraint. The keys of the array refer to the property names of
+     * the record associated with the `$class` model, while the values of the array refer to the corresponding property
+     * names in **this** active record class.
+     *
+     * @return ActiveQueryInterface The relational query object.
+     *
+     * @psalm-param ModelClass $modelClass
+     * @psalm-param array<string, string> $link
+     */
+    public function hasMany(self|string $modelClass, array $link): ActiveQueryInterface;
+
+    /**
+     * Declares a `has-one` relation.
+     *
+     * The declaration is returned in terms of a relational {@see ActiveQuery} instance through which the related record
+     * can be queried and retrieved back.
+     *
+     * A `has-one` relation means that there is at most one related record matching the criteria set by this relation,
+     * e.g., a customer has one country.
+     *
+     * For example, to declare the `country` relation for `Customer` class, you can write the following code in the
+     * `Customer` class:
+     *
+     * ```php
+     * public function getCountryQuery()
+     * {
+     *     return $this->hasOne(Country::className(), ['id' => 'country_id']);
+     * }
+     * ```
+     *
+     * Note that the `id` key in the `$link` parameter refers to a property name in the related class
+     * `Country`, while the `country_id` value refers to a property name in the current active record class.
+     *
+     * Call methods declared in {@see ActiveQuery} to further customize the relation.
+     *
+     * @param ActiveRecordInterface|string $modelClass The class name of the related record, or an instance of
+     * the related record.
+     * @param array $link The primary-foreign key constraint. The keys of the array refer to the property names of
+     * the record associated with the `$class` model, while the values of the array refer to the corresponding property
+     * names in **this** active record class.
+     *
+     * @return ActiveQueryInterface The relational query object.
+     *
+     * @psalm-param ModelClass $modelClass
+     * @psalm-param array<string, string> $link
+     */
+    public function hasOne(self|string $modelClass, array $link): ActiveQueryInterface;
+
+    /**
+     * Inserts a new row into the associated database table using the property values of this record.
+     *
+     * Only the {@see ActiveRecordInterface::newValues()} changed property values will be inserted into the database.
+     *
+     * If the table's primary key is auto incremental and is `null` during insertion, it will be populated with the
+     * actual value after insertion.
+     *
+     * For example, to insert a customer record:
+     *
+     * ```php
+     * $customer = new Customer();
+     * $customer->name = $name;
+     * $customer->email = $email;
+     * $customer->insert();
+     * ```
+     *
+     * To insert a customer record with specific properties:
+     *
+     * ```php
+     * $customer->insert(['name' => $name, 'email' => $email]);
+     * ```
+     *
+     * @param array|null $properties List of property names or name-values pairs that need to be inserted.
+     * If name-value pairs are specified, the corresponding property values will be modified before insertion.
+     * Defaults to `null`, meaning all changed property values will be inserted.
+     *
+     * @throws InvalidCallException If the record {@see ActiveRecordInterface::isNew() is not new}.
+     * @throws InvalidConfigException
+     * @throws Throwable In case insert failed.
+     */
+    public function insert(?array $properties = null): void;
+
+    /**
+     * Checks if any property returned by {@see ActiveRecordInterface::propertyNames()} method has changed.
+     * A new active record instance is considered changed if any property has been set including default values.
+     */
+    public function isChanged(): bool;
+
+    /**
+     * Returns a value indicating whether the given set of property names represents the primary key for this active
+     * record.
+     *
+     * @param array $keys The set of property names to check.
+     *
+     * @return bool whether The given set of property names represents the primary key for this active record.
+     */
+    public function isPrimaryKey(array $keys): bool;
+
+    /**
+     * Returns whether the named property has been changed using the not identical operator `!==`.
+     *
+     * @param string $name The name of the property.
+     *
+     * @return bool Whether the property value has been changed.
+     */
+    public function isPropertyChanged(string $name): bool;
+
+    /**
+     * Returns whether the named property has been changed using the not equal operator `!=`.
+     *
+     * @param string $name The name of the property.
+     *
+     * @return bool Whether the property value has been changed non-strictly.
+     */
+    public function isPropertyChangedNonStrict(string $name): bool;
+
+    /**
+     * Check whether the named relation has been populated with records.
+     *
+     * @param string $name The relation name, for example, `orders` (case-sensitive).
+     *
+     * @return bool Whether relation has been populated with records.
+     *
+     * @see ActiveRecordInterface::relationQuery()
+     */
+    public function isRelationPopulated(string $name): bool;
+
+    /**
+     * Establishes the relationship between two records.
+     *
+     * The relationship is established by setting the foreign key value(s) in one record to be the corresponding primary
+     * key value(s) in the other record.
+     *
+     * The record with the foreign key will be saved into a database without performing validation.
+     *
+     * If the relationship involves a junction table, a new row will be inserted into the junction table which contains
+     * the primary key values from both records.
+     *
+     * This method requires that the primary key value isn't `null`.
+     *
+     * @param string $relationName The relation name, for example, `orders` (case-sensitive).
+     * @param self $linkModel The record to be linked with the current one.
+     * @param array $extraColumns More column values to be saved into the junction table. This parameter is only
+     * meaningful for a relationship involving a junction table (that's a relation set with
+     * {@see ActiveQueryInterface::via()}).
+     *
+     * @psalm-param array<string, mixed> $extraColumns
+     */
+    public function link(string $relationName, self $linkModel, array $extraColumns = []): void;
+
+    /**
+     * Populates the named relation with the related records.
+     *
+     * Note that this method doesn't check if the relation exists or not.
+     *
+     * @param string $name The relation name, for example, `orders` (case-sensitive).
+     * @param array|array[]|self|self[]|null $records The related records to be populated into the relation.
+     */
+    public function populateRelation(string $name, array|self|null $records): void;
+
+    /**
+     * Create {@see ActiveQueryInterface} instance for the given model class.
+     *
+     * @param ActiveRecordInterface|string|null $modelClass The class name of the related record, or an instance
+     * of the related record. If `null`, the current model class will be used.
+     *
+     * @psalm-param ModelClass|null $modelClass
+     */
+    public static function query(self|string|null $modelClass = null): ActiveQueryInterface;
+
+    /**
+     * Returns the primary key names for this AR class.
+     *
+     * The default implementation will return the primary keys as declared in the DB table that's associated with
+     * this AR class.
+     *
+     * If the DB table doesn't declare any primary key, you should override this method to return the property names
+     * that you want to use as primary keys for this active record class.
+     *
+     * Note that an array should be returned even for a table with a single primary key.
+     *
+     * @return string[] The primary keys of the associated database table.
+     *
+     * @psalm-return list<string>
+     */
+    public function primaryKey(): array;
+
+    /**
+     * Returns the relation object with the specified name.
+     *
+     * @param string $name The relation name, for example, `orders` (case-sensitive).
+     *
+     * @return array|array[]|self|self[]|null The relation object.
+     */
+    public function relation(string $name): self|array|null;
+
+    /**
+     * Returns the relation query object with the specified name.
+     *
+     * A relation is defined by a getter method which returns an object implementing the {@see ActiveQueryInterface}
+     * (normally this would be a relational {@see ActiveQuery} object).
+     *
+     * Relations can be defined using {@see ActiveRecordInterface::hasOne()} and
+     * {@see ActiveRecordInterface::hasMany()} methods. For example:
+     *
+     * ```php
+     * public function relationQuery(string $name): ActiveQueryInterface
+     * {
+     *     return match ($name) {
+     *         'orders' => $this->hasMany(Order::class, ['customer_id' => 'id']),
+     *         'country' => $this->hasOne(Country::class, ['id' => 'country_id']),
+     *         default => parent::relationQuery($name),
+     *     };
+     * }
+     * ```
+     *
+     * @param string $name The relation name, for example, `orders` (case-sensitive).
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return ActiveQueryInterface The relational query object.
+     */
+    public function relationQuery(string $name): ActiveQueryInterface;
+
+    /**
+     * Resets relation data for the specified name.
+     *
+     * @param string $name The relation name, for example, `orders` (case-sensitive).
+     */
+    public function resetRelation(string $name): void;
+
+    /**
+     * Saves the changes to this active record into the associated database table.
+     *
+     * Only the {@see ActiveRecordInterface::newValues()} changed property values will be saved into the database.
+     *
+     * This method will call {@see ActiveRecordInterface::insert()} when {@see ActiveRecordInterface::isNew()}
+     * is true, or {@see ActiveRecordInterface::update()} when {@see ActiveRecordInterface::isNew()} is false.
+     *
+     * For example, to save a customer record:
+     *
+     * ```php
+     * $customer = new Customer();
+     * $customer->name = $name;
+     * $customer->email = $email;
+     * $customer->save();
+     * ```
+     *
+     * To save a customer record with specific properties:
+     *
+     * ```php
+     * $customer->save(['name' => $name, 'email' => $email]);
+     * ```
+     *
+     * @param array|null $properties List of property names or name-values pairs that need to be saved.
+     * If name-value pairs are specified, the corresponding property values will be modified before saving.
+     * Defaults to `null`, meaning all changed property values will be saved.
+     */
+    public function save(?array $properties = null): void;
+
+    /**
+     * Sets the named property value.
+     *
+     * @param string $propertyName The property name.
+     *
+     * @throws InvalidArgumentException If the named property doesn't exist.
+     */
+    public function set(string $propertyName, mixed $value): void;
+
+    /**
+     * Marks this record as new. The record should be inserted when calling {@see ActiveRecordInterface::save()}.
+     *
+     * @see ActiveRecordInterface::isNew()
+     * @see ActiveRecordInterface::markAsExisting()
+     */
+    public function markAsNew(): void;
+
+    /**
+     * Marks this record as existing. The record should be updated when calling {@see ActiveRecordInterface::save()}.
+     *
+     * Note: all current properties will be considered unchanged after calling this method.
+     *
+     * @see ActiveRecordInterface::isNew()
+     * @see ActiveRecordInterface::markAsNew()
+     */
+    public function markAsExisting(): void;
+
+    /**
+     * Updates the changes to this active record into the associated database table.
+     *
+     * Only the {@see ActiveRecordInterface::newValues()} changed property values will be updated into the database.
+     *
+     * For example, to update a customer record:
+     *
+     * ```php
+     * $customer = Customer::query()->findByPk(1);
+     * $customer->name = $name;
+     * $customer->email = $email;
+     * $customer->update();
+     * ```
+     *
+     * To update a customer record with specific properties:
+     *
+     * ```php
+     * $customer->update(['name' => $name, 'email' => $email]);
+     * ```
+     *
+     * Note that it's possible the update doesn't affect any row in the table.
+     * In this case, this method will return 0.
+     * For this reason, you should use the following code to check if update() is successful or not:
+     *
+     * ```php
+     * if ($customer->update() !== 0) {
+     *     // update successful
+     * } else {
+     *     // update failed
+     * }
+     * ```
+     *
+     * @param array|null $properties List of property names or name-values pairs that need to be updated.
+     * If name-value pairs are specified, the corresponding property values will be modified before updating.
+     * Defaults to `null`, meaning all changed property values will be updated.
+     *
+     * @throws InvalidCallException If the record {@see ActiveRecordInterface::isNew() is new}.
+     * @throws OptimisticLockException If the instance implements {@see OptimisticLockInterface} and the data being
+     * updated is outdated.
+     * @throws Throwable In case update failed.
+     *
+     * @return int The number of rows affected.
+     */
+    public function update(?array $properties = null): int;
+
+    /**
+     * Updates the whole table using the provided property values and conditions.
+     *
+     * For example, to change the status to be 1 for all customers whose status is 2:
+     *
+     * ```php
+     * $customer = new Customer();
+     * $customer->updateAll(['status' => 1], 'status = 2');
+     * ```
+     *
+     * > Warning: If you don't specify any condition, this method will update **all** rows in the table.
+     *
+     * ```php
+     * $customers = Customer::query()->where('status = 2')->all();
+     * foreach ($customers as $customer) {
+     *     $customer->status = 1;
+     *     $customer->update();
+     * }
+     * ```
+     *
+     * For a large set of models you might consider using {@see ActiveQuery::each()} to keep memory usage within limits.
+     *
+     * @param array $propertyValues Property values (name-value pairs) to be saved into the table.
+     * @param array|string $condition The conditions that will be put in the `WHERE` part of the `UPDATE` SQL.
+     * Please refer to {@see Query::where()} on how to specify this parameter.
+     * @param array|ExpressionInterface|string|null $from The FROM part of the `UPDATE` SQL.
+     * Please refer to {@see QueryPartsInterface::from()} on how to specify this parameter.
+     * @param array $params The parameters (name => value) to be bound to the query.
+     *
+     * @throws InvalidConfigException
+     * @throws Throwable if the models can't be unlinked.
+     * @throws Exception
+     *
+     * @return int The number of rows updated.
+     *
+     * @psalm-param RawFrom|null $from
+     */
+    public function updateAll(array $propertyValues, array|string $condition = [], array|ExpressionInterface|string|null $from = null, array $params = []): int;
+
+    /**
+     * Insert a row into the associated database table if the record doesn't already exist (matching unique constraints)
+     * or update the record if it exists, with populating model by the returning record values.
+     *
+     * Only the {@see ActiveRecordInterface::newValues()} changed property values will be inserted or updated.
+     *
+     * If the table's primary key is auto incremental and is `null` during execution, it will be populated with the
+     * actual value after insertion or update.
+     *
+     * For example, to upsert a customer record:
+     *
+     * ```php
+     * $customer = new Customer();
+     * $customer->name = $name;
+     * $customer->email = $email; // unique property
+     * $customer->created_at = new DateTimeImmutable();
+     * $customer->upsert();
+     * ```
+     *
+     * To upsert a customer record with specific properties:
+     *
+     * ```php
+     * $customer->upsert(
+     *     ['name' => $name, 'email' => $email, 'created_at' => new DateTimeImmutable()],
+     *     ['name', 'email', 'updated_at' => new DateTimeImmutable()],
+     * );
+     * ```
+     *
+     * @param array|null $insertProperties List of property names or name-values pairs that need to be inserted.
+     * If name-value pairs are specified, the values will be used for insertion.
+     * Defaults to `null`, meaning all changed property values will be inserted.
+     * @param array|bool $updateProperties List of property names or name-values pairs that need to be updated
+     * if the record already exists. If name-value pairs are specified, the values will be used for update.
+     * Also available a boolean value:
+     * - `true` the record values will be updated to match the inserted property values;
+     * - `false` no update will be performed if the record already exist.
+     *
+     * @throws InvalidConfigException
+     * @throws Throwable In case query failed.
+     */
+    public function upsert(?array $insertProperties = null, array|bool $updateProperties = true): void;
+
+    /**
+     * Destroys the relationship between two records.
+     *
+     * The record with the foreign key of the relationship will be deleted if `$delete` is true.
+     *
+     * Otherwise, the foreign key will be set `null` and the record will be saved without validation.
+     *
+     * @param string $relationName The relation name, for example, `orders` (case-sensitive).
+     * @param self $linkedModel The active record to be unlinked from the current one.
+     * @param bool $delete Whether to delete the active record that contains the foreign key.
+     * If false, the active record's foreign key will be set `null` and saved.
+     * If true, the active record containing the foreign key will be deleted.
+     */
+    public function unlink(string $relationName, self $linkedModel, bool $delete = false): void;
+
+    /**
+     * Destroys the relationship in the current model.
+     *
+     * The active record with the foreign key of the relationship will be deleted if `$delete` is `true`. Otherwise, the
+     * foreign key will be set `null` and the model will be saved without validation.
+     *
+     * To destroy the relationship without removing records, make sure your keys can be set to `null`.
+     *
+     * @param string $relationName The case-sensitive name of the relationship.
+     * @param bool $delete Whether to delete the model that contains the foreign key.
+     *
+     * @throws Exception
+     * @throws ReflectionException
+     * @throws Throwable
+     */
+    public function unlinkAll(string $relationName, bool $delete = false): void;
+
+    /**
+     * Updates one or several counters for the current active record object.
+     *
+     * Note that this method differs from {@see ActiveRecordInterface::updateAllCounters()} in that it only
+     * saves counters for the current active record object.
+     *
+     * An example usage is as follows:
+     *
+     * ```php
+     * $post = new Post();
+     * $post->updateCounters(['view_count' => 1]);
+     * ```
+     *
+     * @param array $counters The counters to be updated (property name => increment value), use negative values if you
+     * want to decrement the counters.
+     *
+     * @psalm-param array<string, int> $counters
+     *
+     * @see ActiveRecordInterface::updateAllCounters()
+     */
+    public function updateCounters(array $counters): void;
+
+    /**
+     * Updates the whole table using the provided counters and condition.
+     *
+     * For example, to increment all customers' age by 1:
+     *
+     * ```php
+     * $customer = new Customer();
+     * $customer->updateAllCounters(['age' => 1]);
+     * ```
+     *
+     * Note that this method will not trigger any events.
+     *
+     * @param array $counters The counters to be updated (property name => increment value).
+     * Use negative values if you want to decrement the counters.
+     * @param array|string $condition The conditions that will be put in the `WHERE` part of the `UPDATE` SQL.
+     * Please refer to {@see Query::where()} on how to specify this parameter.
+     * @param array|ExpressionInterface|string|null $from The FROM part of the `UPDATE` SQL.
+     * Please refer to {@see QueryPartsInterface::from()} on how to specify this parameter.
+     * @param array $params The parameters (name => value) to be bound to the query.
+     *
+     * Do not name the parameters as `:bp0`, `:bp1`, etc., because they are used internally by this method.
+     *
+     * @return int The number of rows updated.
+     *
+     * @psalm-param array<string, int> $counters
+     * @psalm-param RawFrom|null $from
+     */
+    public function updateAllCounters(
+        array $counters,
+        array|string $condition = '',
+        array|ExpressionInterface|string|null $from = null,
+        array $params = [],
+    ): int;
+
+    /**
+     * Returns the old property values.
+     *
+     * @return array The old property values (name-value pairs).
+     */
+    public function oldValues(): array;
+
+    /**
+     * Returns the property values that have been modified since they're loaded or saved most recently.
+     *
+     * The comparison of new and old values uses `===`.
+     *
+     * @param array|null $propertyNames The names of the properties whose values may be returned if they're changed
+     * recently. If `null`, {@see ActiveRecordInterface::propertyNames()} will be used.
+     *
+     * @return array The changed property values (name-value pairs).
+     *
+     * @psalm-return array<string, mixed>
+     */
+    public function newValues(?array $propertyNames = null): array;
+
+    /**
+     * Marks a property as changed.
+     *
+     * This method may be called to force updating a record when calling {@see ActiveRecordInterface::update()},
+     * even if there is no change being made to the record.
+     *
+     * @param string $name The property name.
+     */
+    public function markPropertyChanged(string $name): void;
+
+    /**
+     * Populates an active record object using a row of data from the database/storage.
+     *
+     * This is an internal method meant to be called to create active record objects after fetching data from the
+     * database.
+     * It's mainly used by {@see ActiveQuery} to populate the query results into active records.
+     *
+     * @param array|object $row Property values (name => value).
+     *
+     * @throws Exception
+     * @throws InvalidConfigException
+     *
+     * @psalm-param array<string, mixed>|object $row
+     */
+    public function populateRecord(array|object $row): static;
+
+    /**
+     * Sets the property values in a massive way.
+     *
+     * @param array $values Property values (name => value) to be assigned to the model.
+     *
+     * @see ActiveRecordInterface::propertyNames()
+     *
+     * @psalm-param array<string, mixed> $values
+     */
+    public function populateProperties(array $values): void;
+
+    /**
+     * Sets the old value of the named property.
+     *
+     * @param string $propertyName The property name.
+     *
+     * @throws InvalidArgumentException If the named property doesn't exist.
+     *
+     * @see ActiveRecordInterface::hasProperty()
+     */
+    public function assignOldValue(string $propertyName, mixed $value): void;
+
+    /**
+     * Sets the old property values.
+     *
+     * All existing old property values will be discarded.
+     *
+     * @param array|null $propertyValues Old property values (name => value) to be set. If set to `null` this record
+     * is {@see ActiveRecordInterface::isNew()}.
+     */
+    public function assignOldValues(?array $propertyValues = null): void;
+}

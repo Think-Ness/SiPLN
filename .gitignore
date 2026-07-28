@@ -20,7 +20,7 @@ Thumbs.db
 .DS_Store
 
 # composer vendor dir
-/vendor
+# /vendor
 
 # Codeception C3
 c3.php

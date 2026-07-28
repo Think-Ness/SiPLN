@@ -1,0 +1,155 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Yiisoft\Db\Mysql\Tests;
+
+use Closure;
+use PHPUnit\Framework\Attributes\DataProviderExternal;
+use Yiisoft\Db\Exception\NotSupportedException;
+use Yiisoft\Db\Expression\ExpressionInterface;
+use Yiisoft\Db\Mysql\Tests\Provider\CommandProvider;
+use Yiisoft\Db\Mysql\Tests\Support\IntegrationTestTrait;
+use Yiisoft\Db\Mysql\Tests\Support\TestConnection;
+use Yiisoft\Db\Query\Query;
+use Yiisoft\Db\Tests\Common\CommonCommandTest;
+
+/**
+ * @group mysql
+ */
+final class CommandTest extends CommonCommandTest
+{
+    use IntegrationTestTrait;
+
+    public function testAddCheck(): void
+    {
+        $this->expectException(NotSupportedException::class);
+        $this->expectExceptionMessage('Yiisoft\Db\Mysql\Schema::loadTableChecks is not supported by MySQL.');
+
+        parent::testAddCheck();
+    }
+
+    public function testAddDefaultValue(): void
+    {
+        $this->expectException(NotSupportedException::class);
+        $this->expectExceptionMessage('Yiisoft\Db\Mysql\Schema::loadTableDefaultValues is not supported by MySQL.');
+
+        parent::testAddDefaultValue();
+    }
+
+    public function testAlterColumn(): void
+    {
+        $db = $this->getSharedConnection();
+        $this->loadFixture();
+
+        $command = $db->createCommand();
+        $command->alterColumn('{{customer}}', 'email', 'text')->execute();
+        $schema = $db->getSchema();
+        $columns = $schema->getTableSchema('{{customer}}')?->getColumns();
+
+        $this->assertArrayHasKey('email', $columns);
+        $this->assertSame('text', $columns['email']->getDbType());
+
+        $db->close();
+    }
+
+    #[DataProviderExternal(CommandProvider::class, 'batchInsert')]
+    public function testBatchInsert(
+        string $table,
+        iterable $values,
+        array $columns,
+        string $expected,
+        array $expectedParams = [],
+        int $insertedRow = 1,
+    ): void {
+        parent::testBatchInsert($table, $values, $columns, $expected, $expectedParams, $insertedRow);
+    }
+
+    public function testDropCheck(): void
+    {
+        $this->expectException(NotSupportedException::class);
+        $this->expectExceptionMessage('Yiisoft\Db\Mysql\Schema::loadTableChecks is not supported by MySQL.');
+
+        parent::testDropCheck();
+    }
+
+    public function testDropDefaultValue(): void
+    {
+        $this->expectException(NotSupportedException::class);
+        $this->expectExceptionMessage('Yiisoft\Db\Mysql\Schema::loadTableDefaultValues is not supported by MySQL.');
+
+        parent::testDropDefaultValue();
+    }
+
+    public function testDropTableCascade(): void
+    {
+        $db = $this->getSharedConnection();
+        $command = $db->createCommand();
+
+        $this->expectException(NotSupportedException::class);
+        $this->expectExceptionMessage('MySQL doesn\'t support cascade drop table.');
+        $command->dropTable('{{table}}', cascade: true);
+
+        $db->close();
+    }
+
+    #[DataProviderExternal(CommandProvider::class, 'rawSql')]
+    public function testGetRawSql(string $sql, array $params, string $expectedRawSql): void
+    {
+        parent::testGetRawSql($sql, $params, $expectedRawSql);
+    }
+
+    public function testInsertReturningPksWithSubqueryAndNoAutoincrement(): void
+    {
+        $db = $this->getSharedConnection();
+        $this->loadFixture();
+
+        $command = $db->createCommand();
+
+        $query = (new Query($db))->select(['order_id' => 1, 'item_id' => 2, 'quantity' => 3, 'subtotal' => 4]);
+
+        $this->expectException(NotSupportedException::class);
+        $this->expectExceptionMessage(
+            'Yiisoft\Db\Mysql\Command::insertReturningPks() is not supported by MySQL for tables without auto increment when inserting sub-query.',
+        );
+
+        $command->insertReturningPks('order_item', $query);
+    }
+
+    #[DataProviderExternal(CommandProvider::class, 'update')]
+    public function testUpdate(
+        string $table,
+        array $columns,
+        array|ExpressionInterface|string $conditions,
+        Closure|array|ExpressionInterface|string|null $from,
+        array $params,
+        array $expectedValues,
+        int $expectedCount,
+    ): void {
+        parent::testUpdate($table, $columns, $conditions, $from, $params, $expectedValues, $expectedCount);
+    }
+
+    #[DataProviderExternal(CommandProvider::class, 'upsert')]
+    public function testUpsert(Closure|array $firstData, Closure|array $secondData): void
+    {
+        parent::testUpsert($firstData, $secondData);
+    }
+
+    public function testShowDatabases(): void
+    {
+        $db = $this->getSharedConnection();
+
+        $this->assertSame([TestConnection::databaseName()], $db->createCommand()->showDatabases());
+    }
+
+    #[DataProviderExternal(CommandProvider::class, 'createIndex')]
+    public function testCreateIndex(array $columns, array $indexColumns, ?string $indexType, ?string $indexMethod): void
+    {
+        parent::testCreateIndex($columns, $indexColumns, $indexType, $indexMethod);
+    }
+
+    protected function getUpsertTestCharCast(): string
+    {
+        return 'CONVERT([[address]], CHAR)';
+    }
+}

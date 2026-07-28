@@ -1,0 +1,2241 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Yiisoft\ActiveRecord\Tests;
+
+use ArgumentCountError;
+use DateTimeImmutable;
+use InvalidArgumentException;
+use LogicException;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\TestWith;
+use Yiisoft\ActiveRecord\ActiveQuery;
+use Yiisoft\ActiveRecord\Event\AfterDelete;
+use Yiisoft\ActiveRecord\Event\EventDispatcherProvider;
+use Yiisoft\ActiveRecord\Internal\ArArrayHelper;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\Animal;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\Article;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\ArticleComment;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\Cat;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\Category;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\CategoryAfterDelete;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\Customer;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\CustomerQuery;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\CustomerSetValueOnUpdateUpsert;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\CustomerWithAlias;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\CustomerWithCustomConnection;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\CustomerWithFactory;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\DefaultValueAr;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\DefaultValueOnInsertAr;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\Dog;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\Item;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\ItemWithPropertyHooks;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\NoExist;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\NoPk;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\NullValues;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\Order;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\OrderItem;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\OrderItemWithNullFK;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\OrderWithConstructor;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\OrderWithCustomerProfileViaCustomerRelation;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\OrderWithFactory;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\OrderWithSoftDelete;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\Profile;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\Promotion;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\SetValueOnUpdateAr;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\StopPropagation;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\Type;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\User;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\UserProfile;
+use Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\UuidPromotion;
+use Yiisoft\ActiveRecord\Tests\Support\DbHelper;
+use Yiisoft\ActiveRecord\Tests\Support\ModelFactory;
+use Yiisoft\Db\Connection\ConnectionProvider;
+use Yiisoft\Db\Exception\InvalidCallException;
+use Yiisoft\Db\Exception\InvalidConfigException;
+use Yiisoft\Db\Expression\Expression;
+use Yiisoft\Factory\Factory;
+use Yiisoft\Test\Support\EventDispatcher\SimpleEventDispatcher;
+
+use function in_array;
+use function count;
+
+use const PHP_VERSION_ID;
+
+abstract class ActiveRecordTest extends TestCase
+{
+    public function testStoreNull(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $record = new NullValues();
+
+        $this->assertNull($record->get('var1'));
+        $this->assertNull($record->get('var2'));
+        $this->assertNull($record->get('var3'));
+        $this->assertNull($record->get('stringcol'));
+
+        $record->set('var1', 123);
+        $record->set('var2', 456);
+        $record->set('var3', 789);
+        $record->set('stringcol', 'hello!');
+        $record->save();
+
+        $this->assertTrue($record->refresh());
+        $this->assertEquals(123, $record->get('var1'));
+        $this->assertEquals(456, $record->get('var2'));
+        $this->assertEquals(789, $record->get('var3'));
+        $this->assertEquals('hello!', $record->get('stringcol'));
+
+        $record->set('var1', null);
+        $record->set('var2', null);
+        $record->set('var3', null);
+        $record->set('stringcol', null);
+        $record->save();
+
+        $this->assertTrue($record->refresh());
+        $this->assertNull($record->get('var1'));
+        $this->assertNull($record->get('var2'));
+        $this->assertNull($record->get('var3'));
+        $this->assertNull($record->get('>stringcol'));
+
+        $record->set('var1', 0);
+        $record->set('var2', 0);
+        $record->set('var3', 0);
+        $record->set('stringcol', '');
+        $record->save();
+
+        $this->assertTrue($record->refresh());
+        $this->assertEquals(0, $record->get('var1'));
+        $this->assertEquals(0, $record->get('var2'));
+        $this->assertEquals(0, $record->get('var3'));
+        $this->assertEquals('', $record->get('stringcol'));
+    }
+
+    public function testStoreEmpty(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $record = new NullValues();
+
+        /** this is to simulate empty html form submission */
+        $record->var1 = '';
+        $record->var2 = '';
+        $record->var3 = '';
+        $record->stringcol = '';
+        $record->save();
+
+        $this->assertTrue($record->refresh());
+
+        /** @see https://github.com/yiisoft/yii2/commit/34945b0b69011bc7cab684c7f7095d837892a0d4#commitcomment-4458225 */
+        $this->assertSame($record->var1, $record->var2);
+        $this->assertSame($record->var2, $record->var3);
+    }
+
+    public function testIsPrimaryKey(): void
+    {
+        $customer = new Customer();
+        $orderItem = new OrderItem();
+
+        $this->assertTrue($customer->isPrimaryKey(['id']));
+        $this->assertFalse($customer->isPrimaryKey([]));
+        $this->assertFalse($customer->isPrimaryKey(['id', 'name']));
+        $this->assertFalse($customer->isPrimaryKey(['name']));
+        $this->assertFalse($customer->isPrimaryKey(['name', 'email']));
+
+        $this->assertTrue($orderItem->isPrimaryKey(['order_id', 'item_id']));
+        $this->assertFalse($orderItem->isPrimaryKey([]));
+        $this->assertFalse($orderItem->isPrimaryKey(['order_id']));
+        $this->assertFalse($orderItem->isPrimaryKey(['item_id']));
+        $this->assertFalse($orderItem->isPrimaryKey(['quantity']));
+        $this->assertFalse($orderItem->isPrimaryKey(['quantity', 'subtotal']));
+        $this->assertFalse($orderItem->isPrimaryKey(['order_id', 'item_id', 'quantity']));
+    }
+
+    public function testOutdatedRelationsAreResetForNewRecords(): void
+    {
+        $orderItem = new OrderItem();
+
+        $orderItem->setOrderId(1);
+        $orderItem->setItemId(3);
+        $this->assertEquals(1, $orderItem->getOrder()->getId());
+        $this->assertEquals(3, $orderItem->getItem()->getId());
+
+        $orderItem->setOrderId(2);
+        $orderItem->setItemId(1);
+        $this->assertEquals(2, $orderItem->getOrder()->getId());
+        $this->assertEquals(1, $orderItem->getItem()->getId());
+
+        /** test `set()`. */
+        $orderItem->set('order_id', 2);
+        $orderItem->set('item_id', 2);
+        $this->assertEquals(2, $orderItem->getOrder()->getId());
+        $this->assertEquals(2, $orderItem->getItem()->getId());
+    }
+
+    public function testDefaultValues(): void
+    {
+        $arClass = new Type();
+
+        $arClass->loadDefaultValues();
+
+        $this->assertSame(1, $arClass->int_col2);
+        $this->assertSame('something', $arClass->char_col2);
+        $this->assertSame(1.23, $arClass->float_col2);
+        $this->assertSame('33.22', $arClass->numeric_col);
+        $this->assertTrue($arClass->bool_col2);
+        $this->assertSame('2002-01-01 00:00:00', $arClass->time);
+
+        if ($this->db()->getDriverName() !== 'mysql') {
+            $this->assertSame(['a' => 1], $arClass->json_col);
+        }
+
+        $arClass = new Type();
+        $arClass->char_col2 = 'not something';
+
+        $arClass->loadDefaultValues();
+        $this->assertSame('not something', $arClass->char_col2);
+
+        $arClass = new Type();
+        $arClass->char_col2 = 'not something';
+
+        $arClass->loadDefaultValues(false);
+        $this->assertSame('something', $arClass->char_col2);
+    }
+
+    public function testCastValues(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $arClass = new Type();
+
+        $arClass->int_col = 123;
+        $arClass->int_col2 = 456;
+        $arClass->smallint_col = 42;
+        $arClass->char_col = '1337';
+        $arClass->char_col2 = 'test';
+        $arClass->char_col3 = 'test123';
+        $arClass->float_col = 3.742;
+        $arClass->float_col2 = 42.1337;
+        $arClass->bool_col = true;
+        $arClass->bool_col2 = false;
+        $arClass->time = new Expression('CURRENT_TIMESTAMP');
+        $arClass->json_col = ['a' => 'b', 'c' => null, 'd' => [1, 2, 3]];
+
+        $arClass->save();
+
+        /** @var $model Type */
+        $aqClass = Type::query();
+        $query = $aqClass->one();
+
+        $this->assertSame(123, $query->int_col);
+        $this->assertSame(456, $query->int_col2);
+        $this->assertSame(42, $query->smallint_col);
+        $this->assertSame('1337', trim($query->char_col));
+        $this->assertSame('test', $query->char_col2);
+        $this->assertSame('test123', $query->char_col3);
+        $this->assertSame(3.742, $query->float_col);
+        $this->assertSame(42.1337, $query->float_col2);
+        $this->assertTrue($query->bool_col);
+        $this->assertFalse($query->bool_col2);
+        $this->assertSame(['a' => 'b', 'c' => null, 'd' => [1, 2, 3]], $query->json_col);
+    }
+
+    public function testPopulateRecordCallWhenQueryingOnParentClass(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $cat = new Cat();
+        $cat->save();
+
+        $dog = new Dog();
+        $dog->save();
+
+        $animal = Animal::query()->resultCallback(ModelFactory::create(...));
+
+        $animals = $animal->where(['type' => Dog::class])->one();
+        $this->assertEquals('bark', $animals->getDoes());
+
+        $animals = $animal->setWhere(['type' => Cat::class])->one();
+        $this->assertEquals('meow', $animals->getDoes());
+    }
+
+    public function testSave(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        // insert
+        $customer = new Customer();
+
+        $customer->setEmail('user4@example.com');
+        $customer->setName('user4');
+        $customer->setAddress('address4');
+        $customer->setStatus(1);
+
+        $this->assertNull($customer->getId());
+        $this->assertTrue($customer->isNew());
+
+        $customer->save();
+        $this->assertFalse($customer->isNew());
+        $this->assertSame(4, $customer->getId());
+
+        $customer->refresh();
+        $this->assertSame(4, $customer->getId());
+        $this->assertSame('user4@example.com', $customer->getEmail());
+        $this->assertSame('user4', $customer->getName());
+        $this->assertSame('address4', $customer->getAddress());
+        $this->assertSame(1, $customer->getStatus());
+
+        // insert with property names
+        $customer = new Customer();
+
+        $customer->setEmail('user5@example.com');
+        $customer->setName('user5');
+        $customer->setAddress('address5');
+        $customer->setStatus(1);
+
+        $this->assertNull($customer->getId());
+        $this->assertTrue($customer->isNew());
+
+        $customer->save(['email', 'name', 'address']);
+        $this->assertFalse($customer->isNew());
+        $this->assertSame(5, $customer->getId());
+
+        $customer->refresh();
+        $this->assertSame(5, $customer->getId());
+        $this->assertSame('user5@example.com', $customer->getEmail());
+        $this->assertSame('user5', $customer->getName());
+        $this->assertSame('address5', $customer->getAddress());
+        $this->assertSame(0, $customer->getStatus());
+
+        // insert with property values
+        $customer = new Customer();
+        $customer->setAddress('address6');
+        $customer->setStatus(1);
+
+        $customer->save([
+            'email' => 'user6@example.com',
+            'name' => 'user6',
+            'address',
+        ]);
+        $this->assertFalse($customer->isNew());
+        $this->assertSame(6, $customer->getId());
+
+        $customer->refresh();
+        $this->assertSame(6, $customer->getId());
+        $this->assertSame('user6@example.com', $customer->getEmail());
+        $this->assertSame('user6', $customer->getName());
+        $this->assertSame('address6', $customer->getAddress());
+        $this->assertSame(0, $customer->getStatus());
+
+        // update
+        $customer->setEmail('customer6@example.com');
+        $customer->setName('customer6');
+
+        $customer->save();
+
+        $this->assertFalse($customer->isNew());
+        $this->assertSame(6, $customer->getId());
+
+        $customer->refresh();
+        $this->assertSame(6, $customer->getId());
+        $this->assertSame('customer6@example.com', $customer->getEmail());
+        $this->assertSame('customer6', $customer->getName());
+        $this->assertSame('address6', $customer->getAddress());
+        $this->assertSame(0, $customer->getStatus());
+
+        // update with property names
+        $customer->setEmail('name6@example.com');
+        $customer->setName('name6');
+        $customer->setStatus(1);
+
+        $customer->save(['email', 'name']);
+
+        $customer->refresh();
+        $this->assertSame(6, $customer->getId());
+        $this->assertSame('name6@example.com', $customer->getEmail());
+        $this->assertSame('name6', $customer->getName());
+        $this->assertSame('address6', $customer->getAddress());
+        $this->assertSame(0, $customer->getStatus());
+
+        // update with property values
+        $customer->setAddress('street6');
+        $customer->setStatus(1);
+        $customer->save([
+            'email' => 'client6@example.com',
+            'name' => 'client6',
+            'address',
+        ]);
+
+        $customer->refresh();
+        $this->assertSame(6, $customer->getId());
+        $this->assertSame('client6@example.com', $customer->getEmail());
+        $this->assertSame('client6', $customer->getName());
+        $this->assertSame('street6', $customer->getAddress());
+        $this->assertSame(0, $customer->getStatus());
+    }
+
+    public function testSaveEmpty(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $record = new NullValues();
+
+        $record->save();
+        $this->assertEquals(1, $record->id);
+    }
+
+    /**
+     * Verify that {{}} are not going to be replaced in parameters.
+     */
+    public function testNoTablenameReplacement(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $customer = new Customer();
+
+        $customer->setName('Some {{weird}} name');
+        $customer->setEmail('test@example.com');
+        $customer->setAddress('Some {{%weird}} address');
+        $customer->insert();
+        $customer->refresh();
+
+        $this->assertEquals('Some {{weird}} name', $customer->getName());
+        $this->assertEquals('Some {{%weird}} address', $customer->getAddress());
+
+        $customer->setName('Some {{updated}} name');
+        $customer->setAddress('Some {{%updated}} address');
+        $customer->update();
+
+        $this->assertEquals('Some {{updated}} name', $customer->getName());
+        $this->assertEquals('Some {{%updated}} address', $customer->getAddress());
+    }
+
+    public function testRefreshQuerySetAliasFindRecord(): void
+    {
+        $customer = new CustomerWithAlias();
+
+        $customer->id = 1;
+        $customer->refresh();
+
+        $this->assertEquals(1, $customer->id);
+    }
+
+    public function testResetNotSavedRelation(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $order = new Order();
+
+        $order->setCustomerId(1);
+        $order->setCreatedAt(1_325_502_201);
+        $order->setTotal(0);
+
+        $orderItem = new OrderItem();
+
+        $order->getOrderItems();
+
+        $order->populateRelation('orderItems', [$orderItem]);
+
+        $order->save();
+
+        $this->assertCount(1, $order->getOrderItems());
+    }
+
+    public function testSetProperties(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $properties = [
+            'email' => 'samdark@mail.ru',
+            'name' => 'samdark',
+            'address' => 'rusia',
+            'status' => 1,
+            'bool_status' => true,
+        ];
+
+        $properties['profile_id'] = null;
+
+        $customer = new Customer();
+
+        $customer->populateProperties($properties);
+
+        $customer->save();
+
+        $this->assertTrue(
+            $this->db()->createQuery()->from('customer')->where(['email' => 'samdark@mail.ru'])->exists(),
+        );
+    }
+
+    public function testAssignOldValue(): void
+    {
+        $customer = new Customer();
+
+        $this->assertEmpty($customer->oldValue('name'));
+
+        $customer->assignOldValue('name', 'samdark');
+
+        $this->assertEquals('samdark', $customer->oldValue('name'));
+    }
+
+    public function testaAssignOldValueException(): void
+    {
+        $customer = new Customer();
+
+        $this->assertEmpty($customer->oldValue('name'));
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(
+            'Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\Customer has no property named "noExist"',
+        );
+        $customer->assignOldValue('noExist', 'samdark');
+    }
+
+    public function testIsPropertyChangedNotChanged(): void
+    {
+        $customer = new Customer();
+
+        $this->assertEmpty($customer->get('email'));
+        $this->assertEmpty($customer->oldValue('email'));
+        $this->assertFalse($customer->isPropertyChanged('email'));
+        $this->assertFalse($customer->isPropertyChangedNonStrict('email'));
+    }
+
+    public function testTableSchemaException(): void
+    {
+        $noExist = new NoExist();
+
+        $this->expectException(InvalidConfigException::class);
+        $this->expectExceptionMessage('The table does not exist: NoExist');
+        $noExist->tableSchema();
+    }
+
+    public function testInsert(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $customer = new Customer();
+
+        $customer->setEmail('user4@example.com');
+        $customer->setName('user4');
+        $customer->setAddress('address4');
+        $customer->setStatus(1);
+
+        $this->assertTrue($customer->isNew());
+        $this->assertNull($customer->getId());
+
+        $customer->insert();
+        $this->assertFalse($customer->isNew());
+        $this->assertSame(4, $customer->getId());
+
+        $customer->refresh();
+        $this->assertSame(4, $customer->getId());
+        $this->assertSame('user4@example.com', $customer->getEmail());
+        $this->assertSame('user4', $customer->getName());
+        $this->assertSame('address4', $customer->getAddress());
+        $this->assertSame(1, $customer->getStatus());
+
+        // with property names
+        $customer = new Customer();
+
+        $customer->setEmail('user5@example.com');
+        $customer->setName('user5');
+        $customer->setAddress('address5');
+        $customer->setStatus(1);
+
+        $this->assertTrue($customer->isNew());
+        $this->assertNull($customer->getId());
+
+        $customer->insert(['email', 'name', 'address']);
+        $this->assertFalse($customer->isNew());
+        $this->assertSame(5, $customer->getId());
+
+        $customer->refresh();
+        $this->assertSame(5, $customer->getId());
+        $this->assertSame('user5@example.com', $customer->getEmail());
+        $this->assertSame('user5', $customer->getName());
+        $this->assertSame('address5', $customer->getAddress());
+        $this->assertSame(0, $customer->getStatus());
+
+        // with property values
+        $customer = new Customer();
+        $customer->setAddress('address6');
+        $customer->setStatus(1);
+
+        $customer->insert([
+            'email' => 'user6@example.com',
+            'name' => 'user6',
+            'address',
+        ]);
+        $this->assertFalse($customer->isNew());
+        $this->assertSame(6, $customer->getId());
+
+        $customer->refresh();
+        $this->assertSame(6, $customer->getId());
+        $this->assertSame('user6@example.com', $customer->getEmail());
+        $this->assertSame('user6', $customer->getName());
+        $this->assertSame('address6', $customer->getAddress());
+        $this->assertSame(0, $customer->getStatus());
+
+        // insert not new record
+        $this->expectException(InvalidCallException::class);
+        $this->expectExceptionMessage('The record is not new and cannot be inserted.');
+
+        $customer->insert();
+    }
+
+    /**
+     * Some PDO implementations (e.g. cubrid) do not support boolean values.
+     *
+     * Make sure this does not affect AR layer.
+     */
+    public function testBooleanProperty(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $customer = new Customer();
+
+        $customer->setName('boolean customer');
+        $customer->setEmail('mail@example.com');
+        $customer->setBoolStatus(true);
+
+        $customer->save();
+        $customer->refresh();
+        $this->assertTrue($customer->getBoolStatus());
+
+        $customer->setBoolStatus(false);
+        $customer->save();
+
+        $customer->refresh();
+        $this->assertFalse($customer->getBoolStatus());
+
+        $customerQuery = Customer::query();
+        $customers = $customerQuery->where(['bool_status' => true])->all();
+        $this->assertCount(2, $customers);
+
+        $customerQuery = Customer::query();
+        $customers = $customerQuery->where(['bool_status' => false])->all();
+        $this->assertCount(2, $customers);
+    }
+
+    public function testHasProperty(): void
+    {
+        $customer = new Customer();
+
+        $this->assertTrue($customer->hasProperty('id'));
+        $this->assertTrue($customer->hasProperty('email'));
+        $this->assertFalse($customer->hasProperty('notExist'));
+
+        $customerQuery = Customer::query();
+        $customer = $customerQuery->findByPk(1);
+        $this->assertTrue($customer->hasProperty('id'));
+        $this->assertTrue($customer->hasProperty('email'));
+        $this->assertFalse($customer->hasProperty('notExist'));
+    }
+
+    public function testRefresh(): void
+    {
+        $customer = new Customer();
+
+        $this->assertFalse($customer->refresh());
+
+        $customerQuery = Customer::query();
+        $customer = $customerQuery->findByPk(1);
+        $customer->setName('to be refreshed');
+
+        $this->assertTrue($customer->refresh());
+        $this->assertEquals('user1', $customer->getName());
+    }
+
+    public function testEquals(): void
+    {
+        $customerA = new Customer();
+        $customerB = new Customer();
+        $this->assertFalse($customerA->equals($customerB));
+
+        $customerA = Customer::query()->findByPk(1);
+        $customerB = new Customer();
+        $this->assertFalse($customerA->equals($customerB));
+        $this->assertFalse($customerB->equals($customerA));
+
+        $customerA = Customer::query()->findByPk(1);
+        $customerB = new Customer();
+        $customerB->setId(1);
+        $this->assertFalse($customerA->equals($customerB));
+        $this->assertFalse($customerB->equals($customerA));
+
+        $customerA = new Customer();
+        $customerB = new Item();
+        $this->assertFalse($customerA->equals($customerB));
+    }
+
+    public static function providerForUnlinkDelete(): array
+    {
+        return [
+            'with delete' => [true, 0],
+            'without delete' => [false, 1],
+        ];
+    }
+
+    /**
+     * @see https://github.com/yiisoft/yii2/issues/17174
+     */
+    #[DataProvider('providerForUnlinkDelete')]
+    public function testUnlinkWithViaOnCondition($delete, $count): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $orderQuery = Order::query();
+        $order = $orderQuery->findByPk(2);
+
+        $this->assertCount(1, $order->getItemsFor8());
+        $order->unlink('itemsFor8', $order->getItemsFor8()[0], $delete);
+
+        $order = $orderQuery->findByPk(2);
+        $this->assertCount(0, $order->getItemsFor8());
+        $this->assertCount(2, $order->getOrderItemsWithNullFK());
+
+        $orderItemQuery = OrderItemWithNullFK::query();
+        $this->assertCount(1, $orderItemQuery->where([
+            'order_id' => 2,
+            'item_id' => 5,
+        ])->all());
+        $this->assertCount($count, $orderItemQuery->setWhere([
+            'order_id' => null,
+            'item_id' => null,
+        ])->all());
+    }
+
+    public function testVirtualRelation(): void
+    {
+        $orderQuery = Order::query();
+        /** @var Order $order */
+        $order = $orderQuery->findByPk(2);
+
+        $order->setVirtualCustomerId($order->getCustomerId());
+        $this->assertNotNull($order->getVirtualCustomerQuery());
+    }
+
+    /**
+     * Test joinWith eager loads via relation
+     *
+     * @see https://github.com/yiisoft/yii2/issues/19507
+     */
+    public function testJoinWithEager(): void
+    {
+        $customerQuery = Customer::query();
+        $eagerCustomers = $customerQuery->joinWith(['items2'])->all();
+        $eagerItemsCount = 0;
+        foreach ($eagerCustomers as $customer) {
+            $eagerItemsCount += is_countable($customer->getItems2()) ? count($customer->getItems2()) : 0;
+        }
+
+        $customerQuery = Customer::query();
+        $lazyCustomers = $customerQuery->all();
+        $lazyItemsCount = 0;
+        foreach ($lazyCustomers as $customer) {
+            $lazyItemsCount += is_countable($customer->getItems2()) ? count($customer->getItems2()) : 0;
+        }
+
+        $this->assertEquals($eagerItemsCount, $lazyItemsCount);
+    }
+
+    public function testPrimaryKeyValue(): void
+    {
+        $customer = Customer::findByPk(1);
+
+        $this->assertSame(1, $customer->primaryKeyValue());
+        $this->assertSame(['id' => 1], $customer->primaryKeyValues());
+
+        $orderItemQuery = OrderItem::query();
+        $orderItem = $orderItemQuery->findByPk([1, 2]);
+
+        $this->assertSame(['order_id' => 1, 'item_id' => 2], $orderItem->primaryKeyValues());
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage(OrderItem::class . ' has multiple primary keys. Use primaryKeyValues() method instead.');
+        $orderItem->primaryKeyValue();
+    }
+
+    public function testPrimaryKeyValueWithoutPrimaryKey(): void
+    {
+        $orderItem = new OrderItemWithNullFK();
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage(
+            OrderItemWithNullFK::class
+            . ' does not have a primary key. You should either define a primary key for order_item_with_null_fk table'
+            . ' or override the primaryKey() method.',
+        );
+        $orderItem->primaryKeyValue();
+    }
+
+    public function testPrimaryKeyValuesWithoutPrimaryKey(): void
+    {
+        $orderItem = new OrderItemWithNullFK();
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage(
+            OrderItemWithNullFK::class
+            . ' does not have a primary key. You should either define a primary key for order_item_with_null_fk table'
+            . ' or override the primaryKey() method.',
+        );
+        $orderItem->primaryKeyValues();
+    }
+
+    public function testPrimaryKeyOldValue(): void
+    {
+        $customer = Customer::findByPk(1);
+        $customer->setId(2);
+
+        $this->assertSame(1, $customer->primaryKeyOldValue());
+        $this->assertSame(['id' => 1], $customer->primaryKeyOldValues());
+
+        $orderItemQuery = OrderItem::query();
+        $orderItem = $orderItemQuery->findByPk([1, 2]);
+        $orderItem->setOrderId(3);
+        $orderItem->setItemId(4);
+
+        $this->assertSame(['order_id' => 1, 'item_id' => 2], $orderItem->primaryKeyOldValues());
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage(OrderItem::class . ' has multiple primary keys. Use primaryKeyOldValues() method instead.');
+
+        $orderItem->primaryKeyOldValue();
+    }
+
+    public function testPrimaryKeyOldValueWithoutPrimaryKey(): void
+    {
+        $orderItem = new OrderItemWithNullFK();
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage(
+            OrderItemWithNullFK::class
+            . ' does not have a primary key. You should either define a primary key for order_item_with_null_fk table'
+            . ' or override the primaryKey() method.',
+        );
+
+        $orderItem->primaryKeyOldValue();
+    }
+
+    public function testPrimaryKeyOldValueWithoutPrimaryKeyContainsTableName(): void
+    {
+        $model = new NoPk();
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage(
+            NoPk::class . ' does not have a primary key. You should either define a primary key for no_pk table or override the primaryKey() method.',
+        );
+
+        $model->primaryKeyOldValue();
+    }
+
+    public function testPrimaryKeyOldValuesWithoutPrimaryKey(): void
+    {
+        $orderItem = new OrderItemWithNullFK();
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage(
+            OrderItemWithNullFK::class
+            . ' does not have a primary key. You should either define a primary key for order_item_with_null_fk table'
+            . ' or override the primaryKey() method.',
+        );
+        $orderItem->primaryKeyOldValues();
+    }
+
+    public function testGetDirtyValuesOnNewRecord(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $customer = new Customer();
+
+        $this->assertSame(
+            [
+                'name' => null,
+                'address' => null,
+                'status' => 0,
+                'bool_status' => false,
+                'profile_id' => null,
+            ],
+            $customer->newValues(),
+        );
+
+        $customer->set('name', 'Adam');
+        $customer->set('email', 'adam@example.com');
+        $customer->set('address', null);
+
+        $this->assertSame([], $customer->newValues([]));
+
+        $this->assertEquals(
+            [
+                'name' => 'Adam',
+                'email' => 'adam@example.com',
+                'address' => null,
+                'status' => 0,
+                'bool_status' => false,
+                'profile_id' => null,
+            ],
+            $customer->newValues(),
+        );
+        $this->assertSame(
+            [
+                'email' => 'adam@example.com',
+                'address' => null,
+                'status' => 0,
+            ],
+            $customer->newValues(['id', 'email', 'address', 'status', 'unknown']),
+        );
+
+        $customer->save();
+        $this->assertSame([], $customer->newValues());
+
+        $customer->set('address', '');
+
+        $this->assertSame(['address' => ''], $customer->newValues());
+    }
+
+    public function testGetDirtyValuesAfterFind(): void
+    {
+        $customerQuery = Customer::query();
+        $customer = $customerQuery->findByPk(1);
+
+        $this->assertSame([], $customer->newValues());
+
+        $customer->set('name', 'Adam');
+        $customer->set('email', 'adam@example.com');
+        $customer->set('address', null);
+
+        $this->assertEquals(
+            ['name' => 'Adam', 'email' => 'adam@example.com', 'address' => null],
+            $customer->newValues(),
+        );
+        $this->assertEquals(
+            ['email' => 'adam@example.com', 'address' => null],
+            $customer->newValues(['id', 'email', 'address', 'status', 'unknown']),
+        );
+    }
+
+    public function testRelationWithInstance(): void
+    {
+        $customerQuery = Customer::query();
+        $customer = $customerQuery->findByPk(2);
+
+        $orders = $customer->getOrdersUsingInstance();
+
+        $this->assertTrue($customer->isRelationPopulated('ordersUsingInstance'));
+        $this->assertCount(2, $orders);
+        $this->assertSame(2, $orders[0]->getId());
+        $this->assertSame(3, $orders[1]->getId());
+    }
+
+    public function testWithCustomConnection(): void
+    {
+        $db = $this->createConnection();
+
+        ConnectionProvider::set($db, 'custom');
+        DbHelper::loadFixture($db);
+
+        $customer = new CustomerWithCustomConnection();
+
+        $this->assertSame($this->db(), $customer->db());
+
+        $customer = $customer->withConnectionName('custom');
+
+        $this->assertSame($db, $customer->db());
+
+        $db->close();
+
+        ConnectionProvider::remove('custom');
+    }
+
+    public function testWithCustomConnectionReturnsClone(): void
+    {
+        $db = $this->createConnection();
+
+        ConnectionProvider::set($db, 'custom');
+        DbHelper::loadFixture($db);
+
+        $customer = new CustomerWithCustomConnection();
+        $customerWithCustomConnection = $customer->withConnectionName('custom');
+
+        $this->assertNotSame($customer, $customerWithCustomConnection);
+        $this->assertSame($this->db(), $customer->db());
+        $this->assertSame($db, $customerWithCustomConnection->db());
+
+        $db->close();
+
+        ConnectionProvider::remove('custom');
+    }
+
+    public function testWithFactory(): void
+    {
+        $factory = $this->createFactory();
+
+        $orderQuery = new ActiveQuery($factory->create(OrderWithFactory::class)->withFactory($factory));
+        $order = $orderQuery->with('customerWithFactory')->findByPk(2);
+
+        $this->assertInstanceOf(OrderWithFactory::class, $order);
+        $this->assertTrue($order->isRelationPopulated('customerWithFactory'));
+        $this->assertInstanceOf(CustomerWithFactory::class, $order->getCustomerWithFactory());
+    }
+
+    public function testWithFactoryInstanceRelation(): void
+    {
+        $factory = $this->createFactory();
+
+        $orderQuery = new ActiveQuery($factory->create(OrderWithFactory::class)->withFactory($factory));
+        $order = $orderQuery->findByPk(2);
+
+        $this->assertInstanceOf(OrderWithFactory::class, $order);
+        $this->assertInstanceOf(CustomerWithFactory::class, $order->getCustomerWithFactoryInstance());
+    }
+
+    public function testWithFactoryRelationWithoutFactory(): void
+    {
+        $factory = $this->createFactory();
+
+        $orderQuery = new ActiveQuery($factory->create(OrderWithFactory::class)->withFactory($factory));
+        $order = $orderQuery->findByPk(2);
+
+        $this->assertInstanceOf(OrderWithFactory::class, $order);
+        $this->assertInstanceOf(Customer::class, $order->getCustomer());
+    }
+
+    public function testWithFactoryLazyRelation(): void
+    {
+        $factory = $this->createFactory();
+
+        $orderQuery = new ActiveQuery($factory->create(OrderWithFactory::class)->withFactory($factory));
+        $order = $orderQuery->findByPk(2);
+
+        $this->assertInstanceOf(OrderWithFactory::class, $order);
+        $this->assertFalse($order->isRelationPopulated('customerWithFactory'));
+        $this->assertInstanceOf(CustomerWithFactory::class, $order->getCustomerWithFactory());
+    }
+
+    public function testWithFactoryWithConstructor(): void
+    {
+        $factory = $this->createFactory();
+
+        $customerQuery = new ActiveQuery($factory->create(CustomerWithFactory::class));
+        $customer = $customerQuery->findByPk(2);
+
+        $this->assertInstanceOf(CustomerWithFactory::class, $customer);
+        $this->assertFalse($customer->isRelationPopulated('ordersWithFactory'));
+        $this->assertInstanceOf(OrderWithFactory::class, $customer->getOrdersWithFactory()[0]);
+    }
+
+    public function testWithFactoryNonInitiated(): void
+    {
+        $orderQuery = OrderWithFactory::query();
+        $order = $orderQuery->findByPk(2);
+
+        $customer = $order->getCustomer();
+
+        $this->assertInstanceOf(Customer::class, $customer);
+
+        $this->expectException(ArgumentCountError::class);
+        $this->expectExceptionMessage('Too few arguments to function');
+
+        $order->getCustomerWithFactory();
+    }
+
+    public function testWithFactoryReturnsCloneAndKeepsOriginalUnchanged(): void
+    {
+        $factory = $this->createFactory();
+        $order = new OrderWithFactory();
+        $orderWithFactory = $order->withFactory($factory);
+
+        $this->assertNotSame($order, $orderWithFactory);
+
+        $loadedOrder = (new ActiveQuery($orderWithFactory))->findByPk(2);
+        $this->assertInstanceOf(CustomerWithFactory::class, $loadedOrder->getCustomerWithFactory());
+
+        $loadedOrderWithoutFactory = (new ActiveQuery($order))->findByPk(2);
+
+        $this->expectException(ArgumentCountError::class);
+        $this->expectExceptionMessage('Too few arguments to function');
+
+        $loadedOrderWithoutFactory->getCustomerWithFactory();
+    }
+
+    public function testWithFactoryPropagatesToNestedRelations(): void
+    {
+        $factory = $this->createFactory();
+
+        $order = (new ActiveQuery($factory->create(OrderWithFactory::class)->withFactory($factory)))->findByPk(2);
+        $customer = $order->getCustomerWithFactory();
+        $relatedOrder = $customer->getOrdersWithFactory()[0];
+
+        $this->assertInstanceOf(OrderWithFactory::class, $relatedOrder);
+        $this->assertInstanceOf(CustomerWithFactory::class, $relatedOrder->getCustomerWithFactory());
+    }
+
+    public function testSerialization(): void
+    {
+        $profile = new Profile();
+
+        $this->assertEquals(
+            "O:53:\"Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\Profile\":3:{s:52:\"\0Yiisoft\ActiveRecord\AbstractActiveRecord\0oldValues\";N;s:50:\"\0Yiisoft\ActiveRecord\AbstractActiveRecord\0related\";a:0:{}s:64:\"\0Yiisoft\ActiveRecord\AbstractActiveRecord\0relationsDependencies\";a:0:{}}",
+            serialize($profile),
+        );
+
+        $profileQuery = Profile::query();
+        $profile = $profileQuery->findByPk(1);
+
+        $this->assertEquals(
+            "O:53:\"Yiisoft\ActiveRecord\Tests\Stubs\ActiveRecord\Profile\":5:{s:52:\"\0Yiisoft\ActiveRecord\AbstractActiveRecord\0oldValues\";a:2:{s:2:\"id\";i:1;s:11:\"description\";s:18:\"profile customer 1\";}s:50:\"\0Yiisoft\ActiveRecord\AbstractActiveRecord\0related\";a:0:{}s:64:\"\0Yiisoft\ActiveRecord\AbstractActiveRecord\0relationsDependencies\";a:0:{}s:5:\"\0*\0id\";i:1;s:14:\"\0*\0description\";s:18:\"profile customer 1\";}",
+            serialize($profile),
+        );
+    }
+
+    public function testRelationViaJson(): void
+    {
+        $promotionQuery = Promotion::query();
+        /** @var Promotion[] $promotions */
+        $promotions = $promotionQuery->with('itemsViaJson')->all();
+
+        $this->assertSame([1, 2], ArArrayHelper::getColumn($promotions[0]->getItemsViaJson(), 'id'));
+        $this->assertSame([3, 4, 5], ArArrayHelper::getColumn($promotions[1]->getItemsViaJson(), 'id'));
+        $this->assertSame([1, 3], ArArrayHelper::getColumn($promotions[2]->getItemsViaJson(), 'id'));
+        $this->assertCount(0, $promotions[3]->getItemsViaJson());
+
+        /** Test inverse relation */
+        foreach ($promotions as $promotion) {
+            foreach ($promotion->getItemsViaJson() as $item) {
+                $this->assertTrue($item->isRelationPopulated('promotionsViaJson'));
+            }
+        }
+
+        $this->assertSame([1, 3], ArArrayHelper::getColumn($promotions[0]->getItemsViaJson()[0]->getPromotionsViaJson(), 'id'));
+        $this->assertSame([1], ArArrayHelper::getColumn($promotions[0]->getItemsViaJson()[1]->getPromotionsViaJson(), 'id'));
+        $this->assertSame([2, 3], ArArrayHelper::getColumn($promotions[1]->getItemsViaJson()[0]->getPromotionsViaJson(), 'id'));
+        $this->assertSame([2], ArArrayHelper::getColumn($promotions[1]->getItemsViaJson()[1]->getPromotionsViaJson(), 'id'));
+        $this->assertSame([2], ArArrayHelper::getColumn($promotions[1]->getItemsViaJson()[2]->getPromotionsViaJson(), 'id'));
+        $this->assertSame([1, 3], ArArrayHelper::getColumn($promotions[2]->getItemsViaJson()[0]->getPromotionsViaJson(), 'id'));
+        $this->assertSame([2, 3], ArArrayHelper::getColumn($promotions[2]->getItemsViaJson()[1]->getPromotionsViaJson(), 'id'));
+    }
+
+    public function testLazyRelationViaJson(): void
+    {
+        if (in_array(self::db()->getDriverName(), ['oci', 'sqlsrv'], true)) {
+            $this->markTestSkipped('Oracle and MSSQL drivers do not support JSON OVERLAPS.');
+        }
+
+        $itemQuery = Item::query();
+        /** @var Item[] $items */
+        $items = $itemQuery->all();
+
+        $this->assertFalse($items[0]->isRelationPopulated('promotionsViaJson'));
+        $this->assertFalse($items[1]->isRelationPopulated('promotionsViaJson'));
+        $this->assertFalse($items[2]->isRelationPopulated('promotionsViaJson'));
+        $this->assertFalse($items[3]->isRelationPopulated('promotionsViaJson'));
+        $this->assertFalse($items[4]->isRelationPopulated('promotionsViaJson'));
+
+        $this->assertSame([1, 3], ArArrayHelper::getColumn($items[0]->getPromotionsViaJson(), 'id'));
+        $this->assertSame([1], ArArrayHelper::getColumn($items[1]->getPromotionsViaJson(), 'id'));
+        $this->assertSame([2, 3], ArArrayHelper::getColumn($items[2]->getPromotionsViaJson(), 'id'));
+        $this->assertSame([2], ArArrayHelper::getColumn($items[3]->getPromotionsViaJson(), 'id'));
+        $this->assertSame([2], ArArrayHelper::getColumn($items[4]->getPromotionsViaJson(), 'id'));
+    }
+
+    public function testRelationViaJsonUuid(): void
+    {
+        $promotionQuery = UuidPromotion::query();
+        /** @var UuidPromotion[] $promotions */
+        $promotions = $promotionQuery->with('itemsViaJson')->all();
+
+        $this->assertSame(
+            ['650e8400-e29b-41d4-a716-446655440001', '650e8400-e29b-41d4-a716-446655440002'],
+            ArArrayHelper::getColumn($promotions[0]->getItemsViaJson(), 'id'),
+        );
+        $this->assertSame(
+            ['650e8400-e29b-41d4-a716-446655440001'],
+            ArArrayHelper::getColumn($promotions[1]->getItemsViaJson(), 'id'),
+        );
+        $this->assertCount(0, $promotions[2]->getItemsViaJson());
+    }
+
+    public function testRelationViaJsonUuidIndexBy(): void
+    {
+        $promotionQuery = UuidPromotion::query();
+        /** @var UuidPromotion[] $promotions */
+        $promotions = $promotionQuery->with('itemsViaJsonIndexed')->all();
+
+        $items0 = $promotions[0]->getItemsViaJsonIndexed();
+        $this->assertArrayHasKey('650e8400-e29b-41d4-a716-446655440001', $items0);
+        $this->assertArrayHasKey('650e8400-e29b-41d4-a716-446655440002', $items0);
+        $this->assertCount(2, $items0);
+        $this->assertSame('UUID Item 1', $items0['650e8400-e29b-41d4-a716-446655440001']->name);
+        $this->assertSame('UUID Item 2', $items0['650e8400-e29b-41d4-a716-446655440002']->name);
+
+        $items1 = $promotions[1]->getItemsViaJsonIndexed();
+        $this->assertArrayHasKey('650e8400-e29b-41d4-a716-446655440001', $items1);
+        $this->assertCount(1, $items1);
+        $this->assertSame('UUID Item 1', $items1['650e8400-e29b-41d4-a716-446655440001']->name);
+
+        $this->assertSame([], $promotions[2]->getItemsViaJsonIndexed());
+    }
+
+    public function testRelationViaJsonAsArray(): void
+    {
+        $promotion = Promotion::query()->with('itemsViaJson')->where(['id' => 1])->asArray()->one();
+
+        $this->assertSame(
+            [
+                'id' => 1,
+                'json_item_ids' => [1, 2],
+                'title' => 'Discounted items',
+                'itemsViaJson' => [
+                    [
+                        'id' => 1,
+                        'name' => 'Agile Web Application Development with Yii3',
+                        'category_id' => 1,
+                        'promotionsViaJson' => [
+                            [
+                                'id' => 1,
+                                'json_item_ids' => [1, 2],
+                                'title' => 'Discounted items',
+                            ],
+                        ],
+                    ],
+                    [
+                        'id' => 2,
+                        'name' => 'Yii3 Cookbook',
+                        'category_id' => 1,
+                        'promotionsViaJson' => [
+                            [
+                                'id' => 1,
+                                'json_item_ids' => [1, 2],
+                                'title' => 'Discounted items',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            $promotion,
+        );
+    }
+
+    public function testIsChanged(): void
+    {
+        $itemQuery = Item::query();
+        $item = $itemQuery->findByPk(1);
+
+        $this->assertFalse($item->isChanged());
+
+        $item->set('name', 'New name');
+
+        $this->assertTrue($item->isChanged());
+
+        $newItem = new Item();
+
+        $this->assertFalse($newItem->isChanged());
+
+        $newItem->set('name', 'New name');
+
+        $this->assertTrue($newItem->isChanged());
+
+        $this->assertTrue((new Customer())->isChanged());
+    }
+
+    public static function dataUpsert(): array
+    {
+        return [
+            'insert values' => [
+                'values' => [
+                    'email' => 'user4@example.com',
+                    'name' => 'user4',
+                    'address' => 'address4',
+                ],
+                'insertProperties' => null,
+                'updateProperties' => false,
+                'expected' => [
+                    'id' => 4,
+                    'email' => 'user4@example.com',
+                    'name' => 'user4',
+                    'address' => 'address4',
+                ],
+            ],
+            'insert part values' => [
+                'values' => [
+                    'email' => 'user4@example.com',
+                    'name' => 'user4',
+                    'address' => 'address4',
+                ],
+                'insertProperties' => [
+                    'email',
+                    'name',
+                ],
+                'updateProperties' => false,
+                'expected' => [
+                    'id' => 4,
+                    'email' => 'user4@example.com',
+                    'name' => 'user4',
+                    'address' => 'address4',
+                ],
+                'expectedAfterRefresh' => [
+                    'id' => 4,
+                    'email' => 'user4@example.com',
+                    'name' => 'user4',
+                    'address' => null,
+                ],
+            ],
+            'insert from insertProperties' => [
+                'values' => [
+                    'email' => 'user4@example.com',
+                    'address' => 'address4',
+                ],
+                'insertProperties' => [
+                    'email',
+                    'name' => 'user4',
+                ],
+                'updateProperties' => false,
+                'expected' => [
+                    'id' => 4,
+                    'email' => 'user4@example.com',
+                    'name' => 'user4',
+                    'address' => 'address4',
+                ],
+                'expectedAfterRefresh' => [
+                    'id' => 4,
+                    'email' => 'user4@example.com',
+                    'name' => 'user4',
+                    'address' => null,
+                ],
+            ],
+            'without changes' => [
+                'values' => [
+                    'email' => 'user3@example.com',
+                    'name' => 'new name',
+                ],
+                'insertProperties' => null,
+                'updateProperties' => false,
+                'expected' => [
+                    'id' => 3,
+                    'email' => 'user3@example.com',
+                    'name' => 'user3',
+                    'address' => 'address3',
+                ],
+            ],
+            'update from values' => [
+                'values' => [
+                    'email' => 'user3@example.com',
+                    'name' => 'new name',
+                    'address' => 'new address',
+                ],
+                'insertProperties' => null,
+                'updateProperties' => true,
+                'expected' => [
+                    'id' => 3,
+                    'email' => 'user3@example.com',
+                    'name' => 'new name',
+                    'address' => 'new address',
+                ],
+            ],
+            'update from updateProperties' => [
+                'values' => [
+                    'email' => 'user3@example.com',
+                    'address' => 'new address',
+                ],
+                'insertProperties' => null,
+                'updateProperties' => [
+                    'name' => 'another name',
+                    'address' => 'another address',
+                ],
+                'expected' => [
+                    'id' => 3,
+                    'email' => 'user3@example.com',
+                    'name' => 'another name',
+                    'address' => 'another address',
+                ],
+            ],
+            'update partly from updateProperties' => [
+                'values' => [],
+                'insertProperties' => [
+                    'email' => 'user3@example.com',
+                    'name' => 'new name',
+                    'address' => 'new address',
+                    'status' => 10,
+                ],
+                'updateProperties' => [
+                    'name' => 'another name',
+                    'address',
+                    'bool_status' => true,
+                ],
+                'expected' => [
+                    'id' => 3,
+                    'email' => 'user3@example.com',
+                    'name' => 'another name',
+                    'address' => 'new address',
+                    'status' => 2,
+                    'bool_status' => true,
+                ],
+            ],
+            'update with same string key and int value' => [
+                'values' => [
+                    'address' => 'old address',
+                ],
+                'insertProperties' => [
+                    'email' => 'user3@example.com',
+                    'address' => 'insert address',
+                ],
+                'updateProperties' => [
+                    'address',
+                    'address' => 'update address',
+                ],
+                'expected' => [
+                    'id' => 3,
+                    'email' => 'user3@example.com',
+                    'address' => 'update address',
+                ],
+            ],
+        ];
+    }
+
+    #[DataProvider('dataUpsert')]
+    public function testUpsert(
+        array $values,
+        ?array $insertProperties,
+        array|bool $updateProperties,
+        array $expected,
+        ?array $expectedAfterRefresh = null,
+    ): void {
+        $this->reloadFixtureAfterTest();
+
+        $customer = new Customer();
+
+        foreach ($values as $property => $value) {
+            $customer->set($property, $value);
+        }
+
+        $customer->upsert($insertProperties, $updateProperties);
+
+        $this->assertFalse($customer->isNew());
+
+        foreach ($expected as $property => $value) {
+            $this->assertSame($value, $customer->get($property));
+        }
+
+        $customer->refresh();
+
+        foreach ($expectedAfterRefresh ?? $expected as $property => $value) {
+            $this->assertSame($value, $customer->get($property));
+        }
+    }
+
+    public function testUpsertWithException(): void
+    {
+        $customer = Customer::findByPk(1);
+
+        $this->expectException(InvalidCallException::class);
+        $this->expectExceptionMessage('The record is not new and cannot be inserted.');
+
+        $customer->upsert();
+    }
+
+    public function testUpsertUpdatesExistingRecordByDefault(): void
+    {
+        if ($this->db()->getDriverName() === 'oci') {
+            $this->markTestSkipped('Oracle does not support RETURNING clause in UPDATE statement.');
+        }
+
+        $this->reloadFixtureAfterTest();
+
+        $customer = new DefaultValueOnInsertAr();
+        $customer->id = 1;
+        $customer->name = 'updated-via-default-upsert';
+
+        $customer->upsert();
+
+        $reloadedCustomer = DefaultValueOnInsertAr::query()->findByPk(1);
+        $this->assertSame('updated-via-default-upsert', $reloadedCustomer->name);
+    }
+
+    public function testCustomerUpsertUpdatesExistingRecordByDefault(): void
+    {
+        if ($this->db()->getDriverName() === 'oci') {
+            $this->markTestSkipped('Oracle does not support RETURNING clause in UPDATE statement.');
+        }
+
+        $this->reloadFixtureAfterTest();
+
+        $customer = new Customer();
+        $customer->setEmail('user1@example.com');
+        $customer->setAddress('updated-address-via-default-upsert');
+
+        $customer->upsert();
+
+        $reloadedCustomer = Customer::query()->findByPk(1);
+        $this->assertSame('updated-address-via-default-upsert', $reloadedCustomer->getAddress());
+    }
+
+    public function testSetValueOnUpdateUpsertKeepsOtherChangedPropertiesWhenUpdatesAreImplicit(): void
+    {
+        if ($this->db()->getDriverName() === 'oci') {
+            $this->markTestSkipped('Oracle does not support RETURNING clause in UPDATE statement.');
+        }
+
+        $this->reloadFixtureAfterTest();
+
+        $customer = new CustomerSetValueOnUpdateUpsert();
+
+        $customer->email = 'user1@example.com';
+        $customer->name = 'Ignored';
+        $customer->address = 'address-via-handler-upsert';
+
+        $customer->upsert();
+
+        $reloadedCustomer = Customer::query()->findByPk(1);
+        $this->assertSame('Updated', $reloadedCustomer->getName());
+        $this->assertSame('address-via-handler-upsert', $reloadedCustomer->getAddress());
+    }
+
+    public function testTimestampBehavior(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $startTime = time();
+
+        $order = new Order();
+
+        $order->setCustomerId(1);
+        $order->setTotal(0);
+        $order->save();
+
+        $insertTime = time();
+
+        $createdAt = $order->getCreatedAt()->getTimestamp();
+        $updatedAt = $order->getUpdatedAt()->getTimestamp();
+
+        $this->assertEqualsWithDelta($insertTime, $createdAt, $insertTime - $startTime);
+        $this->assertEqualsWithDelta($insertTime, $updatedAt, $insertTime - $startTime);
+        $this->assertEqualsWithDelta($createdAt, $updatedAt, 1);
+
+        $order->setTotal(1);
+
+        sleep(1); // Ensure that the updatedAt timestamp will be different
+        $order->save();
+
+        $newUpdatedAt = $order->getUpdatedAt()->getTimestamp();
+
+        $this->assertSame($createdAt, $order->getCreatedAt()->getTimestamp());
+        $this->assertTrue($updatedAt < $newUpdatedAt);
+
+        $order->refresh();
+
+        $this->assertSame($createdAt, $order->getCreatedAt());
+        $this->assertSame($newUpdatedAt, $order->getUpdatedAt());
+    }
+
+    #[TestWith(['Sergei', 1])]
+    #[TestWith(['unknown', 2])]
+    public function testDefaultValue(string $expected, int $id): void
+    {
+        $record = DefaultValueAr::query()->findByPk($id);
+        $this->assertSame($expected, $record->name);
+    }
+
+    #[TestWith(['Sergei', 'Sergei'])]
+    #[TestWith(['Vasya', null])]
+    public function testDefaultValueOnInsertSave(string $expected, ?string $value): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $record = new DefaultValueOnInsertAr();
+        $record->id = 99;
+        $record->name = $value;
+        $record->save();
+
+        $this->assertSame($expected, $record->name);
+
+        $record = DefaultValueOnInsertAr::query()->findByPk($record->id);
+        $this->assertSame($expected, $record->name);
+    }
+
+    #[TestWith(['Kesha', 'Kesha'])]
+    #[TestWith(['Vasya', null])]
+    public function testDefaultValueOnInsertUpsert(string $expected, ?string $value): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $record = new DefaultValueOnInsertAr();
+        $record->id = 1;
+        $record->name = $value;
+        $record->upsert();
+
+        $this->assertSame($expected, $record->name);
+
+        $record = DefaultValueOnInsertAr::query()->findByPk(1);
+        $this->assertSame($expected, $record->name);
+    }
+
+    public function testSetValueOnUpdateSave(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $record = SetValueOnUpdateAr::query()->findByPk(1);
+        $record->save();
+
+        $this->assertSame('Updated', $record->name);
+
+        $record = SetValueOnUpdateAr::query()->findByPk($record->id);
+        $this->assertSame('Updated', $record->name);
+    }
+
+    public function testSetValueOnUpdateSaveNewRecordDoesNotExecuteUpdate(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $record = new SetValueOnUpdateAr();
+        $record->id = 99;
+        $record->name = 'Test';
+
+        $record->save();
+
+        $this->assertSame('Test', $record->name);
+    }
+
+    public function testSetValueOnUpdateUpsert(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $record = new SetValueOnUpdateAr();
+        $record->id = 1;
+        $record->name = 'Kesha';
+        $record->upsert();
+        $this->assertSame('Updated', $record->name);
+
+        $record = SetValueOnUpdateAr::query()->findByPk($record->id);
+        $this->assertSame('Updated', $record->name);
+
+        $record = new SetValueOnUpdateAr();
+        $record->id = 1;
+        $record->upsert(updateProperties: ['name' => 'Kesha']);
+        $this->assertSame('Updated', $record->name);
+    }
+
+    public function testStopPropagation(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $category = StopPropagation\Category::query()->findByPk(1);
+        $category->name = 'Test';
+        $category->save();
+
+        $this->assertSame('Test', $category->name);
+    }
+
+    public function testAfterDelete(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        EventDispatcherProvider::set(
+            CategoryAfterDelete::class,
+            new SimpleEventDispatcher(
+                static function (object $event) {
+                    if ($event instanceof AfterDelete) {
+                        $event->model->isDeleted = true;
+                    }
+                },
+            ),
+        );
+        $category = CategoryAfterDelete::query()->findByPk(1);
+        $category->delete();
+
+        $this->assertTrue($category->isDeleted);
+    }
+
+    public function testLinkViaRelationWithNewRecord(): void
+    {
+        $customer = new Customer();
+        $item = new Item();
+
+        $this->expectException(InvalidCallException::class);
+        $this->expectExceptionMessage(
+            'Unable to link models: the models being linked cannot be newly created.',
+        );
+        $customer->link('items2', $item);
+    }
+
+    public function testLinkViaRelationWithOneNewRecord(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $customer = Customer::query()->findByPk(1);
+        $item = new Item();
+
+        $this->expectException(InvalidCallException::class);
+        $this->expectExceptionMessage(
+            'Unable to link models: the models being linked cannot be newly created.',
+        );
+        $customer->link('items2', $item);
+    }
+
+    public function testLinkViaTable(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $customer = Customer::query()->findByPk(1);
+        $this->assertNotNull($customer);
+
+        $item = Item::query()->findByPk(3);
+        $this->assertNotNull($item);
+
+        $customer->link('orderItems', $item, ['quantity' => 5, 'subtotal' => 50.00]);
+
+        $orderItems = $customer->relation('orderItems');
+        $itemIds = ArArrayHelper::getColumn($orderItems, 'id');
+
+        $this->assertContains(3, $itemIds);
+    }
+
+    public function testLinkBothNewRecordsWithSharedPrimaryKey(): void
+    {
+        $user = new User();
+        $user->setId(100);
+        $user->setUsername('testuser');
+
+        $profile = new UserProfile();
+        $profile->setId(100);
+        $profile->setBio('Test bio');
+
+        $this->expectException(InvalidCallException::class);
+        $this->expectExceptionMessage(
+            'Unable to link models: at most one model can be newly created.',
+        );
+
+        $user->link('profile', $profile);
+    }
+
+    public function testLinkNewRecordToExistingWithSharedPrimaryKey(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $user = User::query()->findByPk(1);
+
+        $profile = new UserProfile();
+        $profile->setBio('Bio for existing user');
+
+        $profile->link('user', $user);
+
+        $this->assertEquals(1, $profile->getId());
+        $this->assertFalse($profile->isNew());
+    }
+
+    public function testLinkExistingRecordToNewWithSharedPrimaryKey(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $user = User::query()->findByPk(1);
+
+        $profile = new UserProfile();
+        $profile->setBio('New profile for existing user');
+
+        $user->link('profile', $profile);
+
+        $this->assertEquals(1, $profile->getId());
+        $this->assertFalse($profile->isNew());
+    }
+
+    public function testLinkWithNonPrimaryKeyFields(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $article = Article::query()->findByPk(1);
+        $this->assertNotNull($article);
+
+        $comment = new ArticleComment();
+        $comment->setCommentText('Test comment');
+
+        $this->expectException(InvalidCallException::class);
+        $this->expectExceptionMessage(
+            'Unable to link models: the link defining the relation does not involve any primary key.',
+        );
+        $article->link('comments', $comment);
+    }
+
+    public function testLinkWithIndexByAsClosure(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $customer = Customer::query()->findByPk(1);
+        $this->assertNotNull($customer);
+
+        $existingOrders = $customer->getOrderItemsIndexedByClosure();
+
+        $newOrder = new Order();
+        $newOrder->setCreatedAt(time());
+        $newOrder->setTotal(150.0);
+        $customer->link('orderItemsIndexedByClosure', $newOrder);
+
+        $expectedIndex = 'order_' . $newOrder->getId();
+        $updatedOrders = $customer->getOrderItemsIndexedByClosure();
+        $this->assertArrayHasKey($expectedIndex, $updatedOrders);
+        $this->assertSame($newOrder, $updatedOrders[$expectedIndex]);
+        $this->assertCount(count($existingOrders) + 1, $updatedOrders);
+    }
+
+    public function testLinkWithNullPrimaryKeyOnForeignModel(): void
+    {
+        $customer = new Customer();
+        $order = new Order();
+
+        $this->expectException(InvalidCallException::class);
+        $this->expectExceptionMessage(
+            'Unable to link active record: the primary key of ' . Customer::class . ' is null.',
+        );
+        $order->link('customer', $customer);
+    }
+
+    public function testMarkPropertyChanged(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $customer = Customer::query()->findByPk(1);
+        $this->assertFalse($customer->isPropertyChanged('name'));
+
+        $customer->markPropertyChanged('name');
+        $this->assertTrue($customer->isPropertyChanged('name'));
+
+        // MySQL returns 0 affected rows if the value is the same
+        $expectedAffectedRows = $this->db()->getDriverName() === 'mysql' ? 0 : 1;
+        $affectedRows = $customer->update();
+        $this->assertSame($expectedAffectedRows, $affectedRows);
+    }
+
+    public function testMarkPropertyChangedWithEmptyName()
+    {
+        $model = new NullValues();
+        $model->assignOldValues(['' => 'empty name', 'name' => 'Vasya']);
+
+        $model->markPropertyChanged('');
+
+        $this->assertSame(['name' => 'Vasya'], $model->oldValues());
+    }
+
+    public function testResetsIntermediateViaRelationWhenLinkPropertyChanges(): void
+    {
+        $order = OrderWithCustomerProfileViaCustomerRelation::query()->findByPk(1);
+
+        $profile = $order->getCustomerProfileViaCustomer();
+
+        $this->assertInstanceOf(Profile::class, $profile);
+        $this->assertTrue($order->isRelationPopulated('customerProfileViaCustomer'));
+        $this->assertTrue($order->isRelationPopulated('customer'));
+
+        $order->setCustomerId(2);
+
+        $this->assertFalse($order->isRelationPopulated('customerProfileViaCustomer'));
+        $this->assertFalse($order->isRelationPopulated('customer'));
+    }
+
+    public function testMarkAsNew(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $customer = Customer::query()->findByPk(1);
+
+        $this->assertFalse($customer->isNew());
+        $this->assertNotEmpty($customer->oldValues());
+
+        $customer->setId(null);
+        $customer->setEmail('sergei@predvoditelev.ru');
+        $customer->markAsNew();
+
+        $this->assertTrue($customer->isNew());
+        $this->assertSame([], $customer->oldValues());
+
+        $customer->save();
+
+        $this->assertSame(
+            2,
+            self::db()
+                ->select('id')
+                ->from('customer')
+                ->where(['id' => 1])
+                ->orWhere(['email' => 'sergei@predvoditelev.ru'])
+                ->count(),
+        );
+    }
+
+    public function testLinkWithArrayValuedForeignKey(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $promotion = Promotion::query()->findByPk(1);
+        $item = Item::query()->findByPk(3);
+
+        $promotion->link('itemsViaJson', $item);
+
+        $this->assertSame(
+            [1, 2, 3],
+            $promotion->json_item_ids,
+        );
+    }
+
+    public function testMarkAsExisting(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $customer = new Customer();
+        $customer->setId(1);
+
+        $this->assertTrue($customer->isNew());
+        $this->assertSame([], $customer->oldValues());
+
+        $customer->markAsExisting();
+        $customer->setEmail('test@example.com');
+        $customer->setName('Test User');
+        $customer->setAddress('Test Address');
+        $customer->setStatus(1);
+
+        $this->assertFalse($customer->isNew());
+        $this->assertNotEmpty($customer->oldValues());
+
+        $customer->save();
+
+        $this->assertSame(
+            'Test User',
+            self::db()->select('name')->from('customer')->where(['id' => 1])->scalar(),
+        );
+    }
+
+    public function testUnlinkAllWithWhereCondition(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $order = Order::query()->findByPk(2);
+        $order->unlinkAll('expensiveItemsUsingViaWithCallable', true);
+
+        $this->assertCount(0, $order->getExpensiveItemsUsingViaWithCallable());
+        $this->assertTrue(
+            self::db()->createQuery()->from('{{order_item}}')->where(['order_id' => 2])->exists(),
+        );
+    }
+
+    public function testUnlinkAllViaModelWithOnCondition(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $order = Order::query()->findByPk(1);
+        $order->unlinkAll('itemsWithOnCondition');
+
+        $this->assertCount(0, $order->getItemsWithOnCondition());
+        $this->assertSame(
+            1,
+            self::db()->select('*')->from('{{order_item_with_null_fk}}')->where(['order_id' => 1])->count(),
+        );
+        $this->assertSame(
+            1,
+            self::db()->select('*')->from('{{order_item_with_null_fk}}')->where(['order_id' => null])->count(),
+        );
+    }
+
+    public function testUnlinkAllViaModelWithOnConditionAndDelete(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $order = Order::query()->findByPk(1);
+        $order->unlinkAll('itemsWithOnCondition', true);
+
+        $this->assertCount(0, $order->getItemsWithOnCondition());
+        $this->assertSame(
+            1,
+            self::db()->createQuery()->from('{{order_item_with_null_fk}}')->where(['order_id' => 1])->count(),
+        );
+        $this->assertSame(
+            0,
+            self::db()->createQuery()->from('{{order_item_with_null_fk}}')->where(['order_id' => null])->count(),
+        );
+    }
+
+    public function testUnlinkAllWithArrayValuedProperty(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $promotion = Promotion::query()->findByPk(1);
+
+        $promotion->unlinkAll('itemsViaJson');
+
+        $this->assertSame([], $promotion->json_item_ids);
+        $this->assertCount(0, $promotion->getItemsViaJson());
+        $this->assertSame(
+            '[]',
+            self::db()->select('json_item_ids')->from('{{promotion}}')->where(['id' => 1])->scalar(),
+        );
+    }
+
+    public function testUnlinkAllWithArrayValuedPropertyAndDelete(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $promotion = Promotion::query()->findByPk(1);
+
+        $promotion->unlinkAll('itemsViaJson', true);
+
+        $reloadedPromotion = Promotion::query()->findByPk(1);
+
+        $this->assertSame([1, 2], $reloadedPromotion->json_item_ids);
+        $this->assertCount(0, $reloadedPromotion->getItemsViaJson());
+        $this->assertNull(Item::query()->findByPk(1));
+        $this->assertNull(Item::query()->findByPk(2));
+    }
+
+    public function testUnlinkWithArrayValuedProperty(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $promotion = Promotion::query()->findByPk(1);
+        $items = $promotion->getItemsViaJson();
+        $promotion->unlink('itemsViaJson', $items[0]);
+
+        $this->assertSame([2], $promotion->json_item_ids);
+        $this->assertCount(1, $promotion->getItemsViaJson());
+        $this->assertSame(
+            '[2]',
+            self::db()->select('json_item_ids')->from('{{promotion}}')->where(['id' => 1])->scalar(),
+        );
+    }
+
+    public function testUnlinkViaTableWithDelete(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $order = Order::query()->findByPk(1);
+        $books = $order->getBooksViaTable();
+        $order->unlink('booksViaTable', $books[0], true);
+
+        $this->assertCount(1, $order->getBooksViaTable());
+        $this->assertSame(
+            1,
+            self::db()->createQuery()->from('{{order_item}}')->where(['order_id' => 1])->count(),
+        );
+    }
+
+    public function testUnlinkViaTableWithoutDelete(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $order = Order::query()->findByPk(1);
+        $book = $order->getBooksWithNullFKViaTable()[0];
+        $initialNullLinksCount = self::db()
+            ->createQuery()
+            ->from('{{order_item_with_null_fk}}')
+            ->where(['order_id' => null, 'item_id' => null])
+            ->count();
+
+        $order->unlink('booksWithNullFKViaTable', $book, false);
+
+        $this->assertCount(1, $order->getBooksWithNullFKViaTable());
+        $this->assertSame(
+            $initialNullLinksCount + 1,
+            self::db()->createQuery()->from('{{order_item_with_null_fk}}')->where([
+                'order_id' => null,
+                'item_id' => null,
+            ])->count(),
+        );
+    }
+
+    public function testUnlinkHasOneWithoutDelete(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $customer = Customer::query()->findByPk(1);
+        $customer->unlink('profile', $customer->getProfile());
+
+        $this->assertNull($customer->getProfile());
+        $this->assertTrue(
+            self::db()->createQuery()->from('{{customer}}')->where(['id' => 1, 'profile_id' => null])->exists(),
+        );
+    }
+
+    public function testUnlinkInvalidLinkThrowsException(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $order = Order::query()->findByPk(1);
+        $item = Item::query()->findByPk(1);
+
+        $this->expectException(InvalidCallException::class);
+        $this->expectExceptionMessage('Unable to unlink models: the link does not involve any primary key.');
+        $order->unlink('invalidRelation', $item);
+    }
+
+    public function testUpdateCountersThrowsExceptionForNewRecord(): void
+    {
+        $orderItem = new OrderItem();
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('Updating counters is not possible for new records.');
+        $orderItem->updateCounters(['quantity' => 1]);
+    }
+
+    public function testUpdateCountersUsesZeroForNullCurrentValue(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $customer = new Customer();
+        $customer->setEmail('counter-null@example.com');
+        $customer->setName('Counter Null');
+        $customer->setAddress('Counter street');
+        $customer->save();
+
+        $customer->updateCounters(['status' => 1]);
+
+        $this->assertSame(1, $customer->getStatus());
+        $this->assertSame(1, Customer::query()->findByPk($customer->getId())->getStatus());
+    }
+
+    public function testUpdateCountersUsesZeroForExistingNullColumnValue(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $record = new NullValues();
+        $record->save();
+
+        $this->assertNull($record->get('var1'));
+
+        $record->updateCounters(['var1' => 1]);
+
+        $this->assertSame(1, $record->get('var1'));
+    }
+
+    public function testGetAllWithHasOneAndArrayValue(): void
+    {
+        $promotions = Promotion::query()->with('singleItem')->andWhere(['id' => [1, 2]])->all();
+
+        $this->assertCount(2, $promotions);
+        $this->assertNull($promotions[0]->relation('singleItem'));
+        $this->assertNull($promotions[1]->relation('singleItem'));
+    }
+
+    public function testWithConstructorQuery(): void
+    {
+        $this->expectException(ArgumentCountError::class);
+        $this->expectExceptionMessage('Too few arguments to function');
+
+        OrderWithConstructor::query()->all();
+    }
+
+    public function testWithConstructorRelations(): void
+    {
+        $this->expectException(ArgumentCountError::class);
+        $this->expectExceptionMessage('Too few arguments to function');
+
+        (new OrderWithConstructor(1))->createQuery()->findByPk(1)->getOrderItems();
+    }
+
+    public function testWithConstructorRepositoryTrait(): void
+    {
+        $this->expectException(ArgumentCountError::class);
+        $this->expectExceptionMessage('Too few arguments to function');
+
+        OrderWithConstructor::findAll();
+    }
+
+    public function testWithConstructorNewInstance(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $newOrder = new OrderWithConstructor(1);
+
+        $this->assertTrue($newOrder->isNew());
+        $newOrder->save();
+        $this->assertFalse($newOrder->isNew());
+        $this->assertSame(4, $newOrder->getId());
+        $this->assertNotNull($newOrder->getCreatedAt());
+        $this->assertNotNull($newOrder->getUpdatedAt());
+        $this->assertNull($newOrder->getDeletedAt());
+        $this->assertSame(1, $newOrder->delete());
+        $this->assertNotNull($newOrder->getDeletedAt());
+    }
+
+    public function testSoftDeleteWithCustomDate(): void
+    {
+        $this->reloadFixtureAfterTest();
+
+        $order = OrderWithSoftDelete::query()->findByPk(1);
+        $deletedAt = new DateTimeImmutable('2026-04-28 12:58:13');
+        $order->set('deleted_at', $deletedAt);
+        $order->delete();
+
+        $softDeletedOrder = OrderWithSoftDelete::query()->setWhere(['id' => 1])->one();
+        $this->assertSame($deletedAt->getTimestamp(), $softDeletedOrder->get('deleted_at'));
+    }
+
+    public function testQuery(): void
+    {
+        $query = Customer::query();
+
+        $this->assertSame(CustomerQuery::class, $query::class);
+        $this->assertSame(Customer::class, $query->getModel()::class);
+    }
+
+    public function testQueryWithStringClassName(): void
+    {
+        $query = Customer::query(Order::class);
+
+        $this->assertSame(CustomerQuery::class, $query::class);
+        $this->assertSame(Order::class, $query->getModel()::class);
+    }
+
+    public function testQueryWithModelInstance(): void
+    {
+        $query = Customer::query(new Order());
+
+        $this->assertSame(CustomerQuery::class, $query::class);
+        $this->assertSame(Order::class, $query->getModel()::class);
+    }
+
+    public function testCreateQuery(): void
+    {
+        $order = new Order();
+        $query = $order->createQuery();
+
+        $this->assertSame(ActiveQuery::class, $query::class);
+        $this->assertSame(Order::class, $query->getModel()::class);
+    }
+
+    public function testCreateQueryWithStringClassName(): void
+    {
+        $order = new Order();
+        $query = $order->createQuery(Customer::class);
+
+        $this->assertSame(CustomerQuery::class, $query::class);
+        $this->assertSame(Customer::class, $query->getModel()::class);
+    }
+
+    public function testCreateQueryWithModelInstance(): void
+    {
+        $order = new Order();
+        $query = $order->createQuery(new Customer());
+
+        $this->assertSame(CustomerQuery::class, $query::class);
+        $this->assertSame(Customer::class, $query->getModel()::class);
+    }
+
+    public function testRelationDefinedViaPropertyHook(): void
+    {
+        if (PHP_VERSION_ID < 80400) {
+            $this->markTestSkipped('Property hooks are not supported in PHP < 8.4');
+        }
+
+        $item = ItemWithPropertyHooks::query()->findByPk(1);
+        $itemCategory = $item->category;
+
+        $this->assertInstanceOf(Category::class, $itemCategory);
+        $this->assertSame(1, $itemCategory->getId());
+        $this->assertSame('Books', $itemCategory->getName());
+
+        $item->category = Category::query()->findByPk(2);
+        $itemCategory = $item->category;
+
+        $this->assertInstanceOf(Category::class, $itemCategory);
+        $this->assertSame(2, $itemCategory->getId());
+        $this->assertSame('Movies', $itemCategory->getName());
+    }
+
+    abstract protected function createFactory(): Factory;
+}
