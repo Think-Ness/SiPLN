@@ -1,0 +1,1044 @@
+Payload: Array
+(
+    [case_ids] => Array
+        (
+            [0] => 3
+            [1] => 4
+            [2] => 5
+        )
+
+    [step_urut] => 11
+    [status] => selesai
+    [date] => 2026-06-01
+    [note] => 
+)
+
+Checking case_id 3, step_urut 11. Result: 
+Checking case_id 4, step_urut 11. Result: 
+Checking case_id 5, step_urut 11. Result: 
+Payload: Array
+(
+    [case_ids] => Array
+        (
+            [0] => 9
+            [1] => 10
+            [2] => 11
+        )
+
+    [step_urut] => 5
+    [status] => selesai
+    [date] => 2026-06-01
+    [note] => 
+)
+
+Checking case_id 9, step_urut 5. Result: Array
+(
+    [id] => 67
+)
+
+Checking case_id 10, step_urut 5. Result: Array
+(
+    [id] => 78
+)
+
+Checking case_id 11, step_urut 5. Result: Array
+(
+    [id] => 89
+)
+
+Payload: Array
+(
+    [case_ids] => Array
+        (
+            [0] => 14
+            [1] => 15
+            [2] => 13
+        )
+
+    [step_urut] => 5
+    [status] => selesai
+    [date] => 2026-06-02
+    [note] => 
+)
+
+Checking case_id 14, step_urut 5. Result: Array
+(
+    [id] => 122
+)
+
+Checking case_id 15, step_urut 5. Result: Array
+(
+    [id] => 133
+)
+
+Checking case_id 13, step_urut 5. Result: Array
+(
+    [id] => 111
+)
+
+Payload: Array
+(
+    [case_ids] => Array
+        (
+            [0] => 20
+            [1] => 16
+            [2] => 18
+            [3] => 17
+            [4] => 19
+        )
+
+    [step_urut] => 3
+    [status] => selesai
+    [date] => 2026-06-02
+    [note] => 
+)
+
+Checking case_id 20, step_urut 3. Result: Array
+(
+    [id] => 186
+)
+
+Checking case_id 16, step_urut 3. Result: Array
+(
+    [id] => 142
+)
+
+Checking case_id 18, step_urut 3. Result: Array
+(
+    [id] => 164
+)
+
+Checking case_id 17, step_urut 3. Result: Array
+(
+    [id] => 153
+)
+
+Checking case_id 19, step_urut 3. Result: Array
+(
+    [id] => 175
+)
+
+Payload: Array
+(
+    [case_ids] => Array
+        (
+            [0] => 20
+        )
+
+    [step_urut] => 5
+    [status] => selesai
+    [date] => 2026-06-02
+    [note] => 
+)
+
+Checking case_id 20, step_urut 5. Result: Array
+(
+    [id] => 188
+)
+
+Payload: Array
+(
+    [case_ids] => Array
+        (
+            [0] => 16
+            [1] => 18
+            [2] => 17
+            [3] => 19
+        )
+
+    [step_urut] => 5
+    [status] => selesai
+    [date] => 2026-06-02
+    [note] => 
+)
+
+Checking case_id 16, step_urut 5. Result: Array
+(
+    [id] => 144
+)
+
+Checking case_id 18, step_urut 5. Result: Array
+(
+    [id] => 166
+)
+
+Checking case_id 17, step_urut 5. Result: Array
+(
+    [id] => 155
+)
+
+Checking case_id 19, step_urut 5. Result: Array
+(
+    [id] => 177
+)
+
+Payload: Array
+(
+    [case_ids] => Array
+        (
+            [0] => 20
+        )
+
+    [step_urut] => 8
+    [status] => proses
+    [date] => 2026-06-02
+    [note] => 
+)
+
+Checking case_id 20, step_urut 8. Result: Array
+(
+    [id] => 191
+)
+
+Payload: Array
+(
+    [case_ids] => Array
+        (
+            [0] => 16
+            [1] => 17
+            [2] => 19
+            [3] => 14
+            [4] => 15
+            [5] => 13
+        )
+
+    [step_urut] => 6
+    [status] => proses
+    [date] => 2026-06-02
+    [note] => 
+)
+
+Checking case_id 16, step_urut 6. Result: Array
+(
+    [id] => 145
+)
+
+Checking case_id 17, step_urut 6. Result: Array
+(
+    [id] => 156
+)
+
+Checking case_id 19, step_urut 6. Result: Array
+(
+    [id] => 178
+)
+
+Checking case_id 14, step_urut 6. Result: Array
+(
+    [id] => 123
+)
+
+Checking case_id 15, step_urut 6. Result: Array
+(
+    [id] => 134
+)
+
+Checking case_id 13, step_urut 6. Result: Array
+(
+    [id] => 112
+)
+
+Payload: Array
+(
+    [case_ids] => Array
+        (
+            [0] => 16
+            [1] => 17
+            [2] => 19
+            [3] => 14
+            [4] => 15
+            [5] => 13
+        )
+
+    [step_urut] => 6
+    [status] => selesai
+    [date] => 2026-06-02
+    [note] => 
+)
+
+Checking case_id 16, step_urut 6. Result: Array
+(
+    [id] => 145
+)
+
+Checking case_id 17, step_urut 6. Result: Array
+(
+    [id] => 156
+)
+
+Checking case_id 19, step_urut 6. Result: Array
+(
+    [id] => 178
+)
+
+Checking case_id 14, step_urut 6. Result: Array
+(
+    [id] => 123
+)
+
+Checking case_id 15, step_urut 6. Result: Array
+(
+    [id] => 134
+)
+
+Checking case_id 13, step_urut 6. Result: Array
+(
+    [id] => 112
+)
+
+Payload: Array
+(
+    [case_ids] => Array
+        (
+            [0] => 10
+        )
+
+    [step_urut] => 8
+    [status] => proses
+    [date] => 2026-06-02
+    [note] => 
+)
+
+Checking case_id 10, step_urut 8. Result: Array
+(
+    [id] => 81
+)
+
+Payload: Array
+(
+    [case_ids] => Array
+        (
+            [0] => 20
+            [1] => 10
+        )
+
+    [step_urut] => 11
+    [status] => proses
+    [date] => 2026-06-02
+    [note] => 
+)
+
+Checking case_id 20, step_urut 11. Result: Array
+(
+    [id] => 194
+)
+
+Checking case_id 10, step_urut 11. Result: Array
+(
+    [id] => 84
+)
+
+Payload: Array
+(
+    [case_ids] => Array
+        (
+            [0] => 24
+            [1] => 25
+            [2] => 26
+            [3] => 27
+            [4] => 28
+            [5] => 29
+            [6] => 30
+            [7] => 31
+            [8] => 32
+            [9] => 33
+            [10] => 34
+            [11] => 35
+            [12] => 36
+            [13] => 23
+        )
+
+    [step_urut] => 8
+    [status] => selesai
+    [date] => 2026-06-03
+    [note] => 
+)
+
+Checking case_id 24, step_urut 8. Result: Array
+(
+    [id] => 231
+)
+
+Checking case_id 25, step_urut 8. Result: Array
+(
+    [id] => 240
+)
+
+Checking case_id 26, step_urut 8. Result: Array
+(
+    [id] => 249
+)
+
+Checking case_id 27, step_urut 8. Result: Array
+(
+    [id] => 258
+)
+
+Checking case_id 28, step_urut 8. Result: Array
+(
+    [id] => 267
+)
+
+Checking case_id 29, step_urut 8. Result: Array
+(
+    [id] => 276
+)
+
+Checking case_id 30, step_urut 8. Result: Array
+(
+    [id] => 285
+)
+
+Checking case_id 31, step_urut 8. Result: Array
+(
+    [id] => 294
+)
+
+Checking case_id 32, step_urut 8. Result: Array
+(
+    [id] => 303
+)
+
+Checking case_id 33, step_urut 8. Result: Array
+(
+    [id] => 312
+)
+
+Checking case_id 34, step_urut 8. Result: Array
+(
+    [id] => 321
+)
+
+Checking case_id 35, step_urut 8. Result: Array
+(
+    [id] => 330
+)
+
+Checking case_id 36, step_urut 8. Result: Array
+(
+    [id] => 339
+)
+
+Checking case_id 23, step_urut 8. Result: Array
+(
+    [id] => 222
+)
+
+Payload: Array
+(
+    [case_ids] => Array
+        (
+            [0] => 43
+            [1] => 42
+        )
+
+    [step_urut] => 4
+    [status] => selesai
+    [date] => 2026-06-03
+    [note] => 
+)
+
+Checking case_id 43, step_urut 4. Result: Array
+(
+    [id] => 410
+)
+
+Checking case_id 42, step_urut 4. Result: Array
+(
+    [id] => 399
+)
+
+Payload: Array
+(
+    [case_ids] => Array
+        (
+            [0] => 54
+            [1] => 53
+            [2] => 50
+            [3] => 47
+            [4] => 55
+            [5] => 44
+            [6] => 56
+            [7] => 48
+            [8] => 45
+            [9] => 51
+            [10] => 46
+            [11] => 57
+            [12] => 52
+            [13] => 49
+        )
+
+    [step_urut] => 1
+    [status] => selesai
+    [date] => 2026-06-03
+    [note] => 
+)
+
+Checking case_id 54, step_urut 1. Result: Array
+(
+    [id] => 528
+)
+
+Checking case_id 53, step_urut 1. Result: Array
+(
+    [id] => 517
+)
+
+Checking case_id 50, step_urut 1. Result: Array
+(
+    [id] => 484
+)
+
+Checking case_id 47, step_urut 1. Result: Array
+(
+    [id] => 451
+)
+
+Checking case_id 55, step_urut 1. Result: Array
+(
+    [id] => 539
+)
+
+Checking case_id 44, step_urut 1. Result: Array
+(
+    [id] => 418
+)
+
+Checking case_id 56, step_urut 1. Result: Array
+(
+    [id] => 550
+)
+
+Checking case_id 48, step_urut 1. Result: Array
+(
+    [id] => 462
+)
+
+Checking case_id 45, step_urut 1. Result: Array
+(
+    [id] => 429
+)
+
+Checking case_id 51, step_urut 1. Result: Array
+(
+    [id] => 495
+)
+
+Checking case_id 46, step_urut 1. Result: Array
+(
+    [id] => 440
+)
+
+Checking case_id 57, step_urut 1. Result: Array
+(
+    [id] => 561
+)
+
+Checking case_id 52, step_urut 1. Result: Array
+(
+    [id] => 506
+)
+
+Checking case_id 49, step_urut 1. Result: Array
+(
+    [id] => 473
+)
+
+Payload: Array
+(
+    [case_ids] => Array
+        (
+            [0] => 69
+            [1] => 68
+            [2] => 70
+        )
+
+    [step_urut] => 1
+    [status] => selesai
+    [date] => 2026-06-03
+    [note] => 
+)
+
+Checking case_id 69, step_urut 1. Result: Array
+(
+    [id] => 677
+)
+
+Checking case_id 68, step_urut 1. Result: Array
+(
+    [id] => 666
+)
+
+Checking case_id 70, step_urut 1. Result: Array
+(
+    [id] => 688
+)
+
+Payload: Array
+(
+    [case_ids] => Array
+        (
+            [0] => 69
+            [1] => 68
+            [2] => 70
+        )
+
+    [step_urut] => 4
+    [status] => selesai
+    [date] => 2026-06-03
+    [note] => 
+)
+
+Checking case_id 69, step_urut 4. Result: Array
+(
+    [id] => 680
+)
+
+Checking case_id 68, step_urut 4. Result: Array
+(
+    [id] => 669
+)
+
+Checking case_id 70, step_urut 4. Result: Array
+(
+    [id] => 691
+)
+
+Payload: Array
+(
+    [case_ids] => Array
+        (
+            [0] => 67
+            [1] => 66
+        )
+
+    [step_urut] => 6
+    [status] => selesai
+    [date] => 2026-06-03
+    [note] => 
+)
+
+Checking case_id 67, step_urut 6. Result: Array
+(
+    [id] => 660
+)
+
+Checking case_id 66, step_urut 6. Result: Array
+(
+    [id] => 649
+)
+
+Payload: Array
+(
+    [case_ids] => Array
+        (
+            [0] => 61
+        )
+
+    [step_urut] => 11
+    [status] => selesai
+    [date] => 2026-06-03
+    [note] => 
+)
+
+Checking case_id 61, step_urut 11. Result: Array
+(
+    [id] => 599
+)
+
+Payload: Array
+(
+    [case_ids] => Array
+        (
+            [0] => 40
+            [1] => 41
+        )
+
+    [step_urut] => 3
+    [status] => selesai
+    [date] => 2026-06-05
+    [note] => 
+)
+
+Checking case_id 40, step_urut 3. Result: Array
+(
+    [id] => 376
+)
+
+Checking case_id 41, step_urut 3. Result: Array
+(
+    [id] => 387
+)
+
+Payload: Array
+(
+    [case_ids] => Array
+        (
+            [0] => 71
+            [1] => 54
+            [2] => 53
+            [3] => 50
+            [4] => 47
+            [5] => 55
+            [6] => 44
+            [7] => 56
+            [8] => 48
+            [9] => 45
+            [10] => 51
+            [11] => 46
+            [12] => 57
+            [13] => 52
+            [14] => 49
+        )
+
+    [step_urut] => 3
+    [status] => proses
+    [date] => 2026-06-05
+    [note] => 
+)
+
+Checking case_id 71, step_urut 3. Result: Array
+(
+    [id] => 701
+)
+
+Checking case_id 54, step_urut 3. Result: Array
+(
+    [id] => 530
+)
+
+Checking case_id 53, step_urut 3. Result: Array
+(
+    [id] => 519
+)
+
+Checking case_id 50, step_urut 3. Result: Array
+(
+    [id] => 486
+)
+
+Checking case_id 47, step_urut 3. Result: Array
+(
+    [id] => 453
+)
+
+Checking case_id 55, step_urut 3. Result: Array
+(
+    [id] => 541
+)
+
+Checking case_id 44, step_urut 3. Result: Array
+(
+    [id] => 420
+)
+
+Checking case_id 56, step_urut 3. Result: Array
+(
+    [id] => 552
+)
+
+Checking case_id 48, step_urut 3. Result: Array
+(
+    [id] => 464
+)
+
+Checking case_id 45, step_urut 3. Result: Array
+(
+    [id] => 431
+)
+
+Checking case_id 51, step_urut 3. Result: Array
+(
+    [id] => 497
+)
+
+Checking case_id 46, step_urut 3. Result: Array
+(
+    [id] => 442
+)
+
+Checking case_id 57, step_urut 3. Result: Array
+(
+    [id] => 563
+)
+
+Checking case_id 52, step_urut 3. Result: Array
+(
+    [id] => 508
+)
+
+Checking case_id 49, step_urut 3. Result: Array
+(
+    [id] => 475
+)
+
+Payload: Array
+(
+    [case_ids] => Array
+        (
+            [0] => 71
+            [1] => 54
+            [2] => 53
+            [3] => 50
+            [4] => 47
+            [5] => 55
+            [6] => 44
+            [7] => 56
+            [8] => 48
+            [9] => 45
+            [10] => 51
+            [11] => 46
+            [12] => 57
+            [13] => 52
+            [14] => 49
+        )
+
+    [step_urut] => 5
+    [status] => selesai
+    [date] => 2026-06-05
+    [note] => 
+)
+
+Checking case_id 71, step_urut 5. Result: Array
+(
+    [id] => 703
+)
+
+Checking case_id 54, step_urut 5. Result: Array
+(
+    [id] => 532
+)
+
+Checking case_id 53, step_urut 5. Result: Array
+(
+    [id] => 521
+)
+
+Checking case_id 50, step_urut 5. Result: Array
+(
+    [id] => 488
+)
+
+Checking case_id 47, step_urut 5. Result: Array
+(
+    [id] => 455
+)
+
+Checking case_id 55, step_urut 5. Result: Array
+(
+    [id] => 543
+)
+
+Checking case_id 44, step_urut 5. Result: Array
+(
+    [id] => 422
+)
+
+Checking case_id 56, step_urut 5. Result: Array
+(
+    [id] => 554
+)
+
+Checking case_id 48, step_urut 5. Result: Array
+(
+    [id] => 466
+)
+
+Checking case_id 45, step_urut 5. Result: Array
+(
+    [id] => 433
+)
+
+Checking case_id 51, step_urut 5. Result: Array
+(
+    [id] => 499
+)
+
+Checking case_id 46, step_urut 5. Result: Array
+(
+    [id] => 444
+)
+
+Checking case_id 57, step_urut 5. Result: Array
+(
+    [id] => 565
+)
+
+Checking case_id 52, step_urut 5. Result: Array
+(
+    [id] => 510
+)
+
+Checking case_id 49, step_urut 5. Result: Array
+(
+    [id] => 477
+)
+
+Payload: Array
+(
+    [case_ids] => Array
+        (
+            [0] => 24
+            [1] => 25
+            [2] => 26
+            [3] => 27
+            [4] => 28
+            [5] => 29
+            [6] => 30
+            [7] => 31
+            [8] => 32
+            [9] => 33
+            [10] => 34
+            [11] => 35
+            [12] => 36
+            [13] => 23
+        )
+
+    [step_urut] => 9
+    [status] => selesai
+    [date] => 2026-06-11
+    [note] => 
+)
+
+Checking case_id 24, step_urut 9. Result: Array
+(
+    [id] => 232
+)
+
+Checking case_id 25, step_urut 9. Result: Array
+(
+    [id] => 241
+)
+
+Checking case_id 26, step_urut 9. Result: Array
+(
+    [id] => 250
+)
+
+Checking case_id 27, step_urut 9. Result: Array
+(
+    [id] => 259
+)
+
+Checking case_id 28, step_urut 9. Result: Array
+(
+    [id] => 268
+)
+
+Checking case_id 29, step_urut 9. Result: Array
+(
+    [id] => 277
+)
+
+Checking case_id 30, step_urut 9. Result: Array
+(
+    [id] => 286
+)
+
+Checking case_id 31, step_urut 9. Result: Array
+(
+    [id] => 295
+)
+
+Checking case_id 32, step_urut 9. Result: Array
+(
+    [id] => 304
+)
+
+Checking case_id 33, step_urut 9. Result: Array
+(
+    [id] => 313
+)
+
+Checking case_id 34, step_urut 9. Result: Array
+(
+    [id] => 322
+)
+
+Checking case_id 35, step_urut 9. Result: Array
+(
+    [id] => 331
+)
+
+Checking case_id 36, step_urut 9. Result: Array
+(
+    [id] => 340
+)
+
+Checking case_id 23, step_urut 9. Result: Array
+(
+    [id] => 223
+)
+
+Payload: Array
+(
+    [case_ids] => Array
+        (
+            [0] => 27
+        )
+
+    [step_urut] => 4
+    [status] => selesai
+    [date] => 2026-04-27
+    [note] => 
+)
+
+Checking case_id 27, step_urut 4. Result: Array
+(
+    [id] => 254
+)
+
+Payload: Array
+(
+    [case_ids] => Array
+        (
+            [0] => 77
+            [1] => 79
+            [2] => 78
+            [3] => 76
+        )
+
+    [step_urut] => 11
+    [status] => selesai
+    [date] => 2026-06-12
+    [note] => 
+)
+
+Checking case_id 77, step_urut 11. Result: Array
+(
+    [id] => 766
+)
+
+Checking case_id 79, step_urut 11. Result: Array
+(
+    [id] => 788
+)
+
+Checking case_id 78, step_urut 11. Result: Array
+(
+    [id] => 777
+)
+
+Checking case_id 76, step_urut 11. Result: Array
+(
+    [id] => 755
+)
+
+Payload: Array
+(
+    [case_ids] => Array
+        (
+            [0] => 104
+        )
+
+    [step_urut] => 9
+    [status] => selesai
+    [date] => 2026-06-12
+    [note] => 
+)
+
+Checking case_id 104, step_urut 9. Result: Array
+(
+    [id] => 1033
+)
+

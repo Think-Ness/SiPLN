@@ -1,0 +1,1 @@
+<?php $db = new PDO("sqlite:d:/01. Project/04. Website/pln/webapp/runtime/database.sqlite"); foreach($db->query("SELECT name, sql FROM sqlite_master WHERE type='table'") as $row) { echo $row["name"] . " | " . $row["sql"] . "\n"; }

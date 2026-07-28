@@ -1,0 +1,247 @@
+<div class="modal fade" id="santriModal" tabindex="-1" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:1100px;">
+    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+      <div class="modal-header py-3 px-4 bg-light border-0">
+        <h5 class="modal-title fw-bold text-dark" id="modalTitle">Personality</h5>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm fw-medium" id="btnSimpan" onclick="simpanSantri()">Simpan</button>
+            <button type="button" class="btn btn-light border rounded-pill px-4 shadow-sm fw-medium text-secondary" data-bs-dismiss="modal">Tutup</button>
+        </div>
+      </div>
+      <div class="modal-body bg-light" style="font-size: 0.85rem;">
+        <input type="hidden" id="santriKds" value="">
+        <input type="hidden" id="f_hapus_foto" value="0">
+        <div class="row g-2">
+            <!-- KOLOM KIRI: Biodata Lengkap -->
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                    <div class="card-header bg-white border-bottom-0 pt-3 pb-1 px-3"><h6 class="mb-0 small fw-bold text-dark"><i class="bi bi-person-lines-fill text-primary me-2"></i>Biodata Lengkap</h6></div>
+                    <div class="card-body py-3 px-4">
+                        <div class="row g-2 mb-3">
+                            <div class="col-6"><label class="text-muted small fw-bold mb-1">Regno (Stambuk)</label><input type="number" id="f_stambuk" class="form-control form-control-sm bg-white border border-secondary-subtle"></div>
+                            <div class="col-6"><label class="text-muted small fw-bold mb-1">NIK (SKTT)</label><input type="text" id="f_nik" class="form-control form-control-sm bg-white border border-secondary-subtle"></div>
+                        </div>
+                        <div class="mb-3"><label class="text-muted small fw-bold mb-1">Nama Lengkap</label><input type="text" id="f_nama" class="form-control form-control-sm bg-white border border-secondary-subtle"></div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6"><label class="text-muted small fw-bold mb-1">Kelas</label><input type="text" id="f_kelas" class="form-control form-control-sm bg-white border border-secondary-subtle"></div>
+                            <div class="col-6"><label class="text-muted small fw-bold mb-1">Rayon</label><input type="text" id="f_rayon" class="form-control form-control-sm bg-white border border-secondary-subtle"></div>
+                        </div>
+                        <div class="mb-3"><label class="text-muted small fw-bold mb-1">Negara Asal</label><input type="text" id="f_negara" class="form-control form-control-sm bg-white border border-secondary-subtle"></div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6"><label class="text-muted small fw-bold mb-1">Tempat Lahir</label><input type="text" id="f_tempat_lahir" class="form-control form-control-sm bg-white border border-secondary-subtle"></div>
+                            <div class="col-6"><label class="text-muted small fw-bold mb-1">Tanggal Lahir</label><input type="date" id="f_tanggal_lahir" class="form-control form-control-sm bg-white border border-secondary-subtle"></div>
+                        </div>
+                        <div class="mb-3"><label class="text-muted small fw-bold mb-1">Alamat</label><textarea id="f_alamat" class="form-control form-control-sm bg-white border border-secondary-subtle" rows="3"></textarea></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KOLOM TENGAH: Paspor & Tabs -->
+            <div class="col-md-5">
+                <!-- Tentang Paspor -->
+                <div class="card border-0 shadow-sm rounded-4 mb-2 overflow-hidden">
+                    <div class="card-header bg-white border-bottom-0 pt-3 pb-1 px-3"><h6 class="mb-0 small fw-bold text-dark"><i class="bi bi-passport text-warning me-2"></i>Tentang Paspor</h6></div>
+                    <div class="card-body py-3 px-4">
+                        <div class="row g-2 mb-3">
+                            <div class="col-6"><label class="text-muted small fw-bold mb-1">No Paspor Baru</label><input type="text" id="f_no_paspor" class="form-control form-control-sm bg-white border border-secondary-subtle"></div>
+                            <div class="col-6"><label class="text-muted small fw-bold mb-1">No Paspor Lama</label><input type="text" id="f_no_paspor_lama" class="form-control form-control-sm bg-white border border-secondary-subtle" readonly placeholder="(Otomatis Riwayat)"></div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-5"><label class="text-muted small fw-bold mb-1">Exp Paspor</label><input type="date" id="f_exp_paspor" class="form-control form-control-sm bg-white border border-secondary-subtle"></div>
+                            <div class="col-5"><label class="text-muted small fw-bold mb-1">Exp ITAS</label><input type="date" id="f_exp_itas" class="form-control form-control-sm bg-white border border-secondary-subtle"></div>
+                            <div class="col-2"><label class="text-muted small fw-bold mb-1">Lvl ITAS</label><input type="number" id="f_level_itas" class="form-control form-control-sm bg-white border border-secondary-subtle" min="0"></div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6"><label class="text-muted small fw-bold mb-1">No ITAS</label><input type="text" id="f_no_itas" class="form-control form-control-sm bg-white border border-secondary-subtle"></div>
+                            <div class="col-6"><label class="text-muted small fw-bold mb-1">No IC Santri</label><input type="text" id="f_no_ic" class="form-control form-control-sm bg-white border border-secondary-subtle"></div>
+                        </div>
+                        <div class="row g-2 mb-2 border-top pt-3 mt-3">
+                            <div class="col-6">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label class="text-muted small fw-bold mb-0">File Paspor <a href="#" id="view_file_paspor" target="_blank" class="ms-1 small d-none" title="Lihat"><i class="bi bi-eye"></i></a></label>
+                                    <button type="button" class="btn btn-sm btn-primary py-1 px-2 fw-medium shadow-sm" style="font-size: 0.65rem; border-radius: 4px;" onclick="scanMRZPaspor()" title="Ekstrak data dari gambar">
+                                        <i class="bi bi-upc-scan me-1"></i>Scan Auto-Fill
+                                    </button>
+                                </div>
+                                <input type="file" id="f_file_paspor" class="form-control form-control-sm bg-white border border-secondary-subtle" accept=".pdf,.jpg,.jpeg,.png">
+                            </div>
+                            <div class="col-6">
+                                <label class="text-muted small fw-bold mb-1" style="height: 24px;">File ITAS <a href="#" id="view_file_itas" target="_blank" class="ms-1 small d-none" title="Lihat"><i class="bi bi-eye"></i></a></label>
+                                <input type="file" id="f_file_itas" class="form-control form-control-sm bg-white border border-secondary-subtle" accept=".pdf,.jpg,.jpeg,.png">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tabs Detail -->
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="min-height: 180px;">
+                    <div class="card-header bg-white p-0 border-bottom-0 pt-2 px-2">
+                        <ul class="nav nav-tabs nav-tabs-sm px-2 pt-1" style="font-size:0.8rem;" id="detailTabs">
+                            <li class="nav-item"><a class="nav-link active px-2 py-1" data-bs-toggle="tab" href="#t_paspor">Detail Paspor</a></li>
+                            <li class="nav-item"><a class="nav-link px-2 py-1" data-bs-toggle="tab" href="#t_ortu">Orang Tua</a></li>
+                            <li class="nav-item"><a class="nav-link px-2 py-1" data-bs-toggle="tab" href="#t_telp">No Telp</a></li>
+                            <li class="nav-item"><a class="nav-link px-2 py-1" data-bs-toggle="tab" href="#t_barang">Barang Bawaan</a></li>
+                            <li class="nav-item"><a class="nav-link px-2 py-1" data-bs-toggle="tab" href="#t_rpaspor">R.Paspor</a></li>
+                            <li class="nav-item"><a class="nav-link px-2 py-1" data-bs-toggle="tab" href="#t_ritas">R.ITAS</a></li>
+                            <li class="nav-item"><a class="nav-link px-2 py-1 text-primary fw-medium" data-bs-toggle="tab" href="#t_berkas"><i class="bi bi-folder-check me-1"></i>Berkas</a></li>
+                        </ul>
+                    </div>
+                    <div class="card-body py-3 px-4 tab-content">
+                        <div class="tab-pane fade show active" id="t_paspor">
+                            <div class="mb-3"><label class="text-muted small fw-bold mb-1">Tempat Dikeluarkan</label><input type="text" id="f_tempat_paspor" class="form-control form-control-sm bg-white border border-secondary-subtle"></div>
+                            <div><label class="text-muted small fw-bold mb-1">Tanggal Dikeluarkan</label><input type="date" id="f_tgl_paspor" class="form-control form-control-sm bg-white border border-secondary-subtle"></div>
+                        </div>
+                        <div class="tab-pane fade" id="t_ortu">
+                            <div class="mb-3"><label class="text-muted small fw-bold mb-1">Nama Ayah</label><input type="text" id="f_nama_ayah" class="form-control form-control-sm bg-white border border-secondary-subtle"></div>
+                            <div><label class="text-muted small fw-bold mb-1">Nama Ibu</label><input type="text" id="f_nama_ibu" class="form-control form-control-sm bg-white border border-secondary-subtle"></div>
+                        </div>
+                        <div class="tab-pane fade" id="t_telp">
+                            <div class="mb-3"><label class="text-muted small fw-bold mb-1">No. HP Ayah</label><input type="number" id="f_no_ayah" class="form-control form-control-sm bg-white border border-secondary-subtle"></div>
+                            <div class="mb-3"><label class="text-muted small fw-bold mb-1">No. HP Ibu</label><input type="number" id="f_no_ibu" class="form-control form-control-sm bg-white border border-secondary-subtle"></div>
+                            <div><label class="text-muted small fw-bold mb-1">No. HP Alternatif</label><input type="number" id="f_no_hp_alternatif" class="form-control form-control-sm bg-white border border-secondary-subtle"></div>
+                        </div>
+                        <div class="tab-pane fade" id="t_barang">
+                            <div class="d-flex gap-2 mb-3">
+                                <input type="text" id="b_nama" class="form-control form-control-sm bg-white border border-secondary-subtle" placeholder="Nama barang">
+                                <input type="number" id="b_jumlah" class="form-control form-control-sm bg-white border border-secondary-subtle w-25" placeholder="Jml" value="1">
+                                <button type="button" class="btn btn-sm btn-primary shadow-sm" onclick="addBarang()"><i class="bi bi-plus-lg"></i></button>
+                            </div>
+                            <div class="table-responsive" style="max-height: 100px;">
+                                <table class="table table-sm table-bordered m-0">
+                                    <tbody id="listBarang"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="t_rpaspor">
+                            <div class="table-responsive" style="max-height: 130px;">
+                                <table class="table table-sm table-bordered m-0"><thead class="table-light"><tr><th>No Paspor</th><th>Exp</th><th>Dok</th><th>Aksi</th></tr></thead><tbody id="listRPaspor"></tbody></table>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="t_ritas">
+                            <div class="table-responsive" style="max-height: 130px;">
+                                <table class="table table-sm table-bordered m-0"><thead class="table-light"><tr><th>No ITAS</th><th>Lvl</th><th>Exp</th><th>Dok</th><th>Aksi</th></tr></thead><tbody id="listRITAS"></tbody></table>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="t_berkas">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="small fw-bold text-muted">Daftar Berkas:</span>
+                                <button type="button" class="btn btn-sm btn-primary py-0" onclick="document.getElementById('fileUploadBerkas').click()"><i class="bi bi-upload"></i> Unggah</button>
+                                <input type="file" id="fileUploadBerkas" class="d-none" onchange="uploadBerkas(this)">
+                            </div>
+                            <div class="table-responsive" style="max-height: 100px;">
+                                <table class="table table-sm table-bordered m-0"><thead class="table-light"><tr><th>Nama File Berkas</th><th class="text-center" style="width:100px;">Aksi</th></tr></thead><tbody id="listBerkas"></tbody></table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KOLOM KANAN: Foto & Status -->
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                    <div class="card-body py-3 px-3 d-flex flex-column">
+                        <div id="fotoContainer" class="border rounded-4 mb-3 flex-grow-1 d-flex align-items-center justify-content-center bg-light overflow-hidden shadow-sm position-relative" style="min-height: 160px; border-width: 2px !important; border-style: dashed !important; transition: all 0.2s;" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)" onclick="if(document.getElementById('fotoActions').classList.contains('d-flex')) document.getElementById('f_foto_santri').click()" style="cursor: pointer;">
+                            <img id="imgPreview" src="" style="max-width:100%; max-height:160px; display:none;">
+                            <i id="imgIcon" class="bi bi-person text-secondary" style="font-size: 5rem;"></i>
+                            <div id="dragOverlay" class="position-absolute top-0 start-0 w-100 h-100 bg-primary bg-opacity-25 d-flex align-items-center justify-content-center d-none" style="z-index: 10; pointer-events: none;">
+                                <span class="fw-bold text-primary"><i class="bi bi-cloud-arrow-up-fill me-2"></i>Lepaskan Foto</span>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 mb-3" id="fotoActions">
+                            <button class="btn btn-sm btn-dark w-50 py-1 rounded-pill shadow-sm fw-medium" onclick="document.getElementById('f_foto_santri').click()">Tmbh Foto</button>
+                            <button class="btn btn-sm btn-outline-danger w-50 py-1 rounded-pill shadow-sm fw-medium" onclick="hapusFoto()">Hapus Foto</button>
+                            <input type="file" id="f_foto_santri" class="d-none" accept="image/*" onchange="previewFoto(this)">
+                        </div>
+                        
+                        <div class="row g-2 mb-3 mt-1">
+                            <div class="col-6"><label class="text-muted small fw-bold mb-1">Status</label><select id="f_aktif" class="form-select form-select-sm bg-white border border-secondary-subtle"><option value="1">Aktif</option><option value="0">Tidak Aktif</option></select></div>
+                            <div class="col-6">
+                                <label class="text-muted small fw-bold mb-1">Pondok</label>
+                                <input type="text" id="f_pondok" list="listModalPondok" class="form-control form-control-sm bg-white border border-secondary-subtle" placeholder="Pilih / Ketik...">
+                                <datalist id="listModalPondok">
+                                    <?php foreach ($pondokList as $v): ?>
+                                        <option value="<?= htmlspecialchars($v) ?>"></option>
+                                    <?php endforeach; ?>
+                                    <option value="G1"></option>
+                                    <option value="G2"></option>
+                                    <option value="G3"></option>
+                                    <option value="G4"></option>
+                                </datalist>
+                            </div>
+                        </div>
+                        <div class="mb-3"><label class="text-muted small fw-bold mb-1">Keberadaan Paspor</label><input type="text" id="f_keberadaan_paspor" class="form-control form-control-sm bg-white border border-secondary-subtle"></div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6"><label class="text-muted small fw-bold mb-1">Ukuran Baju</label><input type="text" id="f_ukuran_baju" class="form-control form-control-sm bg-white border border-secondary-subtle"></div>
+                            <div class="col-6"><label class="text-muted small fw-bold mb-1">Jenis Kelamin</label><select id="f_jenis_kelamin" class="form-select form-select-sm bg-white border border-secondary-subtle"><option value="Laki-laki">L</option><option value="Perempuan">P</option></select></div>
+                        </div>
+                        <div class="mb-3"><label class="text-muted small fw-bold mb-1">Kepengurusan</label><input type="text" id="f_kepengurusan" class="form-control form-control-sm bg-white border border-secondary-subtle"></div>
+                        
+                        <!-- Kewarganegaraan (Auto Server-Side) -->
+                        <div class="mt-auto"><label class="text-muted small fw-bold mb-1">Kewarganegaraan</label><input type="text" id="f_kewarganegaraan" class="form-control form-control-sm bg-light text-muted border border-secondary-subtle" readonly title="Ditentukan otomatis oleh sistem berdasarkan Negara asal"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- Toast Notification -->
+<!-- Confirm Document Modal -->
+<div class="modal fade" id="confirmDocModal" tabindex="-1" data-bs-backdrop="false" style="background-color: rgba(0,0,0,0.2); backdrop-filter: blur(2px);">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 1rem;">
+            <div class="modal-body p-4 text-center">
+                <div class="mb-3">
+                    <i class="bi bi-question-circle text-warning" style="font-size: 4rem;"></i>
+                </div>
+                <h5 class="fw-bold mb-3">Konfirmasi Perubahan Dokumen</h5>
+                <p class="text-muted mb-4">
+                    Sistem mendeteksi adanya perubahan pada <strong id="confirmDocType">Paspor/ITAS</strong>.
+                    <br><br>
+                    Apakah ini adalah pendaftaran <strong>dokumen baru (perpanjangan)</strong>, atau Anda sekadar <strong>melengkapi/mengoreksi</strong> data yang sebelumnya kosong/salah?
+                </p>
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-primary rounded-pill shadow-sm fw-medium" id="btnDocBaru">
+                        <i class="bi bi-file-earmark-plus me-1"></i> Dokumen Baru (Arsipkan yang lama)
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary rounded-pill shadow-sm fw-medium" id="btnDocKoreksi">
+                        <i class="bi bi-pencil-square me-1"></i> Hanya Mengoreksi / Melengkapi Data
+                    </button>
+                    <button type="button" class="btn btn-link text-muted text-decoration-none mt-2 fw-medium" data-bs-dismiss="modal">Batal Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detail Histori Modal -->
+<div class="modal fade" id="histDetailModal" tabindex="-1" data-bs-backdrop="false" style="background-color: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header bg-primary text-white border-0 px-4 py-3">
+                <h6 class="modal-title fw-bold" id="histDetailTitle">Detail Riwayat</h6>
+                <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal" style="box-shadow: none;"></button>
+            </div>
+            <div class="modal-body bg-light p-4" id="histDetailBody">
+            </div>
+            <div class="modal-footer border-0 pt-0 pb-3 px-4 bg-light d-flex justify-content-between align-items-center">
+                <span id="histDetailStatus" class="fw-medium text-secondary" style="font-size: .85rem;"></span>
+                <button type="button" class="btn btn-light border rounded-pill shadow-sm fw-medium px-4 text-secondary" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index:1090">
+    <div id="toastMsg" class="toast align-items-center text-white border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="toastBody"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
