@@ -23,7 +23,7 @@ session_start();
 function redirectActivate() {
     $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
     $host = $_SERVER['HTTP_HOST'];
-    $baseDir = rtrim(str_replace('\', '/', dirname($_SERVER['SCRIPT_NAME'])), '/');
+    $baseDir = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'])), '/');
     header("Location: $protocol://$host$baseDir/activate.php");
     exit;
 }
