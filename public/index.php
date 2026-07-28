@@ -18,6 +18,72 @@ if (!file_exists($root . '/config/installed.lock')) {
     exit;
 }
 
+// --- Hardware/License Guard (Dynamic Revocation) ---
+session_start();
+$licensePath = $root . '/config/license.json';
+if (!file_exists($licensePath)) {
+    header('Location: activate.php');
+    exit;
+}
+
+$licenseData = json_decode(file_get_contents($licensePath), true);
+if (!$licenseData) {
+    header('Location: activate.php');
+    exit;
+}
+
+// Get HWID
+$output = @shell_exec('wmic csproduct get uuid');
+if ($output) {
+    $lines = explode("\n", trim($output));
+    $hwid = isset($lines[1]) ? trim($lines[1]) : md5(php_uname('n') . php_uname('a'));
+} else {
+    $hwid = md5(php_uname('n') . php_uname('a'));
+}
+
+$expectedSig = hash_hmac('sha256', $licenseData['code'] . $hwid, 'SiPLN_Secret_Salt_2026');
+if ($licenseData['signature'] !== $expectedSig || $licenseData['device_id'] !== $hwid) {
+    // Copied to another PC or tampered!
+    @unlink($licensePath);
+    header('Location: activate.php');
+    exit;
+}
+
+// Dynamic Revocation Check (Every 5 minutes)
+$lastCheck = $_SESSION['last_license_check'] ?? 0;
+if (time() - $lastCheck > 300) {
+    $url = "https://firestore.googleapis.com/v1/projects/database-luar-negeri/databases/(default)/documents/aktivasi/" . urlencode($licenseData['code']);
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 3); // Quick timeout to not block UI completely if offline
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    
+    if ($httpCode === 200) {
+        $data = json_decode($response, true);
+        $fields = $data['fields'] ?? [];
+        $status = isset($fields['status']['booleanValue']) ? $fields['status']['booleanValue'] : true;
+        
+        if (!$status) {
+            // Revoked by admin!
+            @unlink($licensePath);
+            session_destroy();
+            header('Location: activate.php');
+            exit;
+        }
+    } else if ($httpCode === 404) {
+        // Document deleted by admin!
+        @unlink($licensePath);
+        session_destroy();
+        header('Location: activate.php');
+        exit;
+    }
+    
+    $_SESSION['last_license_check'] = time();
+}
+// ----------------------------------------------------
+
 // --- Ensure Runtime Directory Exists ---
 $runtimeDir = $root . '/runtime';
 if (!is_dir($runtimeDir)) {
