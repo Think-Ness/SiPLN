@@ -12,6 +12,9 @@ use Yiisoft\Yii\Runner\Http\HttpApplicationRunner;
 
 $root = dirname(__DIR__);
 
+// --- Hardware/License Guard ---
+require_once __DIR__ . '/license_guard.php';
+
 // --- Installation Guard ---
 if (!file_exists($root . '/config/installed.lock')) {
     $uri = $_SERVER['REQUEST_URI'] ?? '';
