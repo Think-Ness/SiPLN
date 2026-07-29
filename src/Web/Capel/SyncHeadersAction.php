@@ -28,6 +28,13 @@ final class SyncHeadersAction
         }
 
         $credentialsPath = dirname(__DIR__, 3) . '/config/google_service_account.json';
+        $encPath = dirname(__DIR__, 3) . '/config/gcp_key.txt';
+        
+        // Auto-decode obfuscated key
+        if (!file_exists($credentialsPath) && file_exists($encPath)) {
+            @file_put_contents($credentialsPath, base64_decode(file_get_contents($encPath)));
+        }
+
         if (!file_exists($credentialsPath)) {
             return JsonResponse::create(['success' => false, 'message' => 'File google_service_account.json tidak ditemukan di folder config!'])->withStatus(400);
         }
