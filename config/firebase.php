@@ -32,8 +32,8 @@ return [
     // SYNC SERVICE ACCOUNT (Firebase Auth)
     // ============================================
     // Buat user khusus di Firebase Authentication untuk sync
-    'sync_email' => 'sigapsayangibu@gmail.com',
-    'sync_password' => '123_123',
+    'sync_email' => 'pln_sync_service@gmail.com',
+    'sync_password' => 'Admin123!@#',
     
     // ============================================
     // SYNC SETTINGS
