@@ -12,15 +12,21 @@ use Yiisoft\Yii\Runner\Http\HttpApplicationRunner;
 
 $root = dirname(__DIR__);
 
-// --- Hardware/License Guard (Dynamic Revocation) ---
-require_once __DIR__ . '/license_guard.php';
-
 // --- Installation Guard ---
 if (!file_exists($root . '/config/installed.lock')) {
-    header('Location: install.php');
+    $uri = $_SERVER['REQUEST_URI'] ?? '';
+    // Jika request adalah untuk aset statis (CSS/JS), kembalikan 404 langsung
+    if (strpos($uri, '/assets/') !== false || preg_match('/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/i', $uri)) {
+        http_response_code(404);
+        exit('Asset not found');
+    }
+    
+    // Redirect ke install.php dengan path absolut
+    $basePath = dirname($_SERVER['SCRIPT_NAME']);
+    $basePath = rtrim(str_replace('\\', '/', $basePath), '/');
+    header('Location: ' . $basePath . '/install.php');
     exit;
 }
-// ----------------------------------------------------
 
 // --- Ensure Runtime Directory Exists ---
 $runtimeDir = $root . '/runtime';
@@ -108,4 +114,3 @@ $runner = new HttpApplicationRunner(
     ),
 );
 $runner->run();
-

@@ -8,9 +8,6 @@
  * Guides the user through first-time setup.
  */
 
-// --- Security: Hardware/License Guard First ---
-require_once __DIR__ . '/license_guard.php';
-
 // --- Security: Block access if already installed ---
 $rootPath = dirname(__DIR__);
 $lockFile = $rootPath . '/config/installed.lock';
@@ -22,6 +19,7 @@ if (file_exists($lockFile)) {
 <head>
     <meta charset="UTF-8">
     <title>Akses Ditolak</title>
+    <base href="./">
     <link href="assets/offline/css/bootstrap.min.css" rel="stylesheet">
     <link href="assets/offline/css/bootstrap-icons.css" rel="stylesheet">
 </head>
@@ -489,11 +487,13 @@ function runFinalize(string $rootPath, array $input): void
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Instalasi — Sistem Informasi PLN</title>
+    <base href="./">
     <link rel="icon" href="assets/logopln.png" type="image/png">
     <link href="assets/offline/css/inter.css" rel="stylesheet">
     <link href="assets/offline/css/bootstrap.min.css" rel="stylesheet">
     <link href="assets/offline/css/bootstrap-icons.css" rel="stylesheet">
     <style>
+        .modal { display: none; } /* Fallback jika bootstrap CSS gagal dimuat */
         :root {
             --accent: #0d6efd;
             --success: #198754;
