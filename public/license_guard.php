@@ -1,6 +1,5 @@
 <?php
 // --- Hardware/License Guard (Dynamic Revocation) ---
-@session_start();
 if (!function_exists('redirectActivate')) {
     function redirectActivate() {
         $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
@@ -40,7 +39,9 @@ if ($licenseData['signature'] !== $expectedSig || $licenseData['device_id'] !== 
 }
 
 // Dynamic Revocation Check (Every 5 minutes)
-$lastCheck = $_SESSION['last_license_check'] ?? 0;
+$lastCheckFile = $guardRoot . '/config/last_check.txt';
+$lastCheck = file_exists($lastCheckFile) ? (int)@file_get_contents($lastCheckFile) : 0;
+
 if (time() - $lastCheck > 300) {
     $url = "https://firestore.googleapis.com/v1/projects/database-luar-negeri/databases/(default)/documents/aktivasi/" . urlencode($licenseData['code']);
     $ch = curl_init($url);
@@ -58,15 +59,14 @@ if (time() - $lastCheck > 300) {
         if (!$status) {
             // Revoked by admin!
             @unlink($licensePath);
-            session_destroy();
             redirectActivate();
         }
     } else if ($httpCode === 404) {
         // Document deleted by admin!
         @unlink($licensePath);
-        session_destroy();
         redirectActivate();
     }
     
-    $_SESSION['last_license_check'] = time();
+    @file_put_contents($lastCheckFile, time());
 }
+
