@@ -38,11 +38,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = json_decode($response, true);
             $fields = $data['fields'] ?? [];
             
-            $status = isset($fields['status']['booleanValue']) ? $fields['status']['booleanValue'] : true; // default true if exist
-            $registeredDevice = isset($fields['device_id']['stringValue']) ? $fields['device_id']['stringValue'] : '';
+            $statusField = $fields['status'] ?? null;
+            $status = true; // default true if exist and no status field
+            if ($statusField !== null) {
+                if (isset($statusField['booleanValue'])) {
+                    $status = $statusField['booleanValue'];
+                } elseif (isset($statusField['stringValue'])) {
+                    $sVal = strtolower(trim($statusField['stringValue']));
+                    if ($sVal === 'false' || $sVal === '0' || $sVal === 'nonaktif' || $sVal === 'inactive' || $sVal === 'off') {
+                        $status = false;
+                    }
+                } elseif (isset($statusField['integerValue'])) {
+                    $status = (int)$statusField['integerValue'] !== 0;
+                }
+            }
+            
+            $registeredDevice = isset($fields['device_id']['stringValue']) ? trim($fields['device_id']['stringValue']) : '';
+            
+            // Periksa juga jika admin menggunakan field 'is_used' atau 'terpakai'
+            $isUsedField = $fields['is_used'] ?? $fields['terpakai'] ?? null;
+            $isUsed = false;
+            if ($isUsedField !== null) {
+                if (isset($isUsedField['booleanValue'])) $isUsed = $isUsedField['booleanValue'];
+                elseif (isset($isUsedField['stringValue'])) {
+                    $uVal = strtolower(trim($isUsedField['stringValue']));
+                    if ($uVal === 'true' || $uVal === '1' || $uVal === 'ya' || $uVal === 'yes') $isUsed = true;
+                }
+            }
             
             if (!$status) {
                 $error = "Lisensi ini telah dicabut atau dinonaktifkan oleh pusat.";
+            } elseif ($isUsed && $registeredDevice === '') {
+                 $error = "Kode Aktivasi ini sudah terdaftar dan digunakan. Silakan hubungi pusat.";
             } elseif ($registeredDevice !== '' && $registeredDevice !== $hardwareId) {
                 $error = "Kode Aktivasi ini sudah terdaftar dan digunakan di perangkat lain. Silakan hubungi pusat.";
             } else {
