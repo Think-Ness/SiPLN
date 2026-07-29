@@ -1848,7 +1848,10 @@ function showTemplateBookmarkInfo() {
                     <tr><td><code>Kepada</code></td><td>Tujuan Surat</td></tr>
                     <tr><td><code>Tempat</code></td><td>Tempat Tujuan</td></tr>
                     <tr><td><code>Hal</code></td><td>Perihal Surat</td></tr>
+                    <tr><td><code>Isi</code></td><td>Isi Utama Surat</td></tr>
                     <tr><td><code>Kepala_Staf</code></td><td>Nama Staf / Pejabat</td></tr>
+                    <tr><td><code>Staf_TTL</code></td><td>Tempat, Tanggal Lahir Staf</td></tr>
+                    <tr><td><code>Staf_Pekerjaan</code></td><td>Pekerjaan Staf</td></tr>
                 </table>
 
                 <h6 class="fw-bold mt-3 text-success">Bookmark Personal (Khusus Perseorangan)</h6>

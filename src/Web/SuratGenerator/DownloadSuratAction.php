@@ -348,6 +348,7 @@ final class DownloadSuratAction
         // Staf data (for Surat Tugas)
         if ($userStaf) {
             $fill("Staf_Nama", $userStaf['nama_lengkap'] ?? '');
+            $fill("Kepala_Staf", $userStaf['nama_lengkap'] ?? '');
             $fill("Staf_TTL", $userStaf['ttl'] ?? '');
             $fill("Staf_Alamat", "Pondok Modern Darussalam Gontor");
             $fill("Staf_Pekerjaan", "Guru Kulliyyatu-l-Mu'allimin Al-Islamiyyah (KMI)");
