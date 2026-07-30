@@ -96,6 +96,11 @@ final class TemplateApiAction
         // Relative path to store in DB
         $relativePath = 'uploads/Surat_Menyurat/' . $folderName . '/' . $filename;
 
+        $jsonDataCollection = $parsedBody['json_data_collection'] ?? null;
+        if ($jsonDataCollection && !is_string($jsonDataCollection)) {
+            $jsonDataCollection = json_encode($jsonDataCollection);
+        }
+
         try {
             $file->moveTo($targetPath);
 
@@ -105,24 +110,38 @@ final class TemplateApiAction
                 $existing = $this->db->createCommand("SELECT id FROM surat_template_dinamis WHERE file_path = :path", [':path' => $relativePath])->queryOne();
                 if (!$existing) {
                      $this->db->createCommand("
-                        INSERT INTO surat_template_dinamis (nama_template, file_path, instansi_tujuan, peruntukan)
-                        VALUES (:nama, :path, :instansi, :peruntukan)
+                        INSERT INTO surat_template_dinamis (nama_template, file_path, instansi_tujuan, peruntukan, json_data_collection)
+                        VALUES (:nama, :path, :instansi, :peruntukan, :json_data)
                     ", [
                         ':nama' => $namaTemplate,
                         ':path' => $relativePath,
                         ':instansi' => $instansiTujuan,
-                        ':peruntukan' => $peruntukan
+                        ':peruntukan' => $peruntukan,
+                        ':json_data' => $jsonDataCollection
+                    ])->execute();
+                } else {
+                     $this->db->createCommand("
+                        UPDATE surat_template_dinamis 
+                        SET nama_template = :nama, instansi_tujuan = :instansi, peruntukan = :peruntukan, json_data_collection = :json_data 
+                        WHERE id = :id
+                    ", [
+                        ':nama' => $namaTemplate,
+                        ':instansi' => $instansiTujuan,
+                        ':peruntukan' => $peruntukan,
+                        ':json_data' => $jsonDataCollection,
+                        ':id' => $existing['id']
                     ])->execute();
                 }
             } else {
                 $this->db->createCommand("
-                    INSERT INTO surat_template_dinamis (nama_template, file_path, instansi_tujuan, peruntukan)
-                    VALUES (:nama, :path, :instansi, :peruntukan)
+                    INSERT INTO surat_template_dinamis (nama_template, file_path, instansi_tujuan, peruntukan, json_data_collection)
+                    VALUES (:nama, :path, :instansi, :peruntukan, :json_data)
                 ", [
                     ':nama' => $namaTemplate,
                     ':path' => $relativePath,
                     ':instansi' => $instansiTujuan,
-                    ':peruntukan' => $peruntukan
+                    ':peruntukan' => $peruntukan,
+                    ':json_data' => $jsonDataCollection
                 ])->execute();
             }
 
@@ -228,6 +247,17 @@ final class TemplateApiAction
         $safeName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $nama);
         $folderPath = dirname(__DIR__, 3) . '/public/uploads/Surat_Menyurat/' . $safeName;
         
+        $dbTemplates = $this->db->createCommand(
+            "SELECT nama_template, json_data_collection FROM surat_template_dinamis WHERE instansi_tujuan = :inst", 
+            [':inst' => $nama]
+        )->queryAll();
+        
+        $dbMap = [];
+        foreach ($dbTemplates as $dbTpl) {
+            $safeTplName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $dbTpl['nama_template']);
+            $dbMap[$safeTplName] = $dbTpl['json_data_collection'];
+        }
+
         $templates = [];
         if (is_dir($folderPath)) {
             $files = scandir($folderPath);
@@ -249,12 +279,15 @@ final class TemplateApiAction
                     $coreName = $baseName;
                 }
 
+                $jsonData = $dbMap[$coreName] ?? null;
+
                 $templates[] = [
                     'filename' => $file,
                     'basename' => $baseName,
                     'core_name' => $coreName,
                     'display_name' => $displayName,
                     'peruntukan' => $peruntukan,
+                    'json_data_collection' => $jsonData
                 ];
             }
         }

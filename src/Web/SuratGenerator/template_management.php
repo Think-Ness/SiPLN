@@ -136,6 +136,22 @@ $this->setTitle('Kelola Template Surat | Sistem Informasi');
                             <label class="form-check-label small" for="cbOverwrite">Timpa file jika nama template dan peruntukan sama (Update/Edit)</label>
                         </div>
                     </div>
+
+                    <!-- Dynamic Data Collection Section -->
+                    <div class="mb-3 border rounded-3 p-3 bg-light">
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" id="cbUseDataCollection" onchange="toggleDataCollection()">
+                            <label class="form-check-label fw-medium text-secondary" for="cbUseDataCollection">Menggunakan Data Collection (Tabel Dinamis)</label>
+                        </div>
+                        <div class="form-text small mb-2">Aktifkan jika template membutuhkan input data berupa tabel/daftar (contoh: Daftar Undangan, Daftar Barang).</div>
+                        
+                        <div id="dataCollectionSection" class="d-none mt-3">
+                            <div id="collectionContainer"></div>
+                            <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="addCollection()">
+                                <i class="bi bi-plus-circle"></i> Tambah Collection
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer bg-light border-top-0 p-3">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
@@ -189,6 +205,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // Remove helper fields
             formData.delete('instansi_tujuan_select');
             formData.delete('instansi_tujuan_baru');
+            
+            const collections = getCollectionJSON();
+            if (collections) {
+                formData.set('json_data_collection', JSON.stringify(collections));
+            }
             
             const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
             const res = await fetch(API_URL + '/api/surat/templates/upload', {
@@ -252,17 +273,92 @@ function onInstansiSelectChange() {
     
     if (sel.value === '__baru__') {
         baruInput.classList.remove('d-none');
+        baruInput.required = true;
         baruInput.focus();
         baruInput.addEventListener('input', () => {
-            preview.textContent = baruInput.value.replace(/[^a-zA-Z0-9_\-]/g, '_') || '...';
+            preview.textContent = baruInput.value.trim() ? baruInput.value.trim().replace(/[^a-zA-Z0-9_\-]/g, '_') : '...';
         });
         preview.textContent = '...';
     } else {
         baruInput.classList.add('d-none');
+        baruInput.required = false;
         baruInput.value = '';
-        preview.textContent = sel.value || '...';
+        preview.textContent = sel.value ? sel.value.replace(/[^a-zA-Z0-9_\-]/g, '_') : '...';
     }
 }
+
+// Data Collection JS Logic
+let collectionCount = 0;
+
+function toggleDataCollection() {
+    const isChecked = document.getElementById('cbUseDataCollection').checked;
+    const sec = document.getElementById('dataCollectionSection');
+    if (isChecked) {
+        sec.classList.remove('d-none');
+        if (document.querySelectorAll('.collection-item').length === 0) addCollection();
+    } else {
+        sec.classList.add('d-none');
+    }
+}
+
+function addCollection() {
+    collectionCount++;
+    const id = collectionCount;
+    const html = `
+    <div class="collection-item border bg-white p-3 rounded-3 mb-3 position-relative shadow-sm" id="col_${id}">
+        <button type="button" class="btn-close position-absolute top-0 end-0 m-2" onclick="removeCollection(${id})" aria-label="Close"></button>
+        <div class="mb-2 pe-4">
+            <label class="form-label small fw-bold text-dark">Nama Collection (Macro/Bookmark) <span class="text-danger">*</span></label>
+            <input type="text" class="form-control form-control-sm col-name-input border-secondary" placeholder="Contoh: Daftar_Undangan" required>
+            <div class="form-text" style="font-size:0.65rem">Di Word, tabel harus memiliki variabel row <code>\${NamaCollection}</code> di kolom pertamanya.</div>
+        </div>
+        <div>
+            <label class="form-label small fw-bold mb-1 text-dark">Daftar Kolom</label>
+            <div id="colFields_${id}" class="d-flex flex-column gap-2 mb-2">
+                <div class="d-flex gap-2 column-field-row">
+                    <input type="text" class="form-control form-control-sm col-field-input" placeholder="Nama Kolom (misal: Nama Lengkap)" required>
+                    <button type="button" class="btn btn-sm btn-light text-danger" onclick="if(this.parentElement.parentElement.children.length>1) this.parentElement.remove()"><i class="bi bi-trash"></i></button>
+                </div>
+            </div>
+            <button type="button" class="btn btn-sm btn-light border" style="font-size:0.75rem" onclick="addColumnField(${id})"><i class="bi bi-plus"></i> Tambah Kolom</button>
+        </div>
+    </div>`;
+    document.getElementById('collectionContainer').insertAdjacentHTML('beforeend', html);
+}
+
+function removeCollection(id) {
+    document.getElementById(`col_${id}`).remove();
+    if (document.querySelectorAll('.collection-item').length === 0) {
+        document.getElementById('cbUseDataCollection').checked = false;
+        toggleDataCollection();
+    }
+}
+
+function addColumnField(id) {
+    const html = `
+    <div class="d-flex gap-2 column-field-row">
+        <input type="text" class="form-control form-control-sm col-field-input" placeholder="Nama Kolom" required>
+        <button type="button" class="btn btn-sm btn-light text-danger" onclick="this.parentElement.remove()"><i class="bi bi-trash"></i></button>
+    </div>`;
+    document.getElementById(`colFields_${id}`).insertAdjacentHTML('beforeend', html);
+}
+
+function getCollectionJSON() {
+    if (!document.getElementById('cbUseDataCollection').checked) return null;
+    const collections = [];
+    document.querySelectorAll('.collection-item').forEach(item => {
+        const name = item.querySelector('.col-name-input').value.trim();
+        const columns = [];
+        item.querySelectorAll('.col-field-input').forEach(inp => {
+            if (inp.value.trim()) columns.push(inp.value.trim());
+        });
+        if (name && columns.length > 0) {
+            collections.push({ name, columns });
+        }
+    });
+    return collections.length > 0 ? collections : null;
+}
+
 
 async function loadTemplates() {
     try {

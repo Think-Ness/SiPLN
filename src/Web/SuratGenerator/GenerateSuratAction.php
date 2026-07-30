@@ -29,6 +29,10 @@ final class GenerateSuratAction
         $kepada = $body['kepada'] ?? '';
         $tempat = $body['tempat'] ?? '';
         $withLampiran = (int)($body['with_lampiran'] ?? 1);
+        $jsonDynamicData = $body['json_dynamic_data'] ?? null;
+        if ($jsonDynamicData && !is_string($jsonDynamicData)) {
+            $jsonDynamicData = json_encode($jsonDynamicData);
+        }
 
         if ($mailingId === 0 || empty($tipeSurat)) {
             return JsonResponse::create(['success' => false, 'message' => 'Data tidak lengkap.'], 400);
@@ -62,7 +66,7 @@ final class GenerateSuratAction
         if ($existing) {
             // Update existing
             $db->createCommand(
-                "UPDATE surat_generated SET nomor_surat = :nomor, tanggal_surat = :tgl, hal = :hal, isi = :isi, kepada = :kepada, tempat = :tempat
+                "UPDATE surat_generated SET nomor_surat = :nomor, tanggal_surat = :tgl, hal = :hal, isi = :isi, kepada = :kepada, tempat = :tempat, json_dynamic_data = :json_data
                  WHERE id = :id",
                 [
                     ':nomor' => $nomorSurat,
@@ -71,6 +75,7 @@ final class GenerateSuratAction
                     ':isi' => $isi,
                     ':kepada' => $kepada,
                     ':tempat' => $tempat,
+                    ':json_data' => $jsonDynamicData,
                     ':id' => $existing['id'],
                 ]
             )->execute();
@@ -78,8 +83,8 @@ final class GenerateSuratAction
         } else {
             // Insert new
             $db->createCommand(
-                "INSERT INTO surat_generated (mailing_id, tipe_surat, nomor_surat, tanggal_surat, hal, isi, kepada, tempat)
-                 VALUES (:mid, :tipe, :nomor, :tgl, :hal, :isi, :kepada, :tempat)",
+                "INSERT INTO surat_generated (mailing_id, tipe_surat, nomor_surat, tanggal_surat, hal, isi, kepada, tempat, json_dynamic_data)
+                 VALUES (:mid, :tipe, :nomor, :tgl, :hal, :isi, :kepada, :tempat, :json_data)",
                 [
                     ':mid' => $mailingId,
                     ':tipe' => $tipeSurat,
@@ -89,6 +94,7 @@ final class GenerateSuratAction
                     ':isi' => $isi,
                     ':kepada' => $kepada,
                     ':tempat' => $tempat,
+                    ':json_data' => $jsonDynamicData,
                 ]
             )->execute();
             $suratId = (int)$db->getLastInsertID();

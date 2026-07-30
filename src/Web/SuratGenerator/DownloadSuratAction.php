@@ -163,12 +163,13 @@ final class DownloadSuratAction
             return $this->errorResponse("Tidak ada santri dalam mailing ini.", 400);
         }
 
-        // Load nomor surat
+        // Load nomor surat and dynamic data
         $suratData = $db->createCommand(
-            "SELECT nomor_surat FROM surat_generated WHERE mailing_id = :mid AND tipe_surat = :tipe",
+            "SELECT nomor_surat, json_dynamic_data FROM surat_generated WHERE mailing_id = :mid AND tipe_surat = :tipe",
             [':mid' => $mailingId, ':tipe' => $tipeSurat]
         )->queryOne();
         $nomorSurat = $suratData ? $suratData['nomor_surat'] : '---/---/---/---/2026';
+        $jsonDynamicData = ($suratData && !empty($suratData['json_dynamic_data'])) ? json_decode($suratData['json_dynamic_data'], true) : null;
 
         // Load user data for staf bookmarks
         $userStaf = null;
@@ -201,6 +202,40 @@ final class DownloadSuratAction
         @shell_exec("taskkill /F /IM WINWORD.EXE > NUL 2>&1");
         
         if ($logProgress) $logProgress("Menginisiasi Microsoft Word...");
+        
+        // --- PROCESS DYNAMIC DATA WITH PHPWORD TEMPLATEPROCESSOR ---
+        $tempFiles = [];
+        if ($jsonDynamicData && is_array($jsonDynamicData)) {
+            try {
+                if ($logProgress) $logProgress("Memproses tabel dinamis (Data Collection)...");
+                $tempPath = tempnam(sys_get_temp_dir(), 'tpl_') . '.docx';
+                $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor($templatePath);
+                
+                foreach ($jsonDynamicData as $macroName => $rows) {
+                    if (empty($rows)) continue;
+                    // cloneRow requires the exact macro name
+                    $templateProcessor->cloneRow($macroName, count($rows));
+                    
+                    $rowIndex = 1;
+                    foreach ($rows as $row) {
+                        // Hapus macro identifier
+                        $templateProcessor->setValue($macroName . '#' . $rowIndex, '');
+                        // Isi data per kolom
+                        foreach ($row as $colName => $val) {
+                            $templateProcessor->setValue($colName . '#' . $rowIndex, htmlspecialchars((string)$val));
+                        }
+                        $rowIndex++;
+                    }
+                }
+                
+                $templateProcessor->saveAs($tempPath);
+                $templatePath = $tempPath;
+                $tempFiles[] = $tempPath; // mark for cleanup
+            } catch (\Exception $e) {
+                error_log("Error processing PhpWord template: " . $e->getMessage());
+                // Silently fallback to COM without dynamic data if PhpWord fails
+            }
+        }
 
         // Initiate Word COM
         error_log("[".date('Y-m-d H:i:s')."] 1. Initiating COM...", 3, sys_get_temp_dir() . '/surat.log');

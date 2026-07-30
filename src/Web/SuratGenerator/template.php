@@ -487,6 +487,9 @@ $kodeInstansi = $instansi['kode_instansi'] ?? '';
                         </div>
                     </div>
                 </div>
+                
+                <div id="dynamicCollectionFields" class="mb-4 d-none"></div>
+
                 <div class="d-flex gap-2 mb-2">
                     <button class="btn btn-outline-secondary rounded-pill fw-semibold shadow-sm w-100" id="btnBukaTemplate" onclick="bukaTemplate()" style="display:none;">
                         <i class="bi bi-file-word me-1"></i> Buka Template Asli
@@ -1085,6 +1088,65 @@ function selectSuratType(type) {
     document.getElementById('metadataSuratGroup').style.display = 'block';
     document.getElementById('btnBukaTemplate').style.display = 'block';
     document.getElementById('btnGenerateSurat').disabled = false;
+    
+    // Render dynamic collection fields if schema exists
+    const schema = currentMailingData.templateSchemas ? currentMailingData.templateSchemas[type] : null;
+    const collContainer = document.getElementById('dynamicCollectionFields');
+    collContainer.innerHTML = '';
+    
+    if (schema && schema.length > 0) {
+        collContainer.classList.remove('d-none');
+        let html = '<h6 class="fw-bold text-primary mb-3 border-bottom pb-2">Data Collection (Tabel Dinamis)</h6>';
+        
+        schema.forEach((coll) => {
+            html += `
+            <div class="card shadow-sm border-0 mb-3 bg-light">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold text-secondary small">${coll.name}</span>
+                        <button class="btn btn-sm btn-outline-primary" onclick="addCollectionRow('${coll.name}', '${coll.columns.join(',')}')">
+                            <i class="bi bi-plus"></i> Tambah Baris
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered bg-white mb-0" id="tblColl_${coll.name}">
+                            <thead class="table-light">
+                                <tr>
+                                    ${coll.columns.map(c => `<th class="small text-muted fw-bold">${c}</th>`).join('')}
+                                    <th style="width:40px"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>`;
+        });
+        collContainer.innerHTML = html;
+        
+        // Add 1 initial row for each collection
+        schema.forEach(coll => {
+            addCollectionRow(coll.name, coll.columns.join(','));
+        });
+    } else {
+        collContainer.classList.add('d-none');
+    }
+}
+
+function addCollectionRow(name, colsStr) {
+    const cols = colsStr.split(',');
+    const tbody = document.querySelector(`#tblColl_${name} tbody`);
+    if (!tbody) return;
+    
+    const tr = document.createElement('tr');
+    let tds = '';
+    cols.forEach(c => {
+        tds += `<td><input type="text" class="form-control form-control-sm border-0 shadow-none bg-transparent" placeholder="${c}" data-col="${c}"></td>`;
+    });
+    tds += `<td class="text-center align-middle"><button class="btn btn-sm text-danger p-0 m-0" onclick="this.closest('tr').remove()"><i class="bi bi-trash"></i></button></td>`;
+    tr.innerHTML = tds;
+    tbody.appendChild(tr);
 }
 
     function updatePetugasTtl() {
@@ -1136,8 +1198,30 @@ function selectSuratType(type) {
             kepada = document.getElementById('inpPetugasId').value;
             // Tempat dan isi diabaikan untuk ST, karena di-handle backend
         }
-
         const withLampiran = document.getElementById('inpWithLampiran').checked ? 1 : 0;
+        
+        let jsonDynamicData = null;
+        if (currentMailingData.templateSchemas && currentMailingData.templateSchemas[currentSuratType]) {
+            const schema = currentMailingData.templateSchemas[currentSuratType];
+            jsonDynamicData = {};
+            schema.forEach(coll => {
+                const tbody = document.querySelector(`#tblColl_${coll.name} tbody`);
+                if (tbody) {
+                    const rows = [];
+                    tbody.querySelectorAll('tr').forEach(tr => {
+                        const rowData = {};
+                        tr.querySelectorAll('input').forEach(inp => {
+                            rowData[inp.dataset.col] = inp.value;
+                        });
+                        // Only add row if at least one field has value
+                        if (Object.values(rowData).some(v => v.trim() !== '')) {
+                            rows.push(rowData);
+                        }
+                    });
+                    jsonDynamicData[coll.name] = rows;
+                }
+            });
+        }
 
         const res = await fetch('<?= API_URL ?>/api/surat/generate', {
             method:'POST',
@@ -1151,10 +1235,11 @@ function selectSuratType(type) {
                 nomor_surat: nomorSurat,
                 tanggal_surat: m.tanggal_surat,
                 hal: hal,
-                isi: isi,
                 kepada: kepada,
                 tempat: tempat,
-                with_lampiran: withLampiran
+                isi: isi,
+                with_lampiran: withLampiran,
+                json_dynamic_data: jsonDynamicData
             })
         });
         const data = await res.json();
