@@ -60,8 +60,21 @@ $this->setTitle('Kelola Template Surat | Sistem Informasi');
                     </ul>
                 </div>
             </div>
-            <div class="mt-3 small text-muted">
-                <em>* Untuk template <strong>Banyak Orang (Sekaligus)</strong>, data santri akan ditambahkan sebagai tabel lampiran di akhir dokumen secara otomatis.</em>
+            
+            <hr class="border-info opacity-25 my-3">
+            <h6 class="fw-bold mb-2">Panduan Data Collection (Tabel Dinamis)</h6>
+            <p class="mb-2 text-dark small">Gunakan fitur ini jika surat Anda membutuhkan input berupa daftar/tabel (contoh: Daftar Undangan, Daftar Pinjaman, dll).</p>
+            <ol class="small text-dark mb-0 ps-3">
+                <li class="mb-1">Di <strong>Microsoft Word</strong>, buat tabel seperti biasa. Pada baris isi data (bukan header), ketikkan variabel macro di sel pertama: <code>${NamaCollection}</code> (Contoh: <code>${Daftar_Undangan}</code>).</li>
+                <li class="mb-1">Kolom lainnya di baris yang sama diisi dengan variabel kolom (Contoh: <code>${Nama_Lengkap}</code>, <code>${Jabatan}</code>).</li>
+                <li class="mb-1">Di sistem (saat Upload Template), centang opsi <strong>Menggunakan Data Collection</strong>.</li>
+                <li class="mb-1">Isi <strong>Nama Collection</strong> persis seperti variabel di sel pertama Word tadi (Contoh: <code>Daftar_Undangan</code>).</li>
+                <li class="mb-1">Tambahkan nama-nama kolom sesuai variabel yang Anda tulis di Word (Contoh: <code>Nama_Lengkap</code>, <code>Jabatan</code>).</li>
+                <li>Saat proses <strong>Generate Surat</strong> (Langkah 3), formulir akan muncul otomatis untuk mengisi baris-baris ini dan sistem akan menggandakan tabel di Word secara instan!</li>
+            </ol>
+
+            <div class="mt-3 small text-muted border-top border-info-subtle pt-2">
+                <em>* Catatan: Untuk template <strong>Banyak Orang (Sekaligus)</strong> tipe klasik, data santri otomatis dilampirkan sebagai halaman baru di akhir dokumen.</em>
             </div>
         </div>
     </div>
