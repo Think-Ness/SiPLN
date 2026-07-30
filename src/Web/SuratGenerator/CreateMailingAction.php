@@ -33,8 +33,8 @@ final class CreateMailingAction
             $db->createCommand("ALTER TABLE surat_mailing ADD COLUMN sort_by VARCHAR(50) DEFAULT 'nama ASC' AFTER catatan")->execute();
         }
 
-        if (empty($kdsList) || $jenisPengajuanId === 0) {
-            return JsonResponse::create(['success' => false, 'message' => 'Data tidak lengkap. Pilih santri dan jenis pengajuan.'], 400);
+        if ($jenisPengajuanId === 0) {
+            return JsonResponse::create(['success' => false, 'message' => 'Data tidak lengkap. Pilih jenis pengajuan terlebih dahulu.'], 400);
         }
 
         if (!in_array($mode, ['sekaligus', 'perseorangan'])) {

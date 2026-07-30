@@ -740,15 +740,38 @@ function formatTglIndo(dateStr) {
 // ========== WIZARD NAV ==========
 function goToStep(step) {
     if (step === 2 && getPickedKds().length === 0) {
-        Swal.fire('Peringatan', 'Pilih minimal 1 santri terlebih dahulu.', 'warning');
+        Swal.fire({
+            title: 'Buat Surat Umum?',
+            text: 'Anda tidak memilih santri satupun. Sistem akan memproses ini sebagai Surat Umum (Tanpa Lampiran Santri). Lanjutkan?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Lanjut',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                proceedToStep2();
+            }
+        });
         return;
     }
     if (step === 3 && !currentMailingData) {
         Swal.fire('Peringatan', 'Buat mailing terlebih dahulu.', 'warning');
         return;
     }
-    if (step === 2) updateStep2Summary();
+    
+    if (step === 2) {
+        proceedToStep2();
+    } else {
+        doGoToStep(step);
+    }
+}
 
+function proceedToStep2() {
+    updateStep2Summary();
+    doGoToStep(2);
+}
+
+function doGoToStep(step) {
     currentStep = step;
     document.querySelectorAll('.wizard-panel').forEach(p => p.classList.remove('active'));
     document.getElementById('step' + step).classList.add('active');
@@ -821,7 +844,7 @@ function getPickedSantriData() {
 function updatePickCount() {
     const c = getPickedKds().length;
     document.getElementById('countPicked').textContent = c;
-    document.getElementById('btnToStep2').disabled = c === 0;
+    document.getElementById('btnToStep2').disabled = false;
 }
 
 // ========== STEP 2 SUMMARY ==========
@@ -834,6 +857,17 @@ function updateSantriNumbers() {
 }
 
 function updateStep2Summary() {
+    const santris = getPickedSantriData();
+    
+    if (santris.length === 0) {
+        selectMode('sekaligus');
+        document.getElementById('modePerseorangan').style.opacity = '0.5';
+        document.getElementById('modePerseorangan').style.pointerEvents = 'none';
+    } else {
+        document.getElementById('modePerseorangan').style.opacity = '1';
+        document.getElementById('modePerseorangan').style.pointerEvents = 'auto';
+    }
+
     const mode = selectedMode;
     document.getElementById('summaryMode').textContent = mode === 'sekaligus' ? 'Sekaligus (Kolektif)' : 'Perseorangan';
 
@@ -866,7 +900,11 @@ function updateStep2Summary() {
         </div>`;
     });
     const listEl = document.getElementById('summarySantriList');
-    listEl.innerHTML = html || '<span class="text-muted">Tidak ada santri terpilih</span>';
+    if (santris.length === 0) {
+        listEl.innerHTML = '<div class="text-muted fst-italic fw-medium text-center py-3 bg-light rounded"><i class="bi bi-file-earmark-text me-1"></i> Surat Umum (Tanpa Santri)</div>';
+    } else {
+        listEl.innerHTML = html;
+    }
 
     // Init SortableJS for manual dragging
     if (window.santriSortable) window.santriSortable.destroy();
