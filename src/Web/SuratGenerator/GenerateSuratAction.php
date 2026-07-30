@@ -99,12 +99,13 @@ final class GenerateSuratAction
         $hasTemplate = true;
 
         $tipeLabel = ['SP' => 'Surat Permohonan', 'SK' => 'Surat Keterangan', 'SJ' => 'Surat Jaminan', 'ST' => 'Surat Tugas'];
+        $label = $tipeLabel[$tipeSurat] ?? str_replace('_', ' ', $tipeSurat);
         AuditLogger::log($db, 'CREATE', 'SURAT_GENERATED', (string)$suratId, null,
-            "Generate {$tipeLabel[$tipeSurat]} nomor $nomorSurat untuk mailing #$mailingId");
+            "Generate {$label} nomor $nomorSurat untuk mailing #$mailingId");
 
         return JsonResponse::create([
             'success' => true,
-            'message' => "{$tipeLabel[$tipeSurat]} berhasil di-generate.",
+            'message' => "{$label} berhasil di-generate.",
             'is_docx' => $hasTemplate,
             'download_url' => $hasTemplate ? API_URL . "/api/surat/download/{$mailingId}?tipe={$tipeSurat}&with_lampiran={$withLampiran}" : null,
             'surat' => [
