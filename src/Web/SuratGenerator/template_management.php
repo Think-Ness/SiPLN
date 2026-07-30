@@ -75,14 +75,13 @@ $this->setTitle('Kelola Template Surat | Sistem Informasi');
                         <tr>
                             <th class="ps-4 fw-semibold text-secondary" style="width: 50px">No</th>
                             <th class="fw-semibold text-secondary">Nama Template</th>
-                            <th class="fw-semibold text-secondary">Instansi Tujuan</th>
                             <th class="fw-semibold text-secondary">Peruntukan</th>
                             <th class="fw-semibold text-secondary">File</th>
                             <th class="fw-semibold text-secondary text-end pe-4" style="width: 100px">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="border-top-0">
-                        <tr><td colspan="6" class="text-center py-4 text-muted">Memuat data...</td></tr>
+                        <tr><td colspan="5" class="text-center py-4 text-muted">Memuat data...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -212,6 +211,38 @@ document.addEventListener('DOMContentLoaded', () => {
             spinner.classList.add('d-none');
         }
     });
+    
+    // Event delegation for toggling groups
+    document.querySelector('#tableTemplates').addEventListener('click', function(e) {
+        const headerRow = e.target.closest('.group-header');
+        if (!headerRow) return;
+        
+        const groupId = headerRow.getAttribute('data-group-id');
+        const rows = document.querySelectorAll('.' + groupId);
+        const icon = document.getElementById('icon-' + groupId);
+        
+        if (!rows || rows.length === 0) return;
+        
+        const isCurrentlyHidden = rows[0].classList.contains('d-none');
+        
+        rows.forEach(row => {
+            if (isCurrentlyHidden) {
+                row.classList.remove('d-none');
+            } else {
+                row.classList.add('d-none');
+            }
+        });
+        
+        if (icon) {
+            if (isCurrentlyHidden) {
+                icon.classList.remove('bi-chevron-right');
+                icon.classList.add('bi-chevron-down');
+            } else {
+                icon.classList.remove('bi-chevron-down');
+                icon.classList.add('bi-chevron-right');
+            }
+        }
+    });
 });
 
 function onInstansiSelectChange() {
@@ -241,21 +272,42 @@ async function loadTemplates() {
         
         const tbody = document.querySelector('#tableTemplates tbody');
         if (data.data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted"><i class="bi bi-folder2-open me-2"></i>Belum ada template. Klik "Tambah Template" untuk mengunggah.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted"><i class="bi bi-folder2-open me-2"></i>Belum ada template. Klik "Tambah Template" untuk mengunggah.</td></tr>';
             return;
         }
         
         let html = '';
+        let currentInstansi = null;
+        let globalNo = 1;
+        
         data.data.forEach((t, i) => {
+            const instansi = t.instansi_tujuan;
+            const groupId = 'group-' + instansi.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+            
+            if (instansi !== currentInstansi) {
+                html += `
+                <tr class="table-secondary text-dark group-header" data-group-id="${groupId}" style="cursor:pointer; transition: background 0.2s;" onmouseover="this.classList.add('bg-light')" onmouseout="this.classList.remove('bg-light')">
+                    <td colspan="5" class="ps-4 py-3 fw-semibold">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-chevron-right me-3 text-muted transition-all" id="icon-${groupId}"></i>
+                            <i class="bi bi-folder2-open me-2 text-primary"></i> 
+                            <span>${escHtml(instansi)}</span>
+                            <span class="badge bg-secondary ms-2" id="count-${groupId}">0</span>
+                        </div>
+                    </td>
+                </tr>`;
+                currentInstansi = instansi;
+                globalNo = 1;
+            }
+            
             const peruntukanBadge = t.peruntukan === 'sekaligus' 
                 ? '<span class="badge bg-info-subtle text-info">Banyak Orang</span>'
                 : '<span class="badge bg-success-subtle text-success">Satu Orang</span>';
             const fileName = t.file_path.split('/').pop();
             
-            html += `<tr>
-                <td class="ps-4 text-muted">${i + 1}</td>
+            html += `<tr class="${groupId} d-none">
+                <td class="ps-4 text-muted">${globalNo++}</td>
                 <td class="fw-semibold">${escHtml(t.nama_template)}</td>
-                <td><span class="badge bg-primary-subtle text-primary">${escHtml(t.instansi_tujuan)}</span></td>
                 <td>${peruntukanBadge}</td>
                 <td><code class="small">${escHtml(fileName)}</code></td>
                 <td class="text-end pe-4 text-nowrap">
@@ -272,10 +324,20 @@ async function loadTemplates() {
             </tr>`;
         });
         tbody.innerHTML = html;
+        
+        // Update group counts
+        const badges = document.querySelectorAll('[id^="count-group-"]');
+        badges.forEach(badge => {
+            const groupId = badge.id.replace('count-', '');
+            const count = document.querySelectorAll('.' + groupId).length;
+            badge.textContent = count + ' Template';
+        });
     } catch(err) {
-        document.querySelector('#tableTemplates tbody').innerHTML = `<tr><td colspan="6" class="text-center py-4 text-danger">${err.message}</td></tr>`;
+        document.querySelector('#tableTemplates tbody').innerHTML = `<tr><td colspan="5" class="text-center py-4 text-danger">${err.message}</td></tr>`;
     }
 }
+
+// inline toggleGroup function removed, replaced by event delegation
 
 function editTemplate(id, nama, instansi, peruntukan) {
     const form = document.getElementById('formTambahTemplate');
