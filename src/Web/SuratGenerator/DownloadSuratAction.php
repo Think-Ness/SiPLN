@@ -34,8 +34,15 @@ final class DownloadSuratAction
             'ST' => 'Surat_Tugas.docx'  // Surat Tugas always single
         ];
 
-        if (!isset($templateFiles[$tipeSurat])) {
-            return $this->errorResponse("Parameter tipe surat tidak valid atau tidak ada. Contoh: ?tipe=SP", 400);
+        if (isset($templateFiles[$tipeSurat])) {
+            $templateFileName = $templateFiles[$tipeSurat];
+        } else {
+            // Dynamic Template from Kelola Template
+            // $tipeSurat is the core_name, e.g. "Surat_Perizinan"
+            if (empty($tipeSurat)) {
+                return $this->errorResponse("Parameter tipe surat tidak valid atau tidak ada. Contoh: ?tipe=SP atau ?tipe=Surat_Perizinan", 400);
+            }
+            $templateFileName = $tipeSurat . $suffix . '.docx';
         }
 
         // Load jenis pengajuan
@@ -71,12 +78,12 @@ final class DownloadSuratAction
         $publicSuratDir = dirname(__DIR__, 3) . '/public/uploads/Surat_Menyurat';
 
         // Locate template file — use Windows-style backslash path for COM
-        $templatePathSlash = $publicSuratDir . '/' . $kantor . '/' . $templateFiles[$tipeSurat];
+        $templatePathSlash = $publicSuratDir . '/' . $kantor . '/' . $templateFileName;
         $templatePath = str_replace('/', '\\', $templatePathSlash); // COM requires backslash
         
         if (!file_exists($templatePathSlash)) {
             return $this->errorResponse(
-                "File template tidak ditemukan: {$templatePathSlash}\n\nPastikan file '{$templateFiles[$tipeSurat]}' ada di folder:\n" . str_replace('/', '\\', $publicSuratDir) . "\\{$kantor}\\"
+                "File template tidak ditemukan: {$templatePathSlash}\n\nPastikan file '{$templateFileName}' ada di folder:\n" . str_replace('/', '\\', $publicSuratDir) . "\\{$kantor}\\"
             );
         }
 
@@ -102,7 +109,13 @@ final class DownloadSuratAction
         
         $safeJenis = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $jenisPengajuan['jenis_pengajuan']);
         $tipeLabel = ['SP' => 'Surat_Permohonan', 'SK' => 'Surat_Keterangan', 'SJ' => 'Surat_Jaminan', 'ST' => 'Surat_Tugas'];
-        $safeTipeSurat = $tipeLabel[$tipeSurat] ?? $tipeSurat;
+        
+        if (isset($tipeLabel[$tipeSurat])) {
+            $safeTipeSurat = $tipeLabel[$tipeSurat];
+        } else {
+            // Dynamic template safe name
+            $safeTipeSurat = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $tipeSurat);
+        }
 
         $saveDir = '';
         if (!empty($jenisPengajuan['output_path'])) {

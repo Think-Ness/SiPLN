@@ -640,12 +640,11 @@ $kodeInstansi = $instansi['kode_instansi'] ?? '';
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small fw-bold text-secondary">Instansi Tujuan</label>
-                    <select id="jpKantor" class="form-select">
+                    <select id="jpKantor" class="form-select" onchange="onJPKantorChange()">
                         <option value="">Pilih Instansi...</option>
-                        <option value="Imigrasi">Imigrasi</option>
-                        <option value="Kemenag">Kemenag</option>
-                        <option value="Lainnya">Instansi Lainnya</option>
+                        <!-- Akan diisi dinamis dari API -->
                     </select>
+                    <div class="form-text" style="font-size:.7rem;">Folder dari Surat_Menyurat/</div>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small fw-bold text-secondary">Tempat</label>
@@ -657,7 +656,7 @@ $kodeInstansi = $instansi['kode_instansi'] ?? '';
             <div class="row g-3">
                 <div class="col-md-12">
                     <label class="form-label small fw-bold text-secondary mb-2 d-block">Surat yang Dibutuhkan (Pilih yang akan di-generate otomatis)</label>
-                    <div class="d-flex flex-wrap gap-2">
+                    <div class="d-flex flex-wrap gap-2" id="suratCheckboxContainer">
                         <input type="checkbox" class="btn-check surat-cb" id="cbSP" value="SP">
                         <label class="btn btn-outline-primary btn-sm rounded-pill px-3" for="cbSP"><i class="bi bi-file-earmark-text me-1"></i> Surat Permohonan (SP)</label>
                         
@@ -670,6 +669,9 @@ $kodeInstansi = $instansi['kode_instansi'] ?? '';
                         <input type="checkbox" class="btn-check surat-cb" id="cbST" value="ST">
                         <label class="btn btn-outline-secondary btn-sm rounded-pill px-3" for="cbST" style="color:#6f42c1; border-color:#6f42c1;"><i class="bi bi-person-badge me-1"></i> Surat Tugas (ST)</label>
                     </div>
+                    <!-- Dynamic template checkboxes from folder -->
+                    <div id="dynamicTemplateCheckboxes" class="d-flex flex-wrap gap-2 mt-2"></div>
+                    <div class="form-text mt-1" style="font-size:.7rem;" id="dynamicTemplateHint"></div>
                 </div>
                 <div class="col-md-12 mt-3">
                     <label class="form-label small fw-bold text-secondary">Path Folder Output (Opsional)</label>
@@ -1537,7 +1539,89 @@ function showJenisPengajuanModal() {
     const modal = new bootstrap.Modal(document.getElementById('modalJenisPengajuan'));
     modal.show();
     loadJPList();
+    loadInstansiTujuanList();
 }
+
+async function loadInstansiTujuanList() {
+    try {
+        const res = await fetch('<?= API_URL ?>/api/surat/instansi-tujuan');
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+        
+        const sel = document.getElementById('jpKantor');
+        const currentVal = sel.value;
+        
+        let html = '<option value="">Pilih Instansi...</option>';
+        data.data.forEach(folder => {
+            const displayName = folder.replace(/_/g, ' ');
+            html += `<option value="${folder}">${displayName}</option>`;
+        });
+        
+        sel.innerHTML = html;
+        if (currentVal && data.data.includes(currentVal)) {
+            sel.value = currentVal;
+        }
+    } catch (e) {
+        console.error("Gagal memuat list instansi tujuan", e);
+    }
+}
+
+async function onJPKantorChange() {
+    const kantor = document.getElementById('jpKantor').value;
+    const container = document.getElementById('dynamicTemplateCheckboxes');
+    const hint = document.getElementById('dynamicTemplateHint');
+    
+    container.innerHTML = '';
+    hint.innerHTML = '';
+    
+    if (!kantor) return;
+    
+    hint.innerHTML = '<i class="bi bi-hourglass-split"></i> Memuat template...';
+    
+    try {
+        const res = await fetch(`<?= API_URL ?>/api/surat/instansi-tujuan/${encodeURIComponent(kantor)}/templates`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+        
+        if (data.data.length === 0) {
+            hint.innerHTML = `<span class="text-muted"><i class="bi bi-info-circle"></i> Tidak ada custom template di folder ${kantor}</span>`;
+            return;
+        }
+        
+        hint.innerHTML = `<span class="text-primary"><i class="bi bi-check-circle"></i> Ditemukan ${data.data.length} custom template di folder ${kantor}</span>`;
+        
+        let html = '';
+        let addedCoreNames = new Set();
+        data.data.forEach(tpl => {
+            const val = tpl.core_name;
+            if (addedCoreNames.has(val)) return; // Only show one checkbox per core name (e.g. one for "Surat Perizinan")
+            addedCoreNames.add(val);
+            
+            const id = 'cb_' + val;
+            
+            html += `
+                <input type="checkbox" class="btn-check surat-cb" id="${id}" value="${val}">
+                <label class="btn btn-outline-dark btn-sm rounded-pill px-3" for="${id}">
+                    <i class="bi bi-file-word me-1"></i> ${tpl.display_name} 
+                </label>
+            `;
+        });
+        container.innerHTML = html;
+        
+        // Re-check currently checked boxes if we are in edit mode
+        if (window.currentEditJP && window.currentEditJP.surat_dibutuhkan) {
+            const arr = window.currentEditJP.surat_dibutuhkan.split(',');
+            arr.forEach(v => {
+                const cb = document.getElementById('cb_' + v.trim());
+                if (cb) cb.checked = true;
+            });
+        }
+        
+    } catch (e) {
+        hint.innerHTML = `<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> Gagal memuat template: ${e.message}</span>`;
+    }
+}
+
 
 async function loadJPList() {
     try {
@@ -1599,28 +1683,31 @@ function editJP(jp) {
     document.getElementById('jpOutputPath').value = jp.output_path || '';
     document.getElementById('jpTempat').value = jp.tempat || '';
     
-    // Set value for Kantor select (if it doesn't match predefined options, we'd normally use custom, but here we assume it matches or falls back)
-    let k = jp.kantor || '';
-    let select = document.getElementById('jpKantor');
-    let optionExists = Array.from(select.options).some(opt => opt.value === k);
-    if (!optionExists && k !== '') {
-        // dynamically add option if user had custom text before
-        let newOption = new Option(k, k);
-        select.add(newOption);
-    }
-    select.value = k;
-    
-    document.getElementById('jpTemplate').value = '';
-    
+    // Store for dynamic checking
+    window.currentEditJP = jp;
+
     // Handle checkboxes for surat dibutuhkan
     document.querySelectorAll('.surat-cb').forEach(cb => cb.checked = false);
     if (jp.surat_dibutuhkan) {
         const arr = jp.surat_dibutuhkan.split(',');
         arr.forEach(val => {
+            // Check default SP,SJ,SK,ST
             const cb = document.getElementById('cb' + val.trim());
             if (cb) cb.checked = true;
+            // Note: dynamic custom templates are checked inside onJPKantorChange via window.currentEditJP
         });
     }
+
+    // Set value for Kantor select and trigger change to load templates
+    let k = jp.kantor || '';
+    let select = document.getElementById('jpKantor');
+    let optionExists = Array.from(select.options).some(opt => opt.value === k);
+    if (!optionExists && k !== '') {
+        let newOption = new Option(k, k);
+        select.add(newOption);
+    }
+    select.value = k;
+    onJPKantorChange();
 
     document.getElementById('jpFormContainer').style.display = 'block';
 }

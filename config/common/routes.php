@@ -417,6 +417,29 @@ return [
                 ->action([Web\SuratGenerator\JenisPengajuanAction::class, 'delete'])
                 ->name('surat.jenis-pengajuan.delete'),
 
+            // Dynamic Surat Templates
+            Route::get('/surat-templates')
+                ->action([Web\SuratGenerator\TemplateManagementAction::class, 'index'])
+                ->name('surat-templates'),
+            Route::get('/api/surat/templates')
+                ->action([Web\SuratGenerator\TemplateApiAction::class, 'list'])
+                ->name('surat.templates.list'),
+            Route::post('/api/surat/templates/upload')
+                ->action([Web\SuratGenerator\TemplateApiAction::class, 'upload'])
+                ->name('surat.templates.upload'),
+            Route::post('/api/surat/templates/{id:\d+}/delete')
+                ->action([Web\SuratGenerator\TemplateApiAction::class, 'delete'])
+                ->name('surat.templates.delete'),
+            Route::get('/api/surat/templates/{id:\d+}/open')
+                ->action([Web\SuratGenerator\TemplateApiAction::class, 'openInWord'])
+                ->name('surat.templates.open'),
+            Route::get('/api/surat/instansi-tujuan')
+                ->action([Web\SuratGenerator\TemplateApiAction::class, 'instansiTujuanList'])
+                ->name('surat.instansi-tujuan.list'),
+            Route::get('/api/surat/instansi-tujuan/{nama}/templates')
+                ->action([Web\SuratGenerator\TemplateApiAction::class, 'instansiTujuanTemplates'])
+                ->name('surat.instansi-tujuan.templates'),
+
             // Pengaturan Sistem
             Route::get('/pengaturan')
                 ->action(Web\Pengaturan\Action::class)

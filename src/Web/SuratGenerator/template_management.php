@@ -1,0 +1,357 @@
+<?php
+/**
+ * @var \Yiisoft\View\WebView $this
+ * @var array $folderList
+ * @var string $role
+ */
+$this->setTitle('Kelola Template Surat | Sistem Informasi');
+?>
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-0 fw-bold text-dark" style="letter-spacing:-.5px;">Kelola Template Surat</h4>
+            <div class="text-muted small fw-medium mt-1">Unggah dan kelola template Microsoft Word (.docx) per instansi tujuan</div>
+        </div>
+        <div class="d-flex gap-2 mt-3 mt-sm-0">
+            <button class="btn btn-primary d-flex align-items-center gap-2 shadow-sm rounded-3" data-bs-toggle="modal" data-bs-target="#modalTambahTemplate">
+                <i class="bi bi-cloud-arrow-up"></i>
+                <span class="fw-medium">Tambah Template</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Panduan Bookmark -->
+    <div class="alert alert-info border-0 shadow-sm rounded-4 mb-4 d-flex gap-3 align-items-start">
+        <div class="bg-white text-info rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:40px;height:40px;">
+            <i class="bi bi-bookmark-fill fs-5"></i>
+        </div>
+        <div>
+            <h6 class="fw-bold mb-2">Panduan Bookmark di File Word (.docx)</h6>
+            <p class="mb-2 text-dark small">Gunakan fitur <strong>Bookmark</strong> di Microsoft Word (Insert → Bookmark) untuk menandai posisi data yang akan diisi otomatis. Berikut daftar nama bookmark yang didukung:</p>
+            <div class="row g-2 small text-dark mt-2">
+                <div class="col-md-4">
+                    <div class="fw-bold text-primary mb-1">Header Surat</div>
+                    <ul class="mb-0">
+                        <li><code>NO</code> : Nomor Surat (angka urut)</li>
+                        <li><code>Bln_Romawi</code> : Bulan dalam Romawi</li>
+                        <li><code>Tahun_Buat</code> : Tahun Surat</li>
+                        <li><code>Tanggal_Buat</code> : Tanggal Surat (Indo)</li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <div class="fw-bold text-primary mb-1">Isi Surat</div>
+                    <ul class="mb-0">
+                        <li><code>Hal</code> : Perihal Surat</li>
+                        <li><code>Isi</code> : Konten Surat</li>
+                        <li><code>Kepada</code> : Tujuan Surat</li>
+                        <li><code>Tempat</code> : Tempat Tujuan</li>
+                        <li><code>JML_LAMPIRAN</code> : Jumlah Lampiran</li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <div class="fw-bold text-primary mb-1">Data Santri (Perseorangan)</div>
+                    <ul class="mb-0">
+                        <li><code>Nama_Santri</code> : Nama Lengkap</li>
+                        <li><code>Tempat_Lahir</code> : Tempat Lahir</li>
+                        <li><code>Tgl_Lahir</code> : Tanggal Lahir</li>
+                        <li><code>Kewarganegaraan</code> : Kewarganegaraan</li>
+                        <li><code>No_Paspor</code> : Nomor Paspor</li>
+                        <li><code>Tgl_Berlaku</code> : Exp. Paspor</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-3 small text-muted">
+                <em>* Untuk template <strong>Banyak Orang (Sekaligus)</strong>, data santri akan ditambahkan sebagai tabel lampiran di akhir dokumen secara otomatis.</em>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="tableTemplates">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4 fw-semibold text-secondary" style="width: 50px">No</th>
+                            <th class="fw-semibold text-secondary">Nama Template</th>
+                            <th class="fw-semibold text-secondary">Instansi Tujuan</th>
+                            <th class="fw-semibold text-secondary">Peruntukan</th>
+                            <th class="fw-semibold text-secondary">File</th>
+                            <th class="fw-semibold text-secondary text-end pe-4" style="width: 100px">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-top-0">
+                        <tr><td colspan="6" class="text-center py-4 text-muted">Memuat data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Tambah Template -->
+<div class="modal fade" id="modalTambahTemplate" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <form id="formTambahTemplate">
+                <div class="modal-header bg-light border-bottom-0 p-4">
+                    <h5 class="modal-title fw-bold">Upload Template Baru</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 pt-2">
+                    <div class="mb-3">
+                        <label class="form-label fw-medium text-secondary">Nama Template <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control rounded-3" name="nama_template" placeholder="Misal: Surat Perizinan" required>
+                        <div class="form-text small mt-1">Akan menjadi nama file: <code>Surat_Perizinan_Satu_Orang.docx</code></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium text-secondary">Instansi Tujuan <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <select class="form-select rounded-start-3" name="instansi_tujuan_select" id="selInstansiTujuan" onchange="onInstansiSelectChange()">
+                                <option value="">-- Pilih Instansi Tujuan --</option>
+                                <?php foreach ($folderList as $folder): ?>
+                                    <option value="<?= htmlspecialchars($folder) ?>"><?= htmlspecialchars(str_replace('_', ' ', $folder)) ?></option>
+                                <?php endforeach; ?>
+                                <option value="__baru__">+ Tambah Instansi Baru...</option>
+                            </select>
+                        </div>
+                        <input type="text" class="form-control rounded-3 mt-2 d-none" name="instansi_tujuan_baru" id="inputInstansiBaru" placeholder="Ketik nama instansi tujuan baru (misal: Pengasuhan)">
+                        <input type="hidden" name="instansi_tujuan" id="hiddenInstansiTujuan">
+                        <div class="form-text small mt-1">Folder penyimpanan: <code>Surat_Menyurat/<span id="previewFolder">...</span>/</code></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium text-secondary">Peruntukan Surat <span class="text-danger">*</span></label>
+                        <select class="form-select rounded-3" name="peruntukan" required>
+                            <option value="perseorangan">Satu Orang (Perseorangan)</option>
+                            <option value="sekaligus">Banyak Orang (Sekaligus / Tabel)</option>
+                        </select>
+                        <div class="form-text small mt-1">Pilih "Banyak Orang" jika isi suratnya berupa tabel daftar nama.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium text-secondary">File Template Word (.docx) <span class="text-danger">*</span></label>
+                        <input type="file" class="form-control rounded-3" name="file" accept=".docx" required>
+                        <div class="form-text small mt-1 text-primary"><i class="bi bi-info-circle"></i> Hanya menerima file ekstensi .docx. Pastikan sudah menggunakan Bookmark.</div>
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" name="overwrite" value="1" id="cbOverwrite">
+                            <label class="form-check-label small" for="cbOverwrite">Timpa file jika nama template dan peruntukan sama (Update/Edit)</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top-0 p-3">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary rounded-3 px-4" id="btnUpload">
+                        <span class="spinner-border spinner-border-sm d-none me-2" id="uploadSpinner"></span>
+                        Upload & Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+const API_URL = '<?= API_URL ?>';
+const ASSET_URL = '<?= ASSET_URL ?>';
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadTemplates();
+
+    const form = document.getElementById('formTambahTemplate');
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const btn = document.getElementById('btnUpload');
+        const spinner = document.getElementById('uploadSpinner');
+        
+        // Resolve instansi_tujuan value
+        const sel = document.getElementById('selInstansiTujuan');
+        const baruInput = document.getElementById('inputInstansiBaru');
+        const hidden = document.getElementById('hiddenInstansiTujuan');
+        
+        if (sel.value === '__baru__') {
+            hidden.value = baruInput.value.trim();
+        } else {
+            hidden.value = sel.value;
+        }
+        
+        if (!hidden.value) {
+            Swal.fire('Peringatan', 'Instansi Tujuan wajib dipilih atau diisi.', 'warning');
+            return;
+        }
+        
+        btn.disabled = true;
+        spinner.classList.remove('d-none');
+        
+        try {
+            const formData = new FormData(form);
+            // Override instansi_tujuan with resolved value
+            formData.set('instansi_tujuan', hidden.value);
+            // Remove helper fields
+            formData.delete('instansi_tujuan_select');
+            formData.delete('instansi_tujuan_baru');
+            
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            const res = await fetch(API_URL + '/api/surat/templates/upload', {
+                method: 'POST',
+                headers: { 'X-CSRF-Token': csrf },
+                body: formData
+            });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.message);
+            
+            Swal.fire('Berhasil', data.message, 'success');
+            form.reset();
+            document.getElementById('inputInstansiBaru').classList.add('d-none');
+            bootstrap.Modal.getInstance(document.getElementById('modalTambahTemplate')).hide();
+            loadTemplates();
+        } catch(err) {
+            Swal.fire('Gagal', err.message, 'error');
+        } finally {
+            btn.disabled = false;
+            spinner.classList.add('d-none');
+        }
+    });
+});
+
+function onInstansiSelectChange() {
+    const sel = document.getElementById('selInstansiTujuan');
+    const baruInput = document.getElementById('inputInstansiBaru');
+    const preview = document.getElementById('previewFolder');
+    
+    if (sel.value === '__baru__') {
+        baruInput.classList.remove('d-none');
+        baruInput.focus();
+        baruInput.addEventListener('input', () => {
+            preview.textContent = baruInput.value.replace(/[^a-zA-Z0-9_\-]/g, '_') || '...';
+        });
+        preview.textContent = '...';
+    } else {
+        baruInput.classList.add('d-none');
+        baruInput.value = '';
+        preview.textContent = sel.value || '...';
+    }
+}
+
+async function loadTemplates() {
+    try {
+        const res = await fetch(API_URL + '/api/surat/templates');
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+        
+        const tbody = document.querySelector('#tableTemplates tbody');
+        if (data.data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted"><i class="bi bi-folder2-open me-2"></i>Belum ada template. Klik "Tambah Template" untuk mengunggah.</td></tr>';
+            return;
+        }
+        
+        let html = '';
+        data.data.forEach((t, i) => {
+            const peruntukanBadge = t.peruntukan === 'sekaligus' 
+                ? '<span class="badge bg-info-subtle text-info">Banyak Orang</span>'
+                : '<span class="badge bg-success-subtle text-success">Satu Orang</span>';
+            const fileName = t.file_path.split('/').pop();
+            
+            html += `<tr>
+                <td class="ps-4 text-muted">${i + 1}</td>
+                <td class="fw-semibold">${escHtml(t.nama_template)}</td>
+                <td><span class="badge bg-primary-subtle text-primary">${escHtml(t.instansi_tujuan)}</span></td>
+                <td>${peruntukanBadge}</td>
+                <td><code class="small">${escHtml(fileName)}</code></td>
+                <td class="text-end pe-4 text-nowrap">
+                    <button class="btn btn-sm btn-outline-primary rounded-circle" onclick="openTemplate(this, ${t.id})" title="Buka di MS Word">
+                        <i class="bi bi-box-arrow-up-right"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-warning rounded-circle ms-1" onclick="editTemplate(${t.id}, '${escHtml(t.nama_template)}', '${escHtml(t.instansi_tujuan)}', '${t.peruntukan}')" title="Edit / Timpa Template">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger rounded-circle ms-1" onclick="deleteTemplate(${t.id}, '${escHtml(t.nama_template)}')" title="Hapus Template">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            </tr>`;
+        });
+        tbody.innerHTML = html;
+    } catch(err) {
+        document.querySelector('#tableTemplates tbody').innerHTML = `<tr><td colspan="6" class="text-center py-4 text-danger">${err.message}</td></tr>`;
+    }
+}
+
+function editTemplate(id, nama, instansi, peruntukan) {
+    const form = document.getElementById('formTambahTemplate');
+    form.reset();
+    
+    form.elements['nama_template'].value = nama;
+    form.elements['peruntukan'].value = peruntukan;
+    
+    const sel = document.getElementById('selInstansiTujuan');
+    const options = Array.from(sel.options).map(o => o.value);
+    if (options.includes(instansi)) {
+        sel.value = instansi;
+        document.getElementById('inputInstansiBaru').classList.add('d-none');
+    } else {
+        sel.value = '__baru__';
+        document.getElementById('inputInstansiBaru').value = instansi;
+        document.getElementById('inputInstansiBaru').classList.remove('d-none');
+    }
+    document.getElementById('previewFolder').textContent = instansi || '...';
+    
+    // Check overwrite explicitly since this is Edit mode
+    document.getElementById('cbOverwrite').checked = true;
+    
+    const modal = new bootstrap.Modal(document.getElementById('modalTambahTemplate'));
+    modal.show();
+}
+
+async function openTemplate(btn, id) {
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+    btn.disabled = true;
+
+    try {
+        const res = await fetch(`${API_URL}/api/surat/templates/${id}/open`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+        // Toast message maybe?
+        console.log('Opened in Word');
+    } catch (e) {
+        Swal.fire('Gagal Membuka Template', e.message, 'error');
+    } finally {
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+    }
+}
+
+async function deleteTemplate(id, name) {
+    const result = await Swal.fire({
+        title: 'Hapus Template?',
+        html: `Template <strong>${name}</strong> akan dihapus beserta file Word-nya.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        confirmButtonText: 'Ya, Hapus',
+        cancelButtonText: 'Batal'
+    });
+    if (!result.isConfirmed) return;
+    
+    try {
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        const res = await fetch(API_URL + '/api/surat/templates/' + id + '/delete', {
+            method: 'POST',
+            headers: { 'X-CSRF-Token': csrf }
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+        Swal.fire('Berhasil', data.message, 'success');
+        loadTemplates();
+    } catch(err) {
+        Swal.fire('Gagal', err.message, 'error');
+    }
+}
+
+function escHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+}
+</script>
