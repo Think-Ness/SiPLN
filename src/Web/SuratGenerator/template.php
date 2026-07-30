@@ -656,22 +656,9 @@ $kodeInstansi = $instansi['kode_instansi'] ?? '';
             <div class="row g-3">
                 <div class="col-md-12">
                     <label class="form-label small fw-bold text-secondary mb-2 d-block">Surat yang Dibutuhkan (Pilih yang akan di-generate otomatis)</label>
-                    <div class="d-flex flex-wrap gap-2" id="suratCheckboxContainer">
-                        <input type="checkbox" class="btn-check surat-cb" id="cbSP" value="SP">
-                        <label class="btn btn-outline-primary btn-sm rounded-pill px-3" for="cbSP"><i class="bi bi-file-earmark-text me-1"></i> Surat Permohonan (SP)</label>
-                        
-                        <input type="checkbox" class="btn-check surat-cb" id="cbSJ" value="SJ">
-                        <label class="btn btn-outline-warning btn-sm rounded-pill px-3" for="cbSJ" style="color:#d35400; border-color:#d35400;"><i class="bi bi-shield-check me-1"></i> Surat Jaminan (SJ)</label>
-                        
-                        <input type="checkbox" class="btn-check surat-cb" id="cbSK" value="SK">
-                        <label class="btn btn-outline-success btn-sm rounded-pill px-3" for="cbSK"><i class="bi bi-file-earmark-check me-1"></i> Surat Keterangan (SK)</label>
-                        
-                        <input type="checkbox" class="btn-check surat-cb" id="cbST" value="ST">
-                        <label class="btn btn-outline-secondary btn-sm rounded-pill px-3" for="cbST" style="color:#6f42c1; border-color:#6f42c1;"><i class="bi bi-person-badge me-1"></i> Surat Tugas (ST)</label>
-                    </div>
-                    <!-- Dynamic template checkboxes from folder -->
-                    <div id="dynamicTemplateCheckboxes" class="d-flex flex-wrap gap-2 mt-2"></div>
-                    <div class="form-text mt-1" style="font-size:.7rem;" id="dynamicTemplateHint"></div>
+                    
+                    <div id="dynamicTemplateHint" class="form-text mb-2" style="font-size:.75rem;">Pilih Instansi Tujuan terlebih dahulu untuk melihat daftar template surat yang tersedia.</div>
+                    <div id="dynamicTemplateCheckboxes" class="d-flex flex-wrap gap-2"></div>
                 </div>
                 <div class="col-md-12 mt-3">
                     <label class="form-label small fw-bold text-secondary">Path Folder Output (Opsional)</label>
@@ -995,18 +982,34 @@ function setupStep3() {
     const m = currentMailingData.mailing;
     document.getElementById('step3KodeMailing').textContent = m.kode_mailing;
 
-    // Tampilkan SELALU ke-4 surat, tidak lagi bergantung pada surat_dibutuhkan
-    const suratTypes = ['SP', 'SK', 'SJ', 'ST'];
+    // Gunakan surat_dibutuhkan dari database
+    const requiredSuratStr = m.surat_dibutuhkan || '';
+    let suratTypes = requiredSuratStr.split(',').map(s => s.trim()).filter(s => s);
+    
+    // Fallback jika kosong
+    if (suratTypes.length === 0) {
+        suratTypes = ['SP', 'SK', 'SJ', 'ST'];
+    }
+
     const mode = m.mode || 'perseorangan';
     const modeMap = TEMPLATE_MAP[mode] || TEMPLATE_MAP['perseorangan'];
 
     let html = '';
     suratTypes.forEach(t => {
-        const s = modeMap[t];
-        if (!s) return;
+        let s = modeMap[t];
+        if (!s) {
+            // Dynamic template
+            s = {
+                label: t.replace(/_/g, ' '),
+                file: t + (mode === 'sekaligus' ? '_Banyak_Orang' : '_Satu_Orang') + '.docx',
+                icon: 'bi-file-word',
+                bg: '#f8f9fa',
+                color: '#212529'
+            };
+        }
         html += `<div class="surat-type-card d-flex align-items-center gap-3" onclick="selectSuratType('${t}')" id="stCard_${t}">
-            <div class="surat-type-icon" style="background:${s.bg};color:${s.color};"><i class="bi ${s.icon}"></i></div>
-            <div><div class="fw-bold small">${s.label}</div><div class="text-muted" style="font-size:.7rem;">${t} — ${s.file}</div></div>
+            <div class="surat-type-icon" style="background:${s.bg};color:${s.color}; border:1px solid #dee2e6;"><i class="bi ${s.icon}"></i></div>
+            <div><div class="fw-bold small">${s.label}</div><div class="text-muted" style="font-size:.7rem;">${s.file}</div></div>
         </div>`;
     });
     document.getElementById('suratTypeCards').innerHTML = html;
@@ -1024,8 +1027,14 @@ function selectSuratType(type) {
     const nextNo = (suratCounters[type] || 1);
     const nomor = String(nextNo).padStart(3, '0');
     
+    // Buat singkatan untuk tipe surat dinamis
+    let abbrev = type;
+    if (type.length > 3 && !['SP', 'SK', 'SJ', 'ST'].includes(type)) {
+        abbrev = type.split('_').map(w => w.charAt(0)).join('').toUpperCase().substring(0, 3);
+    }
+    
     document.getElementById('inpNomorUrut').value = nomor;
-    document.getElementById('inpNomorSuffix').textContent = `/${type}/PLN/${romawi}/${year}`;
+    document.getElementById('inpNomorSuffix').textContent = `/${abbrev}/PLN/${romawi}/${year}`;
     document.getElementById('lastNomorInfo').textContent = `(Terakhir: ${nextNo > 1 ? String(nextNo - 1).padStart(3, '0') : '000'})`;
 
     // Populate metadata form with default data from mailing
@@ -1632,8 +1641,14 @@ async function loadJPList() {
         let html = '<div class="table-responsive"><table class="table table-sm table-hover align-middle mb-0" style="font-size:.82rem;"><thead class="table-light"><tr><th>Jenis Pengajuan</th><th>Perihal</th><th>Kepada</th><th>Surat</th><th class="text-center">Aksi</th></tr></thead><tbody>';
         data.data.forEach(jp => {
             const suratBadges = (jp.surat_dibutuhkan||'').split(',').map(s => {
-                const sl = SURAT_LABELS[s.trim()];
-                return sl ? `<span class="badge" style="background:${sl.bg};color:${sl.color};font-size:.65rem;">${s.trim()}</span>` : '';
+                const t = s.trim();
+                if (!t) return '';
+                const sl = SURAT_LABELS[t];
+                if (sl) {
+                    return `<span class="badge" style="background:${sl.bg};color:${sl.color};font-size:.65rem;">${t}</span>`;
+                } else {
+                    return `<span class="badge bg-secondary" style="font-size:.65rem;">${t.replace(/_/g, ' ')}</span>`;
+                }
             }).join(' ');
             html += `<tr>
                 <td class="fw-semibold">${jp.jenis_pengajuan}</td>
@@ -1670,8 +1685,8 @@ function resetJPForm() {
     document.getElementById('jpKantor').value = '';
     document.getElementById('jpTemplate').value = '';
     
-    // Check all surat by default for new form
-    document.querySelectorAll('.surat-cb').forEach(cb => cb.checked = true);
+    document.getElementById('dynamicTemplateCheckboxes').innerHTML = '';
+    document.getElementById('dynamicTemplateHint').innerHTML = 'Pilih Instansi Tujuan terlebih dahulu untuk melihat daftar template surat yang tersedia.';
 }
 
 function editJP(jp) {
