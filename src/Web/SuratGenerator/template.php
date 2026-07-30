@@ -1125,9 +1125,32 @@ function selectSuratType(type) {
         });
         collContainer.innerHTML = html;
         
-        // Add 1 initial row for each collection
+        let existingData = null;
+        if (currentMailingData.surats) {
+            const extSurat = currentMailingData.surats.find(s => s.tipe_surat === type);
+            if (extSurat && extSurat.json_dynamic_data) {
+                try {
+                    existingData = typeof extSurat.json_dynamic_data === 'string' ? JSON.parse(extSurat.json_dynamic_data) : extSurat.json_dynamic_data;
+                } catch(e) {}
+            }
+        }
+
         schema.forEach(coll => {
-            addCollectionRow(coll.name, coll.columns.join(','));
+            if (existingData && existingData[coll.name] && existingData[coll.name].length > 0) {
+                existingData[coll.name].forEach(rowData => {
+                    const tr = addCollectionRow(coll.name, coll.columns.join(','));
+                    if (tr) {
+                        tr.querySelectorAll('input').forEach(inp => {
+                            const col = inp.dataset.col;
+                            if (rowData[col] !== undefined) {
+                                inp.value = rowData[col];
+                            }
+                        });
+                    }
+                });
+            } else {
+                addCollectionRow(coll.name, coll.columns.join(','));
+            }
         });
     } else {
         collContainer.classList.add('d-none');
@@ -1137,7 +1160,7 @@ function selectSuratType(type) {
 function addCollectionRow(name, colsStr) {
     const cols = colsStr.split(',');
     const tbody = document.querySelector(`#tblColl_${name} tbody`);
-    if (!tbody) return;
+    if (!tbody) return null;
     
     const tr = document.createElement('tr');
     let tds = '';
@@ -1147,6 +1170,7 @@ function addCollectionRow(name, colsStr) {
     tds += `<td class="text-center align-middle"><button class="btn btn-sm text-danger p-0 m-0" onclick="this.closest('tr').remove()"><i class="bi bi-trash"></i></button></td>`;
     tr.innerHTML = tds;
     tbody.appendChild(tr);
+    return tr;
 }
 
     function updatePetugasTtl() {
