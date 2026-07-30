@@ -870,8 +870,6 @@ function updateStep2Summary() {
 
     const mode = selectedMode;
     document.getElementById('summaryMode').textContent = mode === 'sekaligus' ? 'Sekaligus (Kolektif)' : 'Perseorangan';
-
-    const santris = getPickedSantriData();
     const sortBy = document.getElementById('inpSortBy') ? document.getElementById('inpSortBy').value : 'nama ASC';
     
     // Only sort if not manual, because manual means they've dragged them or we just use default
