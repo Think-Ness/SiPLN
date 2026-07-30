@@ -43,36 +43,25 @@ final class DownloadTemplateAction
             'ST' => 'Surat_Tugas.docx'
         ];
 
-        if (!isset($templateFiles[$tipeSurat])) {
-            return $this->errorResponse("Parameter tipe surat tidak valid.", 400);
-        }
-
-        $templateFileName = $templateFiles[$tipeSurat];
-
-        @session_start();
-        $instansiId = $mailing['instansi_id'] ?? null;
-        if (empty($instansiId)) {
-            $instansiId = $_SESSION['instansi_id'] ?? null;
-        }
-
-        if (empty($instansiId)) {
-            return $this->errorResponse("Instansi tidak dapat ditentukan. Silakan login kembali.", 400);
-        }
-
-        $instansi = $db->createCommand(
-            "SELECT * FROM master_instansi WHERE kode = :kode",
-            [':kode' => $instansiId]
-        )->queryOne();
-
-        if (!$instansi || empty($instansi['path_folder'])) {
-            return $this->errorResponse("Path Folder Instansi belum diatur.", 400);
-        }
-
-        $basePath = rtrim(str_replace('\\', '/', $instansi['path_folder']), '/');
         $kantor = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $jenisPengajuan['kantor']);
         $publicSuratDir = dirname(__DIR__, 3) . '/public/uploads/Surat_Menyurat';
 
-        $templatePath = $publicSuratDir . '/' . $kantor . '/' . $templateFileName;
+        if (!isset($templateFiles[$tipeSurat])) {
+            // Check dynamic template
+            $tipeName = str_replace('_', ' ', $tipeSurat);
+            $dynamicTemplate = $db->createCommand(
+                "SELECT file_path FROM surat_template_dinamis WHERE instansi_tujuan = :kantor AND nama_template = :tipe",
+                [':kantor' => $jenisPengajuan['kantor'], ':tipe' => $tipeName]
+            )->queryOne();
+            
+            if (!$dynamicTemplate) {
+                return $this->errorResponse("Parameter tipe surat tidak valid.", 400);
+            }
+            $templatePath = dirname(__DIR__, 3) . '/public/' . ltrim($dynamicTemplate['file_path'], '/');
+        } else {
+            $templateFileName = $templateFiles[$tipeSurat];
+            $templatePath = $publicSuratDir . '/' . $kantor . '/' . $templateFileName;
+        }
 
         if (!file_exists($templatePath)) {
             return $this->errorResponse(
