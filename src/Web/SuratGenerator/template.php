@@ -888,8 +888,13 @@ function onJenisChange() {
 
     let html = '';
     suratNeeded.forEach(t => {
-        const s = SURAT_LABELS[t.trim()];
-        if (s) html += `<span class="badge rounded-pill px-3 py-1 fw-medium" style="background:${s.bg};color:${s.color};border:1px solid ${s.color}20;">${s.label}</span>`;
+        const tr = t.trim();
+        const s = SURAT_LABELS[tr];
+        if (s) {
+            html += `<span class="badge rounded-pill px-3 py-1 fw-medium" style="background:${s.bg};color:${s.color};border:1px solid ${s.color}20;">${s.label}</span>`;
+        } else {
+            html += `<span class="badge rounded-pill px-3 py-1 fw-medium bg-secondary text-white border" style="font-size:0.8rem;">${tr.replace(/_/g, ' ')}</span>`;
+        }
     });
     document.getElementById('summarySuratNeeded').innerHTML = html || '<span class="text-muted small">Pilih jenis pengajuan</span>';
     document.getElementById('btnBuatMailing').disabled = !sel.value;

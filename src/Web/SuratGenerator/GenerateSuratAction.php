@@ -34,8 +34,8 @@ final class GenerateSuratAction
             return JsonResponse::create(['success' => false, 'message' => 'Data tidak lengkap.'], 400);
         }
 
-        if (!in_array($tipeSurat, ['SP', 'SK', 'SJ', 'ST'])) {
-            return JsonResponse::create(['success' => false, 'message' => 'Tipe surat tidak valid.'], 400);
+        if (empty($tipeSurat)) {
+            return JsonResponse::create(['success' => false, 'message' => 'Tipe surat tidak boleh kosong.'], 400);
         }
 
         // Auto-generate nomor surat if empty: get MAX for this type this year
