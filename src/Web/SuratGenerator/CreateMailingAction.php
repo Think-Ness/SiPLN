@@ -106,11 +106,28 @@ final class CreateMailingAction
             [':mid' => $mailingId]
         )->queryAll();
 
+        $kantor = $mailing['kantor'] ?? '';
+        $templateSchemas = [];
+        if ($kantor) {
+            $schemas = $db->createCommand(
+                "SELECT nama_template, json_data_collection 
+                 FROM surat_template_dinamis 
+                 WHERE instansi_tujuan = :kantor",
+                [':kantor' => $kantor]
+            )->queryAll();
+            
+            foreach ($schemas as $row) {
+                $safeTplName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $row['nama_template']);
+                $templateSchemas[$safeTplName] = $row['json_data_collection'] ? json_decode($row['json_data_collection'], true) : null;
+            }
+        }
+
         return JsonResponse::create([
             'success' => true,
             'message' => "Mailing $kodeMailing berhasil dibuat.",
             'mailing' => $mailing,
             'santris' => $santriData,
+            'templateSchemas' => $templateSchemas,
         ]);
     }
 }
