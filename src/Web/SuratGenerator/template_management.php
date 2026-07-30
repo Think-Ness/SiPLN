@@ -314,24 +314,39 @@ function toggleDataCollection() {
     }
 }
 
-function addCollection() {
+function addCollection(name = '', columns = []) {
     collectionCount++;
     const id = collectionCount;
+    
+    let colFieldsHtml = '';
+    if (columns && columns.length > 0) {
+        columns.forEach(colName => {
+            colFieldsHtml += `
+            <div class="d-flex gap-2 column-field-row">
+                <input type="text" class="form-control form-control-sm col-field-input" placeholder="Nama Kolom (misal: Nama Lengkap)" value="${escHtml(colName)}" required>
+                <button type="button" class="btn btn-sm btn-light text-danger" onclick="if(this.parentElement.parentElement.children.length>1) this.parentElement.remove()"><i class="bi bi-trash"></i></button>
+            </div>`;
+        });
+    } else {
+        colFieldsHtml = `
+        <div class="d-flex gap-2 column-field-row">
+            <input type="text" class="form-control form-control-sm col-field-input" placeholder="Nama Kolom (misal: Nama Lengkap)" required>
+            <button type="button" class="btn btn-sm btn-light text-danger" onclick="if(this.parentElement.parentElement.children.length>1) this.parentElement.remove()"><i class="bi bi-trash"></i></button>
+        </div>`;
+    }
+
     const html = `
     <div class="collection-item border bg-white p-3 rounded-3 mb-3 position-relative shadow-sm" id="col_${id}">
         <button type="button" class="btn-close position-absolute top-0 end-0 m-2" onclick="removeCollection(${id})" aria-label="Close"></button>
         <div class="mb-2 pe-4">
             <label class="form-label small fw-bold text-dark">Nama Collection (Macro/Bookmark) <span class="text-danger">*</span></label>
-            <input type="text" class="form-control form-control-sm col-name-input border-secondary" placeholder="Contoh: Daftar_Undangan" required>
+            <input type="text" class="form-control form-control-sm col-name-input border-secondary" placeholder="Contoh: Daftar_Undangan" value="${escHtml(name)}" required>
             <div class="form-text" style="font-size:0.65rem">Di Word, tabel harus memiliki variabel row <code>\${NamaCollection}</code> di kolom pertamanya.</div>
         </div>
         <div>
             <label class="form-label small fw-bold mb-1 text-dark">Daftar Kolom</label>
             <div id="colFields_${id}" class="d-flex flex-column gap-2 mb-2">
-                <div class="d-flex gap-2 column-field-row">
-                    <input type="text" class="form-control form-control-sm col-field-input" placeholder="Nama Kolom (misal: Nama Lengkap)" required>
-                    <button type="button" class="btn btn-sm btn-light text-danger" onclick="if(this.parentElement.parentElement.children.length>1) this.parentElement.remove()"><i class="bi bi-trash"></i></button>
-                </div>
+                ${colFieldsHtml}
             </div>
             <button type="button" class="btn btn-sm btn-light border" style="font-size:0.75rem" onclick="addColumnField(${id})"><i class="bi bi-plus"></i> Tambah Kolom</button>
         </div>
@@ -423,7 +438,7 @@ async function loadTemplates() {
                     <button class="btn btn-sm btn-outline-primary rounded-circle" onclick="openTemplate(this, ${t.id})" title="Buka di MS Word">
                         <i class="bi bi-box-arrow-up-right"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-warning rounded-circle ms-1" onclick="editTemplate(${t.id}, '${escHtml(t.nama_template)}', '${escHtml(t.instansi_tujuan)}', '${t.peruntukan}')" title="Edit / Timpa Template">
+                    <button class="btn btn-sm btn-outline-warning rounded-circle ms-1" onclick="editTemplate(${t.id}, '${escHtml(t.nama_template)}', '${escHtml(t.instansi_tujuan)}', '${t.peruntukan}', this.dataset.json)" data-json="${escHtml(t.json_data_collection || '')}" title="Edit / Timpa Template">
                         <i class="bi bi-pencil"></i>
                     </button>
                     <button class="btn btn-sm btn-outline-danger rounded-circle ms-1" onclick="deleteTemplate(${t.id}, '${escHtml(t.nama_template)}')" title="Hapus Template">
@@ -448,7 +463,7 @@ async function loadTemplates() {
 
 // inline toggleGroup function removed, replaced by event delegation
 
-function editTemplate(id, nama, instansi, peruntukan) {
+function editTemplate(id, nama, instansi, peruntukan, jsonStr) {
     const form = document.getElementById('formTambahTemplate');
     form.reset();
     
@@ -469,6 +484,28 @@ function editTemplate(id, nama, instansi, peruntukan) {
     
     // Check overwrite explicitly since this is Edit mode
     document.getElementById('cbOverwrite').checked = true;
+    
+    // Reset Data Collection UI
+    document.getElementById('cbUseDataCollection').checked = false;
+    document.getElementById('dataCollectionSection').classList.add('d-none');
+    const container = document.getElementById('collectionContainer');
+    container.innerHTML = '';
+    
+    if (jsonStr) {
+        try {
+            const dataCollection = JSON.parse(jsonStr);
+            if (dataCollection && dataCollection.length > 0) {
+                document.getElementById('cbUseDataCollection').checked = true;
+                document.getElementById('dataCollectionSection').classList.remove('d-none');
+                
+                dataCollection.forEach(coll => {
+                    addCollection(coll.name, coll.columns);
+                });
+            }
+        } catch(e) {
+            console.error("Error parsing json data collection", e);
+        }
+    }
     
     const modal = new bootstrap.Modal(document.getElementById('modalTambahTemplate'));
     modal.show();
