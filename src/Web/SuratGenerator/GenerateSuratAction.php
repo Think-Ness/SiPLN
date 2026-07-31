@@ -42,11 +42,16 @@ final class GenerateSuratAction
             return JsonResponse::create(['success' => false, 'message' => 'Tipe surat tidak boleh kosong.'], 400);
         }
 
+        // Cek mode mailing dan jumlah santri
+        $mailingInfo = $db->createCommand("SELECT mode FROM surat_mailing WHERE id = :mid", [':mid' => $mailingId])->queryOne();
+        $mode = $mailingInfo['mode'] ?? 'Sekaligus';
+        $santriCount = (int)$db->createCommand("SELECT COUNT(*) FROM surat_mailing_santri WHERE mailing_id = :mid", [':mid' => $mailingId])->queryScalar();
+
         // Auto-generate nomor surat if empty: get MAX for this type this year
         if (empty($nomorSurat)) {
             $year = date('Y');
             $maxNo = (int)$db->createCommand(
-                "SELECT COALESCE(MAX(CAST(SUBSTRING_INDEX(nomor_surat, '/', 1) AS UNSIGNED)), 0) 
+                "SELECT COALESCE(MAX(CAST(SUBSTRING_INDEX(IFNULL(nomor_akhir, nomor_surat), '/', 1) AS UNSIGNED)), 0) 
                  FROM surat_generated 
                  WHERE tipe_surat = :tipe AND YEAR(tanggal_surat) = :year",
                 [':tipe' => $tipeSurat, ':year' => $year]
@@ -55,6 +60,17 @@ final class GenerateSuratAction
             $nextNo = $maxNo + 1;
             $bulanRomawi = $this->bulanRomawi((int)date('m'));
             $nomorSurat = str_pad((string)$nextNo, 3, '0', STR_PAD_LEFT) . "/$tipeSurat/PLN/$bulanRomawi/$year";
+        }
+
+        // Kalkulasi nomor_akhir jika Perseorangan
+        $nomorAkhir = null;
+        if ($mode === 'Perseorangan' && $santriCount > 1) {
+            $baseNoStr = explode('/', $nomorSurat)[0];
+            $baseNo = (int)$baseNoStr;
+            $endNo = $baseNo + $santriCount - 1;
+            
+            $suffix = substr($nomorSurat, strlen($baseNoStr));
+            $nomorAkhir = str_pad((string)$endNo, 3, '0', STR_PAD_LEFT) . $suffix;
         }
 
         // Check if already generated for this mailing + tipe
@@ -66,10 +82,11 @@ final class GenerateSuratAction
         if ($existing) {
             // Update existing
             $db->createCommand(
-                "UPDATE surat_generated SET nomor_surat = :nomor, tanggal_surat = :tgl, hal = :hal, isi = :isi, kepada = :kepada, tempat = :tempat, json_dynamic_data = :json_data
+                "UPDATE surat_generated SET nomor_surat = :nomor, nomor_akhir = :nomor_akhir, tanggal_surat = :tgl, hal = :hal, isi = :isi, kepada = :kepada, tempat = :tempat, json_dynamic_data = :json_data
                  WHERE id = :id",
                 [
                     ':nomor' => $nomorSurat,
+                    ':nomor_akhir' => $nomorAkhir,
                     ':tgl' => $tanggalSurat,
                     ':hal' => $hal,
                     ':isi' => $isi,
@@ -83,12 +100,13 @@ final class GenerateSuratAction
         } else {
             // Insert new
             $db->createCommand(
-                "INSERT INTO surat_generated (mailing_id, tipe_surat, nomor_surat, tanggal_surat, hal, isi, kepada, tempat, json_dynamic_data)
-                 VALUES (:mid, :tipe, :nomor, :tgl, :hal, :isi, :kepada, :tempat, :json_data)",
+                "INSERT INTO surat_generated (mailing_id, tipe_surat, nomor_surat, nomor_akhir, tanggal_surat, hal, isi, kepada, tempat, json_dynamic_data)
+                 VALUES (:mid, :tipe, :nomor, :nomor_akhir, :tgl, :hal, :isi, :kepada, :tempat, :json_data)",
                 [
                     ':mid' => $mailingId,
                     ':tipe' => $tipeSurat,
                     ':nomor' => $nomorSurat,
+                    ':nomor_akhir' => $nomorAkhir,
                     ':tgl' => $tanggalSurat,
                     ':hal' => $hal,
                     ':isi' => $isi,

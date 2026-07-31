@@ -1611,9 +1611,29 @@ async function openMailingDetail(id) {
         const m = data.mailing;
         document.getElementById('modalMailingTitle').textContent = 'Detail Mailing: ' + m.kode_mailing;
 
-        let santriHtml = '<table class="table table-sm table-striped mb-0" style="font-size:.8rem;"><thead><tr><th>#</th><th>Nama</th><th>Kelas</th><th>Negara</th><th>No Paspor</th></tr></thead><tbody>';
+        let hasGeneratedSurat = data.surats.length > 0;
+        let baseSurat = hasGeneratedSurat ? data.surats[0] : null;
+
+        let thNomorSurat = (m.mode === 'Perseorangan' && hasGeneratedSurat && baseSurat.nomor_surat) ? '<th>No Surat (Utama)</th>' : '';
+        let santriHtml = `<table class="table table-sm table-striped mb-0" style="font-size:.8rem;"><thead><tr><th>#</th><th>Nama</th><th>Kelas</th><th>Negara</th><th>No Paspor</th>${thNomorSurat}</tr></thead><tbody>`;
+        
+        let baseNoStr = '';
+        let baseNo = 0;
+        let suffix = '';
+        if (m.mode === 'Perseorangan' && hasGeneratedSurat && baseSurat.nomor_surat) {
+            baseNoStr = baseSurat.nomor_surat.split('/')[0];
+            baseNo = parseInt(baseNoStr, 10);
+            suffix = baseSurat.nomor_surat.substring(baseNoStr.length);
+        }
+
         data.santris.forEach((s, i) => {
-            santriHtml += `<tr><td>${i+1}</td><td class="fw-semibold">${s.nama}</td><td>${s.kelas||'-'}</td><td>${s.negara||'-'}</td><td><code>${s.no_paspor||'-'}</code></td></tr>`;
+            let tdNomorSurat = '';
+            if (m.mode === 'Perseorangan' && hasGeneratedSurat && baseSurat.nomor_surat) {
+                let currentNo = baseNo + i;
+                let noSuratFormat = String(currentNo).padStart(3, '0') + suffix;
+                tdNomorSurat = `<td><span class="badge bg-secondary">${noSuratFormat}</span></td>`;
+            }
+            santriHtml += `<tr><td>${i+1}</td><td class="fw-semibold">${s.nama}</td><td>${s.kelas||'-'}</td><td>${s.negara||'-'}</td><td><code>${s.no_paspor||'-'}</code></td>${tdNomorSurat}</tr>`;
         });
         santriHtml += '</tbody></table>';
 

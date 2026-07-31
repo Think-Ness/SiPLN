@@ -108,7 +108,7 @@ final class Action
         $suratCounters = [];
         foreach (['SP', 'SK', 'SJ', 'ST'] as $tipe) {
             $maxNo = $db->createCommand(
-                "SELECT MAX(CAST(SUBSTRING_INDEX(nomor_surat, '/', 1) AS UNSIGNED)) 
+                "SELECT COALESCE(MAX(CAST(SUBSTRING_INDEX(IFNULL(nomor_akhir, nomor_surat), '/', 1) AS UNSIGNED)), 0) 
                  FROM surat_generated 
                  WHERE tipe_surat = :tipe AND YEAR(tanggal_surat) = :year",
                 [':tipe' => $tipe, ':year' => $year]
