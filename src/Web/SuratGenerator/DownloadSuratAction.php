@@ -159,9 +159,7 @@ final class DownloadSuratAction
             [':mid' => $mailingId]
         )->queryAll();
 
-        if (empty($santris)) {
-            return $this->errorResponse("Tidak ada santri dalam mailing ini.", 400);
-        }
+        // Santris may be empty for "Surat Umum" (general letters without santri)
 
         // Load nomor surat and dynamic data
         $suratData = $db->createCommand(
@@ -263,7 +261,7 @@ final class DownloadSuratAction
                 $pagesBefore = $doc->ComputeStatistics(2); // 2 = wdStatisticPages
                 
                 $lampiranPages = 0;
-                if ($withLampiran) {
+                if ($withLampiran && !empty($santris)) {
                     error_log("\n[".date('Y-m-d H:i:s')."] 5. Filling sekaligus list...", 3, sys_get_temp_dir() . '/surat.log');
                     if ($logProgress) $logProgress("Mempersiapkan data " . count($santris) . " santri...");
                     $this->fillSekaligusList($doc, $santris, $logProgress, $kantor);
@@ -287,24 +285,71 @@ final class DownloadSuratAction
                 
                 $generatedFiles[] = ['path' => str_replace('\\', '/', $targetPdf), 'name' => $fileNameBase . '.pdf'];
             } else {
-                // Perseorangan: one PDF per santri
-                $totalSantri = count($santris);
-                $curSantri = 1;
-                foreach ($santris as $s) {
-                    if ($logProgress) $logProgress("Memproses surat $curSantri dari $totalSantri...");
-                    $doc = $wd->Documents->Open($templatePath, false, true);
-                    $this->fillHeaderBookmarks($doc, $nomorSurat, $tanggalSurat, $jenisPengajuan, $userStaf);
-                    $this->fillPersonalBookmarks($doc, $s);
+                // Perseorangan mode
+                if (!empty($santris)) {
+                    // Standard: one PDF per santri
+                    $totalSantri = count($santris);
+                    $curSantri = 1;
+                    foreach ($santris as $s) {
+                        if ($logProgress) $logProgress("Memproses surat $curSantri dari $totalSantri...");
+                        $doc = $wd->Documents->Open($templatePath, false, true);
+                        $this->fillHeaderBookmarks($doc, $nomorSurat, $tanggalSurat, $jenisPengajuan, $userStaf);
+                        $this->fillPersonalBookmarks($doc, $s);
 
-                    $safeName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $s['nama']);
-                    $fileNameBase = "{$safeTipeSurat}_{$safeName}";
-                    $targetPdf = str_replace('/', '\\', $saveDir . $fileNameBase . '.pdf');
+                        $safeName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $s['nama']);
+                        $fileNameBase = "{$safeTipeSurat}_{$safeName}";
+                        $targetPdf = str_replace('/', '\\', $saveDir . $fileNameBase . '.pdf');
+                        
+                        $doc->ExportAsFixedFormat($targetPdf, 17);
+                        $doc->Close(0);
+                        
+                        $generatedFiles[] = ['path' => str_replace('\\', '/', $targetPdf), 'name' => $fileNameBase . '.pdf'];
+                        $curSantri++;
+                    }
+                } elseif ($jsonDynamicData && is_array($jsonDynamicData)) {
+                    // Surat Umum Perseorangan: one PDF per data collection row
+                    // Find the first (or primary) collection
+                    $primaryCollName = array_key_first($jsonDynamicData);
+                    $primaryRows = $jsonDynamicData[$primaryCollName] ?? [];
                     
-                    $doc->ExportAsFixedFormat($targetPdf, 17);
-                    $doc->Close(0); // 0 = do not save changes to template
+                    if (empty($primaryRows)) {
+                        return $this->errorResponse("Tidak ada data untuk generate surat perseorangan. Tambahkan data di Data Collection terlebih dahulu.", 400);
+                    }
                     
-                    $generatedFiles[] = ['path' => str_replace('\\', '/', $targetPdf), 'name' => $fileNameBase . '.pdf'];
-                    $curSantri++;
+                    $totalRows = count($primaryRows);
+                    $curRow = 1;
+                    foreach ($primaryRows as $row) {
+                        if ($logProgress) $logProgress("Memproses surat $curRow dari $totalRows...");
+                        
+                        // Use PhpWord to fill each row's data into template
+                        $tempPath = tempnam(sys_get_temp_dir(), 'tpl_') . '.docx';
+                        $tp = new \PhpOffice\PhpWord\TemplateProcessor($templatePath);
+                        
+                        // Fill each column value as a simple variable ${ColumnName}
+                        foreach ($row as $colName => $val) {
+                            $tp->setValue($colName, htmlspecialchars((string)$val));
+                        }
+                        $tp->saveAs($tempPath);
+                        
+                        $doc = $wd->Documents->Open(str_replace('/', '\\', $tempPath), false, true);
+                        $this->fillHeaderBookmarks($doc, $nomorSurat, $tanggalSurat, $jenisPengajuan, $userStaf);
+
+                        // Use first column value as identifier for filename
+                        $firstVal = reset($row) ?: "Item_{$curRow}";
+                        $safeName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', (string)$firstVal);
+                        $fileNameBase = "{$safeTipeSurat}_{$safeName}";
+                        $targetPdf = str_replace('/', '\\', $saveDir . $fileNameBase . '.pdf');
+                        
+                        $doc->ExportAsFixedFormat($targetPdf, 17);
+                        $doc->Close(0);
+                        @unlink($tempPath);
+                        
+                        $generatedFiles[] = ['path' => str_replace('\\', '/', $targetPdf), 'name' => $fileNameBase . '.pdf'];
+                        $curRow++;
+                    }
+                } else {
+                    // No santri and no dynamic data — nothing to generate per-person
+                    return $this->errorResponse("Mode Perseorangan membutuhkan santri atau Data Collection. Gunakan mode Sekaligus untuk surat umum tanpa data.", 400);
                 }
             }
         } catch (\Throwable $e) {

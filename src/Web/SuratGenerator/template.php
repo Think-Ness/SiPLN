@@ -144,14 +144,14 @@ $kodeInstansi = $instansi['kode_instansi'] ?? '';
                         <div class="mode-option selected" onclick="selectMode('sekaligus')" id="modeSekaligus">
                             <i class="bi bi-people-fill text-primary"></i>
                             <div class="mode-title">Sekaligus (Kolektif)</div>
-                            <div class="mode-desc">1 surat dengan semua nama santri terlampir di dalamnya</div>
+                            <div class="mode-desc">1 surat dengan semua data terlampir di dalamnya</div>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="mode-option" onclick="selectMode('perseorangan')" id="modePerseorangan">
                             <i class="bi bi-person-fill text-info"></i>
                             <div class="mode-title">Perseorangan</div>
-                            <div class="mode-desc">1 santri = 1 surat terpisah masing-masing</div>
+                            <div class="mode-desc">1 data = 1 surat terpisah masing-masing</div>
                         </div>
                     </div>
                 </div>
@@ -168,7 +168,7 @@ $kodeInstansi = $instansi['kode_instansi'] ?? '';
                     <h6 class="mb-1 fw-bold text-dark"><i class="bi bi-person-check text-success me-2"></i>Pilih Santri</h6>
                     <div class="text-muted small fw-medium">Total Terpilih: <span class="badge bg-primary rounded-pill px-2" id="countPicked">0</span></div>
                 </div>
-                <button class="btn btn-primary rounded-pill px-4 py-2 fw-semibold shadow-sm" onclick="goToStep(2)" id="btnToStep2" disabled>
+                <button class="btn btn-primary rounded-pill px-4 py-2 fw-semibold shadow-sm" onclick="goToStep(2)" id="btnToStep2">
                     Lanjut Pengajuan <i class="bi bi-arrow-right ms-1"></i>
                 </button>
             </div>
@@ -954,8 +954,8 @@ async function buatMailing() {
         kdsList = getPickedKds();
     }
 
-    if (!jpId || kdsList.length === 0) {
-        Swal.fire('Peringatan', 'Lengkapi jenis pengajuan dan pastikan ada santri terpilih.', 'warning');
+    if (!jpId) {
+        Swal.fire('Peringatan', 'Pilih jenis pengajuan terlebih dahulu.', 'warning');
         return;
     }
 
