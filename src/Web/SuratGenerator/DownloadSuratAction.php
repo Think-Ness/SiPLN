@@ -292,17 +292,17 @@ final class DownloadSuratAction
                     $totalSantri = count($santris);
                     $curSantri = 1;
                     
-                    $baseNoStr = explode('/', $baseNomorSurat)[0];
+                    $baseNoStr = explode('/', $nomorSurat)[0];
                     $baseNo = (int)$baseNoStr;
-                    $suffix = substr($baseNomorSurat, strlen($baseNoStr));
+                    $suffix = substr($nomorSurat, strlen($baseNoStr));
                     
                     foreach ($santris as $s) {
                         $currentNo = $baseNo + $curSantri - 1;
-                        $nomorSurat = str_pad((string)$currentNo, 3, '0', STR_PAD_LEFT) . $suffix;
+                        $currentNomorSurat = str_pad((string)$currentNo, 3, '0', STR_PAD_LEFT) . $suffix;
 
                         if ($logProgress) $logProgress("Memproses surat $curSantri dari $totalSantri...");
                         $doc = $wd->Documents->Open($templatePath, false, true);
-                        $this->fillHeaderBookmarks($doc, $nomorSurat, $tanggalSurat, $jenisPengajuan, $userStaf, null, $customInputsData);
+                        $this->fillHeaderBookmarks($doc, $currentNomorSurat, $tanggalSurat, $jenisPengajuan, $userStaf, null, $customInputsData);
                         $this->fillPersonalBookmarks($doc, $s);
 
                         $safeName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $s['nama']);
