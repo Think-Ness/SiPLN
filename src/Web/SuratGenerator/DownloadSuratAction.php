@@ -417,11 +417,29 @@ final class DownloadSuratAction
     private function fillHeaderBookmarks($doc, $nomorSurat, $tanggalSurat, $jp, $userStaf, $lampiranPages = null, $customInputsData = null)
     {
         $bookmarks = $doc->Bookmarks;
-        $fill = function ($name, $val) use ($bookmarks) {
+        $fill = function ($name, $val) use ($doc, $bookmarks) {
+            // 1. Try Bookmark
             try {
                 if ($bookmarks->Exists($name)) {
                     $bookmarks->Item($name)->Range->Text = (string)$val;
                 }
+            } catch (\Exception $e) {}
+            
+            // 2. Try Find & Replace for ${Var}
+            try {
+                $doc->Content->Find->Execute(
+                    '${' . $name . '}',  // Find text
+                    false, // Match case
+                    false, // Match whole word
+                    false, // Match wildcards
+                    false, // Match sounds like
+                    false, // Match all word forms
+                    true,  // Forward
+                    1,     // Wrap (wdFindContinue)
+                    false, // Format
+                    (string)$val, // Replace with
+                    2      // Replace all (wdReplaceAll)
+                );
             } catch (\Exception $e) {}
         };
 
@@ -454,28 +472,10 @@ final class DownloadSuratAction
             $fill("Pekerjaan", "Guru Kulliyyatu-l-Mu'allimin Al-Islamiyyah (KMI)");
         }
         
-        // Fill custom inputs via Bookmarks OR Find&Replace for ${Var}
+        // Fill custom inputs
         if ($customInputsData && is_array($customInputsData)) {
             foreach ($customInputsData as $key => $val) {
-                // 1. Try Bookmark
                 $fill($key, $val);
-                
-                // 2. Try Find & Replace for ${Var}
-                try {
-                    $doc->Content->Find->Execute(
-                        '${' . $key . '}',  // Find text
-                        false, // Match case
-                        false, // Match whole word
-                        false, // Match wildcards
-                        false, // Match sounds like
-                        false, // Match all word forms
-                        true,  // Forward
-                        1,     // Wrap (wdFindContinue)
-                        false, // Format
-                        (string)$val, // Replace with
-                        2      // Replace all (wdReplaceAll)
-                    );
-                } catch (\Exception $e) {}
             }
         }
     }
@@ -483,11 +483,29 @@ final class DownloadSuratAction
     private function fillPersonalBookmarks($doc, $s)
     {
         $bookmarks = $doc->Bookmarks;
-        $fill = function ($name, $val) use ($bookmarks) {
+        $fill = function ($name, $val) use ($doc, $bookmarks) {
+            // 1. Try Bookmark
             try {
                 if ($bookmarks->Exists($name)) {
                     $bookmarks->Item($name)->Range->Text = (string)$val;
                 }
+            } catch (\Exception $e) {}
+            
+            // 2. Try Find & Replace for ${Var}
+            try {
+                $doc->Content->Find->Execute(
+                    '${' . $name . '}',  // Find text
+                    false, // Match case
+                    false, // Match whole word
+                    false, // Match wildcards
+                    false, // Match sounds like
+                    false, // Match all word forms
+                    true,  // Forward
+                    1,     // Wrap (wdFindContinue)
+                    false, // Format
+                    (string)$val, // Replace with
+                    2      // Replace all (wdReplaceAll)
+                );
             } catch (\Exception $e) {}
         };
 

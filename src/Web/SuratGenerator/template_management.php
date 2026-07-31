@@ -20,14 +20,19 @@ $this->setTitle('Kelola Template Surat | Sistem Informasi');
         </div>
     </div>
 
-    <!-- Panduan Bookmark -->
+    <!-- Panduan Bookmark & Tag Variabel -->
     <div class="alert alert-info border-0 shadow-sm rounded-4 mb-4 d-flex gap-3 align-items-start">
         <div class="bg-white text-info rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:40px;height:40px;">
-            <i class="bi bi-bookmark-fill fs-5"></i>
+            <i class="bi bi-tags-fill fs-5"></i>
         </div>
         <div>
-            <h6 class="fw-bold mb-2">Panduan Bookmark di File Word (.docx)</h6>
-            <p class="mb-2 text-dark small">Gunakan fitur <strong>Bookmark</strong> di Microsoft Word (Insert → Bookmark) untuk menandai posisi data yang akan diisi otomatis. Berikut daftar nama bookmark yang didukung:</p>
+            <h6 class="fw-bold mb-2">Panduan Variabel Otomatis (Tag & Bookmark)</h6>
+            <p class="mb-2 text-dark small">Sistem mendukung dua cara untuk menempatkan data otomatis di Microsoft Word:</p>
+            <ul class="mb-2 text-dark small ps-3">
+                <li><strong>Metode Tag (Disarankan):</strong> Ketik langsung di teks Word dengan format <code>${NamaVariabel}</code> (Contoh: <code>${Tanggal_Buat}</code>).</li>
+                <li><strong>Metode Bookmark:</strong> Gunakan fitur Bookmark (Insert → Bookmark) dengan nama variabel.</li>
+            </ul>
+            <p class="mb-1 text-dark small fw-bold">Daftar Variabel Sistem yang Tersedia:</p>
             <div class="row g-2 small text-dark mt-2">
                 <div class="col-md-4">
                     <div class="fw-bold text-primary mb-1">Header Surat</div>
