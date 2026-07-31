@@ -2183,6 +2183,7 @@ function showTemplateBookmarkInfo() {
                     <tr><td><code>Jenis_Kelamin</code></td><td>Jenis Kelamin Santri</td></tr>
                     <tr><td><code>Kewarganegaraan</code></td><td>Status (WNA/WNI/Affidavit)</td></tr>
                     <tr><td><code>Negara_Asal</code></td><td>Negara Asal</td></tr>
+                    <tr><td><code>Alamat_Santri</code></td><td>Alamat Santri</td></tr>
                     <tr><td><code>Alamat_Idn</code></td><td>Alamat di Indonesia</td></tr>
                     <tr><td><code>No_Paspor</code></td><td>Nomor Paspor</td></tr>
                     <tr><td><code>Tgl_Berlaku</code></td><td>Tanggal Berlaku S.D Paspor</td></tr>
