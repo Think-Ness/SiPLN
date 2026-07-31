@@ -1244,6 +1244,40 @@ function selectSuratType(type) {
     } else {
         ciContainer.classList.add('d-none');
     }
+    
+    // Update Preview Area with generated files if already exists
+    const previewArea = document.getElementById('suratPreviewArea');
+    let generatedFilesForType = [];
+    if (currentMailingData && currentMailingData.generatedFiles) {
+        generatedFilesForType = currentMailingData.generatedFiles.filter(f => f.tipe_surat === type);
+    }
+    
+    if (generatedFilesForType.length > 0) {
+        let filesHtml = '<div class="d-flex flex-wrap gap-2 justify-content-center mt-3">';
+        generatedFilesForType.forEach(f => {
+            filesHtml += `<a href="${f.url}" target="_blank" class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 text-decoration-none shadow-sm hover-shadow" style="font-size: .85rem;">
+                <i class="bi bi-file-pdf me-1"></i>${f.name}
+            </a>`;
+        });
+        filesHtml += '</div>';
+        
+        previewArea.innerHTML = `
+            <div class="d-flex flex-column align-items-center justify-content-center text-center h-100 p-5 bg-light rounded-4">
+                <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem; opacity: 0.8; margin-bottom: 1rem;"></i>
+                <h5 class="fw-bold text-dark">Surat Telah Di-generate</h5>
+                <p class="text-muted small mb-3">Surat ini sudah di-generate sebelumnya. Anda dapat mengunduhnya di bawah ini, atau mengubah data di panel kiri lalu klik <strong>Generate Surat</strong> untuk membuat ulang.</p>
+                ${filesHtml}
+            </div>
+        `;
+    } else {
+        previewArea.innerHTML = `
+            <div class="d-flex flex-column align-items-center justify-content-center text-center h-100 text-muted p-5 bg-light rounded-4">
+                <i class="bi bi-file-earmark-pdf" style="font-size: 5rem; opacity: 0.2; margin-bottom: 1rem;"></i>
+                <h4 class="fw-bold">Pratinjau Surat</h4>
+                <p class="mb-0">Silakan isi data yang diperlukan di panel kiri, lalu klik <strong>Generate Surat</strong> untuk melihat hasilnya di sini.</p>
+            </div>
+        `;
+    }
 }
 
 function addCollectionRow(name, colsStr) {
