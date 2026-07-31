@@ -738,6 +738,13 @@ function formatTglIndo(dateStr) {
     return d.getDate() + ' ' + bulanIndo[d.getMonth()] + ' ' + d.getFullYear();
 }
 
+function escHtml(s) {
+    if (s === null || s === undefined) return '';
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+}
+
 // ========== WIZARD NAV ==========
 function goToStep(step) {
     if (step === 2 && getPickedKds().length === 0) {
