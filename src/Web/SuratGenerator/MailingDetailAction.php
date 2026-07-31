@@ -88,11 +88,64 @@ final class MailingDetailAction
             }
         }
 
+        $generatedFiles = [];
+        if (!empty($surats)) {
+            $tanggalSurat = $mailing['tanggal_surat'] ?? date('Y-m-d');
+            $tahunItas = date('Y', strtotime($tanggalSurat));
+            $bulanItas = date('m', strtotime($tanggalSurat));
+            
+            if (!empty($santris) && !empty($santris[0]['exp_itas']) && $santris[0]['exp_itas'] !== '-') {
+                $tahunItas = date('Y', strtotime($santris[0]['exp_itas']));
+                $bulanItas = date('m', strtotime($santris[0]['exp_itas']));
+            }
+            
+            $safeJenis = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $mailing['jenis_pengajuan'] ?? 'Umum');
+            
+            foreach ($surats as $s) {
+                $tipeLabel = ['SP' => 'Surat_Permohonan', 'SK' => 'Surat_Keterangan', 'SJ' => 'Surat_Jaminan', 'ST' => 'Surat_Tugas'];
+                $safeTipeSurat = $tipeLabel[$s['tipe_surat']] ?? preg_replace('/[^a-zA-Z0-9_\-]/', '_', $s['tipe_surat']);
+                
+                $baseUrl = '/webapp/public/uploads/Surat_Menyurat/Output/' . $safeJenis . '/' . $safeTipeSurat . '/' . $tahunItas . '/' . $bulanItas . '/';
+                
+                if ($mailing['mode'] === 'sekaligus') {
+                    $fileNameBase = "{$safeTipeSurat}_Sekaligus_{$safeJenis}";
+                    $generatedFiles[] = [
+                        'tipe_surat' => $s['tipe_surat'],
+                        'nomor_surat' => $s['nomor_surat'],
+                        'name' => "Surat " . ($s['tipe_surat']) . " (Kolektif)",
+                        'url' => $baseUrl . $fileNameBase . '.pdf'
+                    ];
+                } else {
+                    if (!empty($santris)) {
+                        $baseNoStr = explode('/', $s['nomor_surat'])[0];
+                        $baseNo = (int)$baseNoStr;
+                        $suffix = substr($s['nomor_surat'], strlen($baseNoStr));
+                        
+                        foreach ($santris as $i => $santri) {
+                            $currentNo = $baseNo + $i;
+                            $nomorSurat = str_pad((string)$currentNo, 3, '0', STR_PAD_LEFT) . $suffix;
+                            
+                            $safeName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $santri['nama']);
+                            $fileNameBase = "{$safeTipeSurat}_{$safeName}";
+                            
+                            $generatedFiles[] = [
+                                'tipe_surat' => $s['tipe_surat'],
+                                'nomor_surat' => $nomorSurat,
+                                'name' => "Surat " . ($s['tipe_surat']) . " - " . $santri['nama'],
+                                'url' => $baseUrl . $fileNameBase . '.pdf'
+                            ];
+                        }
+                    }
+                }
+            }
+        }
+
         return JsonResponse::create([
             'success' => true,
             'mailing' => $mailing,
             'santris' => $santris,
             'surats' => $surats,
+            'generatedFiles' => $generatedFiles,
             'instansi' => $instansi ?: [],
             'currentUser' => $currentUser ?: [],
             'templateSchemas' => $templateSchemas,

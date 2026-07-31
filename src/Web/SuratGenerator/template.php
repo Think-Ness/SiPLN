@@ -1638,7 +1638,16 @@ async function openMailingDetail(id) {
         santriHtml += '</tbody></table>';
 
         let suratHtml = '';
-        if (data.surats.length > 0) {
+        if (data.generatedFiles && data.generatedFiles.length > 0) {
+            suratHtml = '<div class="d-flex flex-wrap gap-2">';
+            data.generatedFiles.forEach(f => {
+                const sl = SURAT_LABELS[f.tipe_surat];
+                suratHtml += `<a href="${f.url}" target="_blank" class="badge rounded-pill px-3 py-2 fw-medium text-decoration-none shadow-sm hover-shadow" style="background:${sl?.bg};color:${sl?.color};border:1px solid ${sl?.color}20;font-size:.8rem;">
+                    <i class="bi bi-file-pdf me-1"></i>${f.name} — ${f.nomor_surat}
+                </a>`;
+            });
+            suratHtml += '</div>';
+        } else if (data.surats && data.surats.length > 0) {
             suratHtml = '<div class="d-flex flex-wrap gap-2">';
             data.surats.forEach(s => {
                 const sl = SURAT_LABELS[s.tipe_surat];
