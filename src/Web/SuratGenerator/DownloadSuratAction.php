@@ -523,6 +523,7 @@ final class DownloadSuratAction
         $fill("Jenis_Kelamin", ucwords(strtolower($s['jenis_kelamin'] ?? '')));
         $fill("Kewarganegaraan", ucwords(strtolower($s['kewarganegaraan'] ?? '')));
         $fill("Negara_Asal", ucwords(strtolower($s['negara'] ?? '')));
+        $fill("Alamat_Santri", $s['alamat'] ?? '');
         $fill("Alamat_Idn", "Pondok Modern Darussalam Gontor");
         $fill("No_Paspor", $s['no_paspor'] ?? '');
         $fill("Tgl_Berlaku", $this->formatTglIndo($s['exp_paspor'] ?? ''));

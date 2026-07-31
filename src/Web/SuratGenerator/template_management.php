@@ -61,6 +61,7 @@ $this->setTitle('Kelola Template Surat | Sistem Informasi');
                         <li><code>Tgl_Lahir</code> : Tanggal Lahir</li>
                         <li><code>Kewarganegaraan</code> : Kewarganegaraan</li>
                         <li><code>Negara_Asal</code> : Negara Asal</li>
+                        <li><code>Alamat_Santri</code> : Alamat Santri</li>
                         <li><code>No_Paspor</code> : Nomor Paspor</li>
                         <li><code>Tgl_Berlaku</code> : Exp. Paspor</li>
                     </ul>
