@@ -77,6 +77,16 @@ $this->setTitle('Kelola Template Surat | Sistem Informasi');
                 <li class="mb-1">Tambahkan nama-nama kolom sesuai variabel yang Anda tulis di Word (Contoh: <code>Nama_Lengkap</code>, <code>Jabatan</code>).</li>
                 <li>Saat proses <strong>Generate Surat</strong> (Langkah 3), formulir akan muncul otomatis untuk mengisi baris-baris ini dan sistem akan menggandakan tabel di Word secara instan!</li>
             </ol>
+            
+            <hr class="border-info opacity-25 my-3">
+            <h6 class="fw-bold mb-2">Panduan Input Kustom (Variabel Tambahan)</h6>
+            <p class="mb-2 text-dark small">Gunakan fitur ini jika surat Anda membutuhkan isian spesifik yang bukan tabel (contoh: Jam Acara, Nama Pemateri, Lokasi).</p>
+            <ol class="small text-dark mb-0 ps-3">
+                <li class="mb-1">Di <strong>Microsoft Word</strong>, ketik tag variabel di posisi yang Anda inginkan (Contoh: <code>${Waktu}</code>, <code>${Lokasi}</code>).</li>
+                <li class="mb-1">Di sistem (saat Upload Template), aktifkan <strong>Membutuhkan Input Kustom</strong>.</li>
+                <li class="mb-1">Tambahkan input dengan <strong>Nama Variabel</strong> yang persis sama dengan yang di Word (Contoh: <code>Waktu</code>).</li>
+                <li>Saat proses <strong>Generate Surat</strong> (Langkah 3), form input akan otomatis muncul sesuai tipe yang Anda pilih (Teks, Teks Panjang, atau Tanggal).</li>
+            </ol>
 
             <div class="mt-3 small text-muted border-top border-info-subtle pt-2">
                 <em>* Catatan: Untuk template <strong>Banyak Orang (Sekaligus)</strong> tipe klasik, data santri otomatis dilampirkan sebagai halaman baru di akhir dokumen.</em>
