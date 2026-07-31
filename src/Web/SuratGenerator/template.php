@@ -489,6 +489,7 @@ $kodeInstansi = $instansi['kode_instansi'] ?? '';
                 </div>
                 
                 <div id="dynamicCollectionFields" class="mb-4 d-none"></div>
+                <div id="dynamicCustomInputFields" class="mb-4 d-none"></div>
 
                 <div class="d-flex gap-2 mb-2">
                     <button class="btn btn-outline-secondary rounded-pill fw-semibold shadow-sm w-100" id="btnBukaTemplate" onclick="bukaTemplate()" style="display:none;">
@@ -1191,6 +1192,45 @@ function selectSuratType(type) {
     } else {
         collContainer.classList.add('d-none');
     }
+    
+    // Render dynamic custom input fields if schema exists
+    const customSchema = currentMailingData.templateCustomInputs ? currentMailingData.templateCustomInputs[type] : null;
+    const ciContainer = document.getElementById('dynamicCustomInputFields');
+    ciContainer.innerHTML = '';
+    
+    if (customSchema && customSchema.length > 0) {
+        ciContainer.classList.remove('d-none');
+        let html = '<h6 class="fw-bold text-primary mb-3 border-bottom pb-2">Variabel Kustom</h6>';
+        
+        // Get existing data if any
+        let existingCiData = null;
+        if (currentMailingData.surats) {
+            const extSurat = currentMailingData.surats.find(s => s.tipe_surat === type);
+            if (extSurat && extSurat.custom_inputs_data) {
+                try {
+                    existingCiData = typeof extSurat.custom_inputs_data === 'string' ? JSON.parse(extSurat.custom_inputs_data) : extSurat.custom_inputs_data;
+                } catch(e) {}
+            }
+        }
+        
+        customSchema.forEach((ci) => {
+            const value = existingCiData && existingCiData[ci.name] ? existingCiData[ci.name] : '';
+            html += `<div class="mb-3">
+                <label class="form-label fw-bold text-muted small" style="letter-spacing:.5px;">${ci.label.toUpperCase()}</label>`;
+            
+            if (ci.type === 'textarea') {
+                html += `<textarea class="form-control border shadow-sm rounded-3 py-2 dynamic-custom-input" rows="2" data-name="${ci.name}" placeholder="Masukkan ${ci.label}">${escHtml(value)}</textarea>`;
+            } else if (ci.type === 'date') {
+                html += `<input type="date" class="form-control border shadow-sm rounded-3 py-2 dynamic-custom-input" data-name="${ci.name}" value="${escHtml(value)}">`;
+            } else {
+                html += `<input type="text" class="form-control border shadow-sm rounded-3 py-2 dynamic-custom-input" data-name="${ci.name}" placeholder="Masukkan ${ci.label}" value="${escHtml(value)}">`;
+            }
+            html += `</div>`;
+        });
+        ciContainer.innerHTML = html;
+    } else {
+        ciContainer.classList.add('d-none');
+    }
 }
 
 function addCollectionRow(name, colsStr) {
@@ -1282,6 +1322,14 @@ function addCollectionRow(name, colsStr) {
                 }
             });
         }
+        let customInputsData = null;
+        const ciInputs = document.querySelectorAll('.dynamic-custom-input');
+        if (ciInputs.length > 0) {
+            customInputsData = {};
+            ciInputs.forEach(inp => {
+                customInputsData[inp.dataset.name] = inp.value;
+            });
+        }
 
         const res = await fetch('<?= API_URL ?>/api/surat/generate', {
             method:'POST',
@@ -1299,7 +1347,8 @@ function addCollectionRow(name, colsStr) {
                 tempat: tempat,
                 isi: isi,
                 with_lampiran: withLampiran,
-                json_dynamic_data: jsonDynamicData
+                json_dynamic_data: jsonDynamicData ? JSON.stringify(jsonDynamicData) : null,
+                custom_inputs_data: customInputsData ? JSON.stringify(customInputsData) : null
             })
         });
         const data = await res.json();

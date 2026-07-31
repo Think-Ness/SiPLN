@@ -163,11 +163,12 @@ final class DownloadSuratAction
 
         // Load nomor surat and dynamic data
         $suratData = $db->createCommand(
-            "SELECT nomor_surat, json_dynamic_data FROM surat_generated WHERE mailing_id = :mid AND tipe_surat = :tipe",
+            "SELECT nomor_surat, json_dynamic_data, custom_inputs_data FROM surat_generated WHERE mailing_id = :mid AND tipe_surat = :tipe",
             [':mid' => $mailingId, ':tipe' => $tipeSurat]
         )->queryOne();
         $nomorSurat = $suratData ? $suratData['nomor_surat'] : '---/---/---/---/2026';
         $jsonDynamicData = ($suratData && !empty($suratData['json_dynamic_data'])) ? json_decode($suratData['json_dynamic_data'], true) : null;
+        $customInputsData = ($suratData && !empty($suratData['custom_inputs_data'])) ? json_decode($suratData['custom_inputs_data'], true) : null;
 
         // Load user data for staf bookmarks
         $userStaf = null;
@@ -272,7 +273,7 @@ final class DownloadSuratAction
                 
                 error_log("\n[".date('Y-m-d H:i:s')."] 4. Filling headers...", 3, sys_get_temp_dir() . '/surat.log');
                 if ($logProgress) $logProgress("Menyesuaikan template header...");
-                $this->fillHeaderBookmarks($doc, $nomorSurat, $tanggalSurat, $jenisPengajuan, $userStaf, $withLampiran ? $lampiranPages : null);
+                $this->fillHeaderBookmarks($doc, $nomorSurat, $tanggalSurat, $jenisPengajuan, $userStaf, $withLampiran ? $lampiranPages : null, $customInputsData);
 
                 $fileNameBase = "{$safeTipeSurat}_Sekaligus_{$safeJenis}";
                 $targetPdf = str_replace('/', '\\', $saveDir . $fileNameBase . '.pdf');
@@ -293,7 +294,7 @@ final class DownloadSuratAction
                     foreach ($santris as $s) {
                         if ($logProgress) $logProgress("Memproses surat $curSantri dari $totalSantri...");
                         $doc = $wd->Documents->Open($templatePath, false, true);
-                        $this->fillHeaderBookmarks($doc, $nomorSurat, $tanggalSurat, $jenisPengajuan, $userStaf);
+                        $this->fillHeaderBookmarks($doc, $nomorSurat, $tanggalSurat, $jenisPengajuan, $userStaf, null, $customInputsData);
                         $this->fillPersonalBookmarks($doc, $s);
 
                         $safeName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $s['nama']);
@@ -332,7 +333,7 @@ final class DownloadSuratAction
                         $tp->saveAs($tempPath);
                         
                         $doc = $wd->Documents->Open(str_replace('/', '\\', $tempPath), false, true);
-                        $this->fillHeaderBookmarks($doc, $nomorSurat, $tanggalSurat, $jenisPengajuan, $userStaf);
+                        $this->fillHeaderBookmarks($doc, $nomorSurat, $tanggalSurat, $jenisPengajuan, $userStaf, null, $customInputsData);
 
                         // Use first column value as identifier for filename
                         $firstVal = reset($row) ?: "Item_{$curRow}";
@@ -413,7 +414,7 @@ final class DownloadSuratAction
         return \App\Shared\JsonResponse::create(['success' => false, 'message' => $message], 200);
     }
 
-    private function fillHeaderBookmarks($doc, $nomorSurat, $tanggalSurat, $jp, $userStaf, $lampiranPages = null)
+    private function fillHeaderBookmarks($doc, $nomorSurat, $tanggalSurat, $jp, $userStaf, $lampiranPages = null, $customInputsData = null)
     {
         $bookmarks = $doc->Bookmarks;
         $fill = function ($name, $val) use ($bookmarks) {
@@ -451,6 +452,31 @@ final class DownloadSuratAction
             $fill("TTL", $userStaf['ttl'] ?? '');
             $fill("Alamat", "Pondok Modern Darussalam Gontor");
             $fill("Pekerjaan", "Guru Kulliyyatu-l-Mu'allimin Al-Islamiyyah (KMI)");
+        }
+        
+        // Fill custom inputs via Bookmarks OR Find&Replace for ${Var}
+        if ($customInputsData && is_array($customInputsData)) {
+            foreach ($customInputsData as $key => $val) {
+                // 1. Try Bookmark
+                $fill($key, $val);
+                
+                // 2. Try Find & Replace for ${Var}
+                try {
+                    $doc->Content->Find->Execute(
+                        '${' . $key . '}',  // Find text
+                        false, // Match case
+                        false, // Match whole word
+                        false, // Match wildcards
+                        false, // Match sounds like
+                        false, // Match all word forms
+                        true,  // Forward
+                        1,     // Wrap (wdFindContinue)
+                        false, // Format
+                        (string)$val, // Replace with
+                        2      // Replace all (wdReplaceAll)
+                    );
+                } catch (\Exception $e) {}
+            }
         }
     }
 

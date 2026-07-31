@@ -108,9 +108,10 @@ final class CreateMailingAction
 
         $kantor = $mailing['kantor'] ?? '';
         $templateSchemas = [];
+        $templateCustomInputs = [];
         if ($kantor) {
             $schemas = $db->createCommand(
-                "SELECT nama_template, json_data_collection 
+                "SELECT nama_template, json_data_collection, json_custom_inputs 
                  FROM surat_template_dinamis 
                  WHERE instansi_tujuan = :kantor",
                 [':kantor' => $kantor]
@@ -119,6 +120,7 @@ final class CreateMailingAction
             foreach ($schemas as $row) {
                 $safeTplName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $row['nama_template']);
                 $templateSchemas[$safeTplName] = $row['json_data_collection'] ? json_decode($row['json_data_collection'], true) : null;
+                $templateCustomInputs[$safeTplName] = $row['json_custom_inputs'] ? json_decode($row['json_custom_inputs'], true) : null;
             }
         }
 
@@ -128,6 +130,7 @@ final class CreateMailingAction
             'mailing' => $mailing,
             'santris' => $santriData,
             'templateSchemas' => $templateSchemas,
+            'templateCustomInputs' => $templateCustomInputs,
         ]);
     }
 }

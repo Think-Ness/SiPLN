@@ -101,6 +101,11 @@ final class TemplateApiAction
             $jsonDataCollection = json_encode($jsonDataCollection);
         }
 
+        $jsonCustomInputs = $parsedBody['json_custom_inputs'] ?? null;
+        if ($jsonCustomInputs && !is_string($jsonCustomInputs)) {
+            $jsonCustomInputs = json_encode($jsonCustomInputs);
+        }
+
         try {
             $file->moveTo($targetPath);
 
@@ -110,38 +115,41 @@ final class TemplateApiAction
                 $existing = $this->db->createCommand("SELECT id FROM surat_template_dinamis WHERE file_path = :path", [':path' => $relativePath])->queryOne();
                 if (!$existing) {
                      $this->db->createCommand("
-                        INSERT INTO surat_template_dinamis (nama_template, file_path, instansi_tujuan, peruntukan, json_data_collection)
-                        VALUES (:nama, :path, :instansi, :peruntukan, :json_data)
+                        INSERT INTO surat_template_dinamis (nama_template, file_path, instansi_tujuan, peruntukan, json_data_collection, json_custom_inputs)
+                        VALUES (:nama, :path, :instansi, :peruntukan, :json_data, :json_custom)
                     ", [
                         ':nama' => $namaTemplate,
                         ':path' => $relativePath,
                         ':instansi' => $instansiTujuan,
                         ':peruntukan' => $peruntukan,
-                        ':json_data' => $jsonDataCollection
+                        ':json_data' => $jsonDataCollection,
+                        ':json_custom' => $jsonCustomInputs
                     ])->execute();
                 } else {
                      $this->db->createCommand("
                         UPDATE surat_template_dinamis 
-                        SET nama_template = :nama, instansi_tujuan = :instansi, peruntukan = :peruntukan, json_data_collection = :json_data 
+                        SET nama_template = :nama, instansi_tujuan = :instansi, peruntukan = :peruntukan, json_data_collection = :json_data, json_custom_inputs = :json_custom 
                         WHERE id = :id
                     ", [
                         ':nama' => $namaTemplate,
                         ':instansi' => $instansiTujuan,
                         ':peruntukan' => $peruntukan,
                         ':json_data' => $jsonDataCollection,
+                        ':json_custom' => $jsonCustomInputs,
                         ':id' => $existing['id']
                     ])->execute();
                 }
             } else {
                 $this->db->createCommand("
-                    INSERT INTO surat_template_dinamis (nama_template, file_path, instansi_tujuan, peruntukan, json_data_collection)
-                    VALUES (:nama, :path, :instansi, :peruntukan, :json_data)
+                    INSERT INTO surat_template_dinamis (nama_template, file_path, instansi_tujuan, peruntukan, json_data_collection, json_custom_inputs)
+                    VALUES (:nama, :path, :instansi, :peruntukan, :json_data, :json_custom)
                 ", [
                     ':nama' => $namaTemplate,
                     ':path' => $relativePath,
                     ':instansi' => $instansiTujuan,
                     ':peruntukan' => $peruntukan,
-                    ':json_data' => $jsonDataCollection
+                    ':json_data' => $jsonDataCollection,
+                    ':json_custom' => $jsonCustomInputs
                 ])->execute();
             }
 

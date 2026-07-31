@@ -165,6 +165,22 @@ $this->setTitle('Kelola Template Surat | Sistem Informasi');
                             </button>
                         </div>
                     </div>
+
+                    <!-- Dynamic Custom Inputs Section -->
+                    <div class="mb-3 border rounded-3 p-3 bg-light">
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" id="cbUseCustomInputs" onchange="toggleCustomInputs()">
+                            <label class="form-check-label fw-medium text-secondary" for="cbUseCustomInputs">Membutuhkan Input Kustom (Variabel Tambahan)</label>
+                        </div>
+                        <div class="form-text small mb-2">Aktifkan jika template membutuhkan input teks khusus selain data standar (contoh: Waktu, Tempat Acara, Nama Pemateri). Gunakan Bookmark atau tag <code>\${NamaVariabel}</code> di Word.</div>
+                        
+                        <div id="customInputsSection" class="d-none mt-3">
+                            <div id="customInputContainer"></div>
+                            <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="addCustomInput()">
+                                <i class="bi bi-plus-circle"></i> Tambah Input Kustom
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer bg-light border-top-0 p-3">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
@@ -222,6 +238,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const collections = getCollectionJSON();
             if (collections) {
                 formData.set('json_data_collection', JSON.stringify(collections));
+            }
+            
+            const customInputs = getCustomInputsJSON();
+            if (customInputs) {
+                formData.set('json_custom_inputs', JSON.stringify(customInputs));
             }
             
             const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
@@ -387,6 +408,71 @@ function getCollectionJSON() {
     return collections.length > 0 ? collections : null;
 }
 
+// Custom Inputs JS Logic
+let customInputCount = 0;
+
+function toggleCustomInputs() {
+    const isChecked = document.getElementById('cbUseCustomInputs').checked;
+    const sec = document.getElementById('customInputsSection');
+    if (isChecked) {
+        sec.classList.remove('d-none');
+        if (document.querySelectorAll('.custom-input-item').length === 0) addCustomInput();
+    } else {
+        sec.classList.add('d-none');
+    }
+}
+
+function addCustomInput(name = '', label = '', type = 'text') {
+    customInputCount++;
+    const id = customInputCount;
+    
+    const html = `
+    <div class="custom-input-item border bg-white p-3 rounded-3 mb-3 position-relative shadow-sm" id="ci_${id}">
+        <button type="button" class="btn-close position-absolute top-0 end-0 m-2" onclick="removeCustomInput(${id})" aria-label="Close"></button>
+        <div class="row g-2 pe-4">
+            <div class="col-md-5">
+                <label class="form-label small fw-bold text-dark">Nama Variabel/Bookmark <span class="text-danger">*</span></label>
+                <input type="text" class="form-control form-control-sm ci-name-input border-secondary" placeholder="Contoh: Waktu" value="${escHtml(name)}" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small fw-bold text-dark">Label Form <span class="text-danger">*</span></label>
+                <input type="text" class="form-control form-control-sm ci-label-input border-secondary" placeholder="Contoh: Jam Acara" value="${escHtml(label)}" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold text-dark">Tipe Input</label>
+                <select class="form-select form-select-sm ci-type-input border-secondary">
+                    <option value="text" ${type==='text'?'selected':''}>Teks Singkat</option>
+                    <option value="textarea" ${type==='textarea'?'selected':''}>Teks Panjang</option>
+                    <option value="date" ${type==='date'?'selected':''}>Tanggal</option>
+                </select>
+            </div>
+        </div>
+    </div>`;
+    document.getElementById('customInputContainer').insertAdjacentHTML('beforeend', html);
+}
+
+function removeCustomInput(id) {
+    document.getElementById(`ci_${id}`).remove();
+    if (document.querySelectorAll('.custom-input-item').length === 0) {
+        document.getElementById('cbUseCustomInputs').checked = false;
+        toggleCustomInputs();
+    }
+}
+
+function getCustomInputsJSON() {
+    if (!document.getElementById('cbUseCustomInputs').checked) return null;
+    const inputs = [];
+    document.querySelectorAll('.custom-input-item').forEach(item => {
+        const name = item.querySelector('.ci-name-input').value.trim();
+        const label = item.querySelector('.ci-label-input').value.trim();
+        const type = item.querySelector('.ci-type-input').value;
+        if (name && label) {
+            inputs.push({ name, label, type });
+        }
+    });
+    return inputs.length > 0 ? inputs : null;
+}
+
 
 async function loadTemplates() {
     try {
@@ -430,6 +516,7 @@ async function loadTemplates() {
             const fileName = t.file_path.split('/').pop();
             
             const jsonAttr = t.json_data_collection ? t.json_data_collection.replace(/"/g, '&quot;').replace(/'/g, '&#39;') : '';
+            const ciAttr = t.json_custom_inputs ? t.json_custom_inputs.replace(/"/g, '&quot;').replace(/'/g, '&#39;') : '';
             
             html += `<tr class="${groupId} d-none">
                 <td class="ps-4 text-muted">${globalNo++}</td>
@@ -440,7 +527,7 @@ async function loadTemplates() {
                     <button class="btn btn-sm btn-outline-primary rounded-circle" onclick="openTemplate(this, ${t.id})" title="Buka di MS Word">
                         <i class="bi bi-box-arrow-up-right"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-warning rounded-circle ms-1" onclick="editTemplate(${t.id}, '${escHtml(t.nama_template)}', '${escHtml(t.instansi_tujuan)}', '${t.peruntukan}', this.dataset.json)" data-json="${jsonAttr}" title="Edit / Timpa Template">
+                    <button class="btn btn-sm btn-outline-warning rounded-circle ms-1" onclick="editTemplate(${t.id}, '${escHtml(t.nama_template)}', '${escHtml(t.instansi_tujuan)}', '${t.peruntukan}', this.dataset.json, this.dataset.ci)" data-json="${jsonAttr}" data-ci="${ciAttr}" title="Edit / Timpa Template">
                         <i class="bi bi-pencil"></i>
                     </button>
                     <button class="btn btn-sm btn-outline-danger rounded-circle ms-1" onclick="deleteTemplate(${t.id}, '${escHtml(t.nama_template)}')" title="Hapus Template">
@@ -465,7 +552,7 @@ async function loadTemplates() {
 
 // inline toggleGroup function removed, replaced by event delegation
 
-function editTemplate(id, nama, instansi, peruntukan, jsonStr) {
+function editTemplate(id, nama, instansi, peruntukan, jsonStr, customInputsStr) {
     const form = document.getElementById('formTambahTemplate');
     form.reset();
     
@@ -506,6 +593,24 @@ function editTemplate(id, nama, instansi, peruntukan, jsonStr) {
             }
         } catch(e) {
             console.error("Error parsing json data collection", e);
+        }
+    }
+    
+    // Reset Custom Inputs UI
+    document.getElementById('cbUseCustomInputs').checked = false;
+    document.getElementById('customInputsSection').classList.add('d-none');
+    document.getElementById('customInputContainer').innerHTML = '';
+    
+    if (customInputsStr) {
+        try {
+            const ci = JSON.parse(customInputsStr);
+            if (ci && ci.length > 0) {
+                document.getElementById('cbUseCustomInputs').checked = true;
+                document.getElementById('customInputsSection').classList.remove('d-none');
+                ci.forEach(c => addCustomInput(c.name, c.label, c.type));
+            }
+        } catch(e) {
+            console.error("Error parsing json custom inputs", e);
         }
     }
     
