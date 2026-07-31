@@ -1052,9 +1052,22 @@ function setupStep3() {
                 color: '#212529'
             };
         }
+        
+        let generatedBadge = '';
+        if (currentMailingData && currentMailingData.surats) {
+            let generatedSurat = currentMailingData.surats.find(surat => surat.tipe_surat === t);
+            if (generatedSurat) {
+                generatedBadge = `<div class="badge bg-success bg-opacity-10 text-success mt-1 border border-success border-opacity-25" style="font-size: 0.65rem;"><i class="bi bi-check2-all me-1"></i>Sudah di-generate (${generatedSurat.nomor_surat})</div>`;
+            }
+        }
+
         html += `<div class="surat-type-card d-flex align-items-center gap-3" onclick="selectSuratType('${t}')" id="stCard_${t}">
             <div class="surat-type-icon" style="background:${s.bg};color:${s.color}; border:1px solid #dee2e6;"><i class="bi ${s.icon}"></i></div>
-            <div><div class="fw-bold small">${s.label}</div><div class="text-muted" style="font-size:.7rem;">${s.file}</div></div>
+            <div>
+                <div class="fw-bold small">${s.label}</div>
+                <div class="text-muted" style="font-size:.7rem;">${s.file}</div>
+                ${generatedBadge}
+            </div>
         </div>`;
     });
     document.getElementById('suratTypeCards').innerHTML = html;
