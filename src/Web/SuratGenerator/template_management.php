@@ -429,6 +429,8 @@ async function loadTemplates() {
                 : '<span class="badge bg-success-subtle text-success">Satu Orang</span>';
             const fileName = t.file_path.split('/').pop();
             
+            const jsonAttr = t.json_data_collection ? t.json_data_collection.replace(/"/g, '&quot;').replace(/'/g, '&#39;') : '';
+            
             html += `<tr class="${groupId} d-none">
                 <td class="ps-4 text-muted">${globalNo++}</td>
                 <td class="fw-semibold">${escHtml(t.nama_template)}</td>
@@ -438,7 +440,7 @@ async function loadTemplates() {
                     <button class="btn btn-sm btn-outline-primary rounded-circle" onclick="openTemplate(this, ${t.id})" title="Buka di MS Word">
                         <i class="bi bi-box-arrow-up-right"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-warning rounded-circle ms-1" onclick="editTemplate(${t.id}, '${escHtml(t.nama_template)}', '${escHtml(t.instansi_tujuan)}', '${t.peruntukan}', this.dataset.json)" data-json="${escHtml(t.json_data_collection || '')}" title="Edit / Timpa Template">
+                    <button class="btn btn-sm btn-outline-warning rounded-circle ms-1" onclick="editTemplate(${t.id}, '${escHtml(t.nama_template)}', '${escHtml(t.instansi_tujuan)}', '${t.peruntukan}', this.dataset.json)" data-json="${jsonAttr}" title="Edit / Timpa Template">
                         <i class="bi bi-pencil"></i>
                     </button>
                     <button class="btn btn-sm btn-outline-danger rounded-circle ms-1" onclick="deleteTemplate(${t.id}, '${escHtml(t.nama_template)}')" title="Hapus Template">
