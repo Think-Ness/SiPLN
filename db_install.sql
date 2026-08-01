@@ -653,6 +653,7 @@ CREATE TABLE `surat_generated` (
   `mailing_id` int(11) NOT NULL,
   `tipe_surat` enum('SP','SK','SJ','ST') NOT NULL,
   `nomor_surat` varchar(100) NOT NULL,
+  `nomor_akhir` varchar(100) DEFAULT NULL,
   `tanggal_surat` date NOT NULL,
   `hal` varchar(255) NOT NULL DEFAULT '',
   `isi` text DEFAULT NULL,
