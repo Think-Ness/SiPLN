@@ -401,14 +401,14 @@ CREATE TABLE `list_angkatan` (
 
 -- Data for `list_angkatan`
 INSERT INTO `list_angkatan` (`id`, `angka`, `nama_indo`, `nama_arab`, `nama_arab_lengkap`, `urutan`, `status_santri`) VALUES 
-('1', '1', 'Kelas Satu', 'الأول', 'الفصل الأول', '1', '1'),
-('2', '1 Int', 'Kelas Satu Intensif', 'الأول التكثيفي', 'الفصل الأول التكثيفي', '2', '1'),
-('3', '2', 'Kelas Dua', 'الثاني', 'الفصل الثالث', '3', '1'),
-('4', '3', 'Kelas Tiga', 'الثالث', 'الفصل الثالث', '4', '1'),
-('5', '3 Int', 'Kelas Tiga Intensif', 'الثالث التكثيفي', 'الفصل الثالث التكثيفي', '5', '1'),
-('6', '4', 'Kelas Empat', 'الرابع', 'الفصل الرابع', '6', '1'),
-('7', '5', 'Kelas Lima', 'الخامس', 'الفصل الخامس', '7', '1'),
-('8', '6', 'Kelas Enam', 'السادس', 'الفصل السادس', '8', '1'),
+('1', '1', 'Kelas Satu', 'Ø§Ù„Ø£ÙˆÙ„', 'Ø§Ù„ÙØµÙ„ Ø§Ù„Ø£ÙˆÙ„', '1', '1'),
+('2', '1 Int', 'Kelas Satu Intensif', 'Ø§Ù„Ø£ÙˆÙ„ Ø§Ù„ØªÙƒØ«ÙŠÙÙŠ', 'Ø§Ù„ÙØµÙ„ Ø§Ù„Ø£ÙˆÙ„ Ø§Ù„ØªÙƒØ«ÙŠÙÙŠ', '2', '1'),
+('3', '2', 'Kelas Dua', 'Ø§Ù„Ø«Ø§Ù†ÙŠ', 'Ø§Ù„ÙØµÙ„ Ø§Ù„Ø«Ø§Ù„Ø«', '3', '1'),
+('4', '3', 'Kelas Tiga', 'Ø§Ù„Ø«Ø§Ù„Ø«', 'Ø§Ù„ÙØµÙ„ Ø§Ù„Ø«Ø§Ù„Ø«', '4', '1'),
+('5', '3 Int', 'Kelas Tiga Intensif', 'Ø§Ù„Ø«Ø§Ù„Ø« Ø§Ù„ØªÙƒØ«ÙŠÙÙŠ', 'Ø§Ù„ÙØµÙ„ Ø§Ù„Ø«Ø§Ù„Ø« Ø§Ù„ØªÙƒØ«ÙŠÙÙŠ', '5', '1'),
+('6', '4', 'Kelas Empat', 'Ø§Ù„Ø±Ø§Ø¨Ø¹', 'Ø§Ù„ÙØµÙ„ Ø§Ù„Ø±Ø§Ø¨Ø¹', '6', '1'),
+('7', '5', 'Kelas Lima', 'Ø§Ù„Ø®Ø§Ù…Ø³', 'Ø§Ù„ÙØµÙ„ Ø§Ù„Ø®Ø§Ù…Ø³', '7', '1'),
+('8', '6', 'Kelas Enam', 'Ø§Ù„Ø³Ø§Ø¯Ø³', 'Ø§Ù„ÙØµÙ„ Ø§Ù„Ø³Ø§Ø¯Ø³', '8', '1'),
 ('9', 'B', 'Kelas B', NULL, NULL, '9', '2'),
 ('10', 'A', 'Kelas A', NULL, NULL, '10', '2');
 
@@ -677,6 +677,8 @@ CREATE TABLE `surat_jenis_pengajuan` (
   `isi` text DEFAULT NULL,
   `kepada` varchar(255) NOT NULL DEFAULT '',
   `tempat` varchar(255) NOT NULL DEFAULT '',
+  `json_dynamic_data` text DEFAULT NULL,
+  `custom_inputs_data` text DEFAULT NULL,
   `surat_dibutuhkan` varchar(100) NOT NULL DEFAULT 'SP,SK,SJ,ST' COMMENT 'Comma-separated: SP,SK,SJ,ST',
   `kantor` varchar(255) NOT NULL DEFAULT '',
   `output_path` varchar(255) DEFAULT NULL,

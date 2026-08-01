@@ -1169,14 +1169,14 @@ CREATE TABLE `list_angkatan` (
 
 -- Data for `list_angkatan`
 INSERT INTO `list_angkatan` (`id`, `angka`, `nama_indo`, `nama_arab`, `nama_arab_lengkap`, `urutan`, `status_santri`) VALUES 
-('1', '1', 'Kelas Satu', 'الأول', 'الفصل الأول', '1', '1'),
-('2', '1 Int', 'Kelas Satu Intensif', 'الأول التكثيفي', 'الفصل الأول التكثيفي', '2', '1'),
-('3', '2', 'Kelas Dua', 'الثاني', 'الفصل الثالث', '3', '1'),
-('4', '3', 'Kelas Tiga', 'الثالث', 'الفصل الثالث', '4', '1'),
-('5', '3 Int', 'Kelas Tiga Intensif', 'الثالث التكثيفي', 'الفصل الثالث التكثيفي', '5', '1'),
-('6', '4', 'Kelas Empat', 'الرابع', 'الفصل الرابع', '6', '1'),
-('7', '5', 'Kelas Lima', 'الخامس', 'الفصل الخامس', '7', '1'),
-('8', '6', 'Kelas Enam', 'السادس', 'الفصل السادس', '8', '1'),
+('1', '1', 'Kelas Satu', 'Ø§Ù„Ø£ÙˆÙ„', 'Ø§Ù„ÙØµÙ„ Ø§Ù„Ø£ÙˆÙ„', '1', '1'),
+('2', '1 Int', 'Kelas Satu Intensif', 'Ø§Ù„Ø£ÙˆÙ„ Ø§Ù„ØªÙƒØ«ÙŠÙÙŠ', 'Ø§Ù„ÙØµÙ„ Ø§Ù„Ø£ÙˆÙ„ Ø§Ù„ØªÙƒØ«ÙŠÙÙŠ', '2', '1'),
+('3', '2', 'Kelas Dua', 'Ø§Ù„Ø«Ø§Ù†ÙŠ', 'Ø§Ù„ÙØµÙ„ Ø§Ù„Ø«Ø§Ù„Ø«', '3', '1'),
+('4', '3', 'Kelas Tiga', 'Ø§Ù„Ø«Ø§Ù„Ø«', 'Ø§Ù„ÙØµÙ„ Ø§Ù„Ø«Ø§Ù„Ø«', '4', '1'),
+('5', '3 Int', 'Kelas Tiga Intensif', 'Ø§Ù„Ø«Ø§Ù„Ø« Ø§Ù„ØªÙƒØ«ÙŠÙÙŠ', 'Ø§Ù„ÙØµÙ„ Ø§Ù„Ø«Ø§Ù„Ø« Ø§Ù„ØªÙƒØ«ÙŠÙÙŠ', '5', '1'),
+('6', '4', 'Kelas Empat', 'Ø§Ù„Ø±Ø§Ø¨Ø¹', 'Ø§Ù„ÙØµÙ„ Ø§Ù„Ø±Ø§Ø¨Ø¹', '6', '1'),
+('7', '5', 'Kelas Lima', 'Ø§Ù„Ø®Ø§Ù…Ø³', 'Ø§Ù„ÙØµÙ„ Ø§Ù„Ø®Ø§Ù…Ø³', '7', '1'),
+('8', '6', 'Kelas Enam', 'Ø§Ù„Ø³Ø§Ø¯Ø³', 'Ø§Ù„ÙØµÙ„ Ø§Ù„Ø³Ø§Ø¯Ø³', '8', '1'),
 ('9', 'B', 'Kelas B', NULL, NULL, '9', '2'),
 ('10', 'A', 'Kelas A', NULL, NULL, '10', '2');
 
@@ -1993,7 +1993,6 @@ CREATE TABLE `surat_generated` (
   `mailing_id` int(11) NOT NULL,
   `tipe_surat` varchar(50) NOT NULL,
   `nomor_surat` varchar(100) NOT NULL,
-  `nomor_akhir` varchar(100) DEFAULT NULL,
   `tanggal_surat` date NOT NULL,
   `hal` varchar(255) NOT NULL DEFAULT '',
   `isi` text DEFAULT NULL,
@@ -2048,6 +2047,8 @@ CREATE TABLE `surat_jenis_pengajuan` (
   `isi` text DEFAULT NULL,
   `kepada` varchar(255) NOT NULL DEFAULT '',
   `tempat` varchar(255) NOT NULL DEFAULT '',
+  `json_dynamic_data` text DEFAULT NULL,
+  `custom_inputs_data` text DEFAULT NULL,
   `surat_dibutuhkan` varchar(100) NOT NULL DEFAULT 'SP,SK,SJ,ST' COMMENT 'Comma-separated: SP,SK,SJ,ST',
   `kantor` varchar(255) NOT NULL DEFAULT '',
   `output_path` varchar(255) DEFAULT NULL,
@@ -2210,20 +2211,20 @@ INSERT INTO `users` (`id`, `username`, `password_hash`, `nama_lengkap`, `ttl`, `
 ('6', 'rer', '$2y$10$XbntFkCH7I0Uz0Yhw2zkcenOhefyK0Lto1dAxD/sK29QqMwx2r4S.', 'ryry', NULL, NULL, NULL, NULL, 'staff_instansi', '[\"menu_master_data\",\"menu_auto_rekap\"]', '1', '2026-06-03 22:00:29', '2026-06-03 22:00:29');
 
 SET FOREIGN_KEY_CHECKS=1;
+INSERT INTO `master_menus` (`kategori`, `nama_menu`, `url`, `icon`, `permission_key`, `urut`, `is_active`) VALUES ('lainlain', 'Kelola Template', '/surat-templates', 'bi bi-file-word', 'menu_surat_templates', 41, 1);
 
--- Table structure for surat_template_dinamis
-DROP TABLE IF EXISTS surat_template_dinamis;
-CREATE TABLE surat_template_dinamis (
-  id int(11) NOT NULL AUTO_INCREMENT,
-  instansi_id varchar(50) NOT NULL,
-  core_name varchar(100) NOT NULL,
-  
-ama_tampilan varchar(255) NOT NULL,
-  ile_satu varchar(255) DEFAULT NULL,
-  ile_banyak varchar(255) DEFAULT NULL,
-  json_fields text DEFAULT NULL,
-  is_active tinyint(1) NOT NULL DEFAULT 1,
-  created_at datetime NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (id),
-  KEY idx_instansi (instansi_id)
+-- Table structure for `surat_template_dinamis`
+DROP TABLE IF EXISTS `surat_template_dinamis`;
+CREATE TABLE `surat_template_dinamis` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `instansi_id` varchar(50) NOT NULL,
+  `core_name` varchar(100) NOT NULL,
+  `nama_tampilan` varchar(255) NOT NULL,
+  `file_satu` varchar(255) DEFAULT NULL,
+  `file_banyak` varchar(255) DEFAULT NULL,
+  `json_fields` text DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_instansi` (`instansi_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
