@@ -55,7 +55,7 @@ if ($isActive('/') || $isActive('/auto-rekap') || $isActive('/kalender-expiry') 
 if ($isActive('/master-data') || $isActive('/inaktif-data') || $isActive('/request-edit')) $activeGroups[] = 'masterdata';
 if ($isActive('/master-print')) $activeGroups[] = 'masterprint';
 if ($isActive('/anggaran') || $isActive('/job-desk/keuangan') || $isActive('/job-desk/pengeluaran-operasional')) $activeGroups[] = 'keuangan';
-if ($isActive('/job-desk/settings') || $isActive('/profil-instansi') || $isActive('/anggota-kamar') || $isActive('/surat-generator')) $activeGroups[] = 'lainlain';
+if ($isActive('/job-desk/settings') || $isActive('/profil-instansi') || $isActive('/anggota-kamar') || $isActive('/surat-generator') || $isActive('/surat-templates')) $activeGroups[] = 'lainlain';
 if ($isActive('/manajemen-instansi') || $isActive('/manajemen-user') || $isActive('/pengaturan') || $isActive('/audit-log')) $activeGroups[] = 'sistem';
 
 // Fetch dynamic menus from DB
@@ -76,6 +76,16 @@ try {
     $allMenus = $stmt->fetchAll(\PDO::FETCH_ASSOC);
     foreach ($allMenus as $m) {
         $dynamicMenus[$m['kategori']][] = $m;
+    }
+
+    // Auto-refresh session permissions
+    if (isset($_SESSION['user_id'])) {
+        $stmtUser = $pdo->prepare("SELECT permissions FROM users WHERE id = ?");
+        $stmtUser->execute([$_SESSION['user_id']]);
+        $userRow = $stmtUser->fetch(\PDO::FETCH_ASSOC);
+        if ($userRow && !empty($userRow['permissions'])) {
+            $_SESSION['permissions'] = json_decode($userRow['permissions'], true) ?? [];
+        }
     }
 } catch (\Exception $e) {
     // DB error fallback

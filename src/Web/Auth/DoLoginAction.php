@@ -116,11 +116,11 @@ final class DoLoginAction
                 "action_edit_santri","menu_anggota_kamar","menu_audit_log","menu_auto_rekap","menu_inaktif_data",
                 "menu_job_desk","menu_manajemen_instansi","menu_manajemen_pengguna","menu_master_data",
                 "menu_master_print","menu_pemberkasan","menu_pengaturan_jobdesk","menu_pengaturan_sistem",
-                "menu_profil_instansi","menu_surat_generator","action_edit_santri_edit","menu_anggota_kamar_edit",
+                "menu_profil_instansi","menu_surat_generator","menu_surat_templates","action_edit_santri_edit","menu_anggota_kamar_edit",
                 "menu_audit_log_edit","menu_auto_rekap_edit","menu_inaktif_data_edit","menu_job_desk_edit",
                 "menu_manajemen_instansi_edit","menu_manajemen_pengguna_edit","menu_master_data_edit",
                 "menu_master_print_edit","menu_pemberkasan_edit","menu_pengaturan_jobdesk_edit",
-                "menu_pengaturan_sistem_edit","menu_profil_instansi_edit","menu_surat_generator_edit"
+                "menu_pengaturan_sistem_edit","menu_profil_instansi_edit","menu_surat_generator_edit","menu_surat_templates_edit"
             ];
             $db->createCommand()->insert('users', [
                 'username' => 'superadmin',
