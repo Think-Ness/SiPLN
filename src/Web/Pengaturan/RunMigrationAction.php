@@ -23,20 +23,43 @@ final class RunMigrationAction
         }
 
         try {
-            // Check current columns
-            $cols = $db->createCommand('DESCRIBE surat_template_dinamis')->queryColumn();
-            
             $messages = [];
-            
-            // Drop instansi_id if exists, add instansi_tujuan if not exists
-            if (in_array('instansi_id', $cols) && !in_array('instansi_tujuan', $cols)) {
-                $db->createCommand('ALTER TABLE surat_template_dinamis DROP COLUMN instansi_id, ADD COLUMN instansi_tujuan VARCHAR(100) NOT NULL AFTER file_path')->execute();
-                $messages[] = 'Kolom instansi_id dihapus, instansi_tujuan ditambahkan.';
-            } elseif (!in_array('instansi_tujuan', $cols)) {
-                $db->createCommand('ALTER TABLE surat_template_dinamis ADD COLUMN instansi_tujuan VARCHAR(100) NOT NULL AFTER file_path')->execute();
-                $messages[] = 'Kolom instansi_tujuan berhasil ditambahkan.';
+
+            // Check if table exists
+            $tableExists = $db->createCommand("SHOW TABLES LIKE 'surat_template_dinamis'")->queryScalar();
+
+            if (!$tableExists) {
+                // Create table
+                $db->createCommand("
+                    CREATE TABLE `surat_template_dinamis` (
+                      `id` int(11) NOT NULL AUTO_INCREMENT,
+                      `nama_template` varchar(255) NOT NULL,
+                      `file_path` varchar(255) NOT NULL,
+                      `instansi_tujuan` varchar(100) NOT NULL,
+                      `peruntukan` enum('sekaligus','perseorangan') NOT NULL DEFAULT 'perseorangan',
+                      `json_data_collection` text DEFAULT NULL,
+                      `json_custom_inputs` text DEFAULT NULL,
+                      `aktif` tinyint(1) NOT NULL DEFAULT 1,
+                      `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+                      `updated_at` datetime DEFAULT NULL ON UPDATE current_timestamp(),
+                      PRIMARY KEY (`id`)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+                ")->execute();
+                $messages[] = 'Tabel surat_template_dinamis berhasil dibuat dengan struktur terbaru.';
             } else {
-                $messages[] = 'Struktur tabel sudah yang terbaru (tidak ada perubahan).';
+                // Check current columns
+                $cols = $db->createCommand('DESCRIBE surat_template_dinamis')->queryColumn();
+                
+                // Drop instansi_id if exists, add instansi_tujuan if not exists
+                if (in_array('instansi_id', $cols) && !in_array('instansi_tujuan', $cols)) {
+                    $db->createCommand('ALTER TABLE surat_template_dinamis DROP COLUMN instansi_id, ADD COLUMN instansi_tujuan VARCHAR(100) NOT NULL AFTER file_path')->execute();
+                    $messages[] = 'Kolom instansi_id dihapus, instansi_tujuan ditambahkan.';
+                } elseif (!in_array('instansi_tujuan', $cols)) {
+                    $db->createCommand('ALTER TABLE surat_template_dinamis ADD COLUMN instansi_tujuan VARCHAR(100) NOT NULL AFTER file_path')->execute();
+                    $messages[] = 'Kolom instansi_tujuan berhasil ditambahkan.';
+                } else {
+                    $messages[] = 'Struktur tabel sudah yang terbaru (tidak ada perubahan).';
+                }
             }
 
             return JsonResponse::create([
