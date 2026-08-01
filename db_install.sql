@@ -651,7 +651,7 @@ DROP TABLE IF EXISTS `surat_generated`;
 CREATE TABLE `surat_generated` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `mailing_id` int(11) NOT NULL,
-  `tipe_surat` enum('SP','SK','SJ','ST') NOT NULL,
+  `tipe_surat` varchar(50) NOT NULL,
   `nomor_surat` varchar(100) NOT NULL,
   `nomor_akhir` varchar(100) DEFAULT NULL,
   `tanggal_surat` date NOT NULL,
@@ -659,6 +659,8 @@ CREATE TABLE `surat_generated` (
   `isi` text DEFAULT NULL,
   `kepada` varchar(255) NOT NULL DEFAULT '',
   `tempat` varchar(255) NOT NULL DEFAULT '',
+  `json_dynamic_data` text DEFAULT NULL,
+  `custom_inputs_data` text DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `idx_mailing` (`mailing_id`),
@@ -754,3 +756,19 @@ CREATE TABLE `users` (
 
 SET FOREIGN_KEY_CHECKS=1;
 INSERT INTO `master_menus` (`kategori`, `nama_menu`, `url`, `icon`, `permission_key`, `urut`, `is_active`) VALUES ('lainlain', 'Kelola Template', '/surat-templates', 'bi bi-file-word', 'menu_surat_templates', 41, 1);
+
+-- Table structure for `surat_template_dinamis`
+DROP TABLE IF EXISTS `surat_template_dinamis`;
+CREATE TABLE `surat_template_dinamis` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `instansi_id` varchar(50) NOT NULL,
+  `core_name` varchar(100) NOT NULL,
+  `nama_tampilan` varchar(255) NOT NULL,
+  `file_satu` varchar(255) DEFAULT NULL,
+  `file_banyak` varchar(255) DEFAULT NULL,
+  `json_fields` text DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_instansi` (`instansi_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

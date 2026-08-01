@@ -1991,13 +1991,16 @@ DROP TABLE IF EXISTS `surat_generated`;
 CREATE TABLE `surat_generated` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `mailing_id` int(11) NOT NULL,
-  `tipe_surat` enum('SP','SK','SJ','ST') NOT NULL,
+  `tipe_surat` varchar(50) NOT NULL,
   `nomor_surat` varchar(100) NOT NULL,
+  `nomor_akhir` varchar(100) DEFAULT NULL,
   `tanggal_surat` date NOT NULL,
   `hal` varchar(255) NOT NULL DEFAULT '',
   `isi` text DEFAULT NULL,
   `kepada` varchar(255) NOT NULL DEFAULT '',
   `tempat` varchar(255) NOT NULL DEFAULT '',
+  `json_dynamic_data` text DEFAULT NULL,
+  `custom_inputs_data` text DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `idx_mailing` (`mailing_id`),
@@ -2207,3 +2210,20 @@ INSERT INTO `users` (`id`, `username`, `password_hash`, `nama_lengkap`, `ttl`, `
 ('6', 'rer', '$2y$10$XbntFkCH7I0Uz0Yhw2zkcenOhefyK0Lto1dAxD/sK29QqMwx2r4S.', 'ryry', NULL, NULL, NULL, NULL, 'staff_instansi', '[\"menu_master_data\",\"menu_auto_rekap\"]', '1', '2026-06-03 22:00:29', '2026-06-03 22:00:29');
 
 SET FOREIGN_KEY_CHECKS=1;
+
+-- Table structure for surat_template_dinamis
+DROP TABLE IF EXISTS surat_template_dinamis;
+CREATE TABLE surat_template_dinamis (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  instansi_id varchar(50) NOT NULL,
+  core_name varchar(100) NOT NULL,
+  
+ama_tampilan varchar(255) NOT NULL,
+  ile_satu varchar(255) DEFAULT NULL,
+  ile_banyak varchar(255) DEFAULT NULL,
+  json_fields text DEFAULT NULL,
+  is_active tinyint(1) NOT NULL DEFAULT 1,
+  created_at datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (id),
+  KEY idx_instansi (instansi_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

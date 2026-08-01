@@ -262,18 +262,43 @@ final class DownloadSuratAction
                 $pagesBefore = $doc->ComputeStatistics(2); // 2 = wdStatisticPages
                 
                 $lampiranPages = 0;
+                $lampiranPages = 0;
                 if ($withLampiran && !empty($santris)) {
-                    error_log("\n[".date('Y-m-d H:i:s')."] 5. Filling sekaligus list...", 3, sys_get_temp_dir() . '/surat.log');
-                    if ($logProgress) $logProgress("Mempersiapkan data " . count($santris) . " santri...");
-                    $this->fillSekaligusList($doc, $santris, $logProgress, $kantor);
-                    
-                    $pagesAfter = $doc->ComputeStatistics(2);
-                    $lampiranPages = max(1, $pagesAfter - $pagesBefore);
+                    $totalSantris = count($santris);
+                    $maxPerPage = 4;
+                    $pages = 1;
+                    $counter = 1;
+                    foreach ($santris as $s) {
+                        $shouldBreak = false;
+                        if ($counter > 1) {
+                            $posOnPage = ($counter - 1) % $maxPerPage;
+                            if ($kantor === 'Kemenag') {
+                                if ($counter === $totalSantris && $posOnPage === 3) {
+                                    $shouldBreak = true;
+                                } elseif ($posOnPage === 0) {
+                                    $shouldBreak = true;
+                                }
+                            } else {
+                                if ($posOnPage === 0) {
+                                    $shouldBreak = true;
+                                }
+                            }
+                        }
+                        if ($shouldBreak) $pages++;
+                        $counter++;
+                    }
+                    $lampiranPages = $pages;
                 }
                 
                 error_log("\n[".date('Y-m-d H:i:s')."] 4. Filling headers...", 3, sys_get_temp_dir() . '/surat.log');
                 if ($logProgress) $logProgress("Menyesuaikan template header...");
                 $this->fillHeaderBookmarks($doc, $nomorSurat, $tanggalSurat, $jenisPengajuan, $userStaf, $withLampiran ? $lampiranPages : null, $customInputsData);
+
+                if ($withLampiran && !empty($santris)) {
+                    error_log("\n[".date('Y-m-d H:i:s')."] 5. Filling sekaligus list...", 3, sys_get_temp_dir() . '/surat.log');
+                    if ($logProgress) $logProgress("Mempersiapkan data " . count($santris) . " santri...");
+                    $this->fillSekaligusList($doc, $santris, $logProgress, $kantor);
+                }
 
                 $fileNameBase = "{$safeTipeSurat}_Sekaligus_{$safeJenis}";
                 $targetPdf = str_replace('/', '\\', $saveDir . $fileNameBase . '.pdf');
@@ -426,6 +451,7 @@ final class DownloadSuratAction
     {
         $bookmarks = $doc->Bookmarks;
         $fill = function ($name, $val) use ($doc, $bookmarks) {
+            error_log("\n[".date('Y-m-d H:i:s')."]     -> Try Bookmark {$name}", 3, sys_get_temp_dir() . '/surat.log');
             // 1. Try Bookmark
             try {
                 if ($bookmarks->Exists($name)) {
@@ -433,6 +459,7 @@ final class DownloadSuratAction
                 }
             } catch (\Exception $e) {}
             
+            error_log("\n[".date('Y-m-d H:i:s')."]     -> Try FindReplace {$name}", 3, sys_get_temp_dir() . '/surat.log');
             // 2. Try Find & Replace for ${Var}
             try {
                 $doc->Content->Find->Execute(
@@ -449,17 +476,24 @@ final class DownloadSuratAction
                     2      // Replace all (wdReplaceAll)
                 );
             } catch (\Exception $e) {}
+            error_log("\n[".date('Y-m-d H:i:s')."]     -> Done {$name}", 3, sys_get_temp_dir() . '/surat.log');
         };
 
+        error_log("\n[".date('Y-m-d H:i:s')."] 4.1. Filling NO...", 3, sys_get_temp_dir() . '/surat.log');
         $nomorAngka = explode('/', (string)$nomorSurat)[0];
         $fill("NO", $nomorAngka);
+        error_log("\n[".date('Y-m-d H:i:s')."] 4.2. Filling Tanggal_Buat...", 3, sys_get_temp_dir() . '/surat.log');
         $fill("Tanggal_Buat", $this->formatTglIndo($tanggalSurat));
+        error_log("\n[".date('Y-m-d H:i:s')."] 4.3. Filling Bln_Romawi...", 3, sys_get_temp_dir() . '/surat.log');
         $fill("Bln_Romawi", $this->bulanRomawi((int)date('m', strtotime($tanggalSurat))));
+        error_log("\n[".date('Y-m-d H:i:s')."] 4.4. Filling Tahun_Buat...", 3, sys_get_temp_dir() . '/surat.log');
         $fill("Tahun_Buat", date('Y', strtotime($tanggalSurat)));
         
         if ($lampiranPages !== null) {
+            error_log("\n[".date('Y-m-d H:i:s')."] 4.5. Filling JML_LAMPIRAN...", 3, sys_get_temp_dir() . '/surat.log');
             $fill("JML_LAMPIRAN", $lampiranPages . " Lembar");
         }
+        error_log("\n[".date('Y-m-d H:i:s')."] 4.6. Filling Kepada dll...", 3, sys_get_temp_dir() . '/surat.log');
         $fill("Kepada", $jp['kepada'] ?? '');
         $fill("Tempat", $jp['tempat'] ?? '');
         $fill("Hal", $jp['hal'] ?? '');
@@ -467,6 +501,7 @@ final class DownloadSuratAction
 
         // Staf data (for Surat Tugas)
         if ($userStaf) {
+            error_log("\n[".date('Y-m-d H:i:s')."] 4.7. Filling Staf...", 3, sys_get_temp_dir() . '/surat.log');
             $fill("Staf_Nama", $userStaf['nama_lengkap'] ?? '');
             $fill("Kepala_Staf", $userStaf['nama_lengkap'] ?? '');
             $fill("Staf_TTL", $userStaf['ttl'] ?? '');
@@ -480,12 +515,14 @@ final class DownloadSuratAction
             $fill("Pekerjaan", "Guru Kulliyyatu-l-Mu'allimin Al-Islamiyyah (KMI)");
         }
         
+        error_log("\n[".date('Y-m-d H:i:s')."] 4.8. Filling Custom Inputs...", 3, sys_get_temp_dir() . '/surat.log');
         // Fill custom inputs
         if ($customInputsData && is_array($customInputsData)) {
             foreach ($customInputsData as $key => $val) {
                 $fill($key, $val);
             }
         }
+        error_log("\n[".date('Y-m-d H:i:s')."] 4.9. Finished Headers.", 3, sys_get_temp_dir() . '/surat.log');
     }
 
     private function fillPersonalBookmarks($doc, $s)
