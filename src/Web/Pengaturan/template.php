@@ -180,6 +180,37 @@ $this->setTitle('Pengaturan Sistem | Manajemen Terpusat');
 </div>
 <?php endif; ?>
 
+<?php if ($role === 'super_admin'): ?>
+<!-- Database Migration / Update Section -->
+<div class="row g-4 mt-1">
+    <div class="col-lg-12">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-header bg-white border-bottom p-4">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-tools text-danger"></i>
+                    <h5 class="fw-bold mb-0">Maintenance & Pembaruan Sistem</h5>
+                </div>
+                <p class="text-muted small mb-0 mt-2">
+                    Gunakan fitur di bawah ini hanya setelah melakukan pembaruan file source code aplikasi (Update Aplikasi).
+                </p>
+            </div>
+            <div class="card-body p-4">
+                <div class="d-flex flex-wrap align-items-center justify-content-between bg-light p-3 border rounded-3">
+                    <div class="mb-3 mb-md-0 me-3">
+                        <h6 class="fw-bold mb-1"><i class="bi bi-database-up text-primary me-2"></i>Suntik / Sinkronisasi Struktur Database</h6>
+                        <p class="text-muted small mb-0" style="line-height: 1.5;">Terapkan perubahan skema database terbaru secara otomatis (misalnya penambahan kolom <code>instansi_tujuan</code> pada fitur Surat Generator / Pengaturan Template). Cukup tekan sekali setelah mengupdate aplikasi.</p>
+                    </div>
+                    <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm flex-shrink-0" onclick="triggerDatabaseMigration()" id="btn-db-migrate">
+                        <i class="bi bi-lightning-fill me-2"></i>Suntik Database Baru
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+
 <!-- Toast Notification -->
 <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
     <div id="toastSuccess" class="toast align-items-center text-white bg-success border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
@@ -349,6 +380,63 @@ function triggerFullSync() {
             .catch(err => {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="bi bi-cloud-upload-fill me-2"></i>Kirim Semua Data ke Firebase';
+                Swal.fire('Error', 'Gagal menghubungi server: ' + err.message, 'error');
+            });
+        }
+    });
+}
+</script>
+
+<script>
+function triggerDatabaseMigration() {
+    Swal.fire({
+        title: 'Suntik Perubahan Database?',
+        html: `<p class="text-muted">Proses ini akan mengecek dan menerapkan perubahan struktur (kolom/tabel) terbaru ke database lokal Anda, seperti pada fitur Surat Generator.</p>
+               <p class="text-danger small fw-bold">Pastikan tidak ada orang lain yang sedang mengedit data penting saat ini.</p>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '<i class="bi bi-database-up me-1"></i> Ya, Terapkan Perubahan',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#dc3545',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const btn = document.getElementById('btn-db-migrate');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Memproses...';
+            
+            Swal.fire({
+                title: 'Sedang Menerapkan Perubahan...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+            
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+            
+            fetch('<?= API_URL ?>/api/pengaturan/migrate', {
+                method: 'POST',
+                headers: { 
+                    'X-CSRF-Token': csrfToken,
+                    'Content-Type': 'application/json' 
+                }
+            })
+            .then(r => r.json())
+            .then(res => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-lightning-fill me-2"></i>Suntik Database Baru';
+                
+                if (res.success) {
+                    Swal.fire({
+                        title: 'Berhasil! 🎉',
+                        text: res.message,
+                        icon: 'success',
+                    });
+                } else {
+                    Swal.fire('Gagal', res.message || 'Terjadi kesalahan saat memproses database', 'error');
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-lightning-fill me-2"></i>Suntik Database Baru';
                 Swal.fire('Error', 'Gagal menghubungi server: ' + err.message, 'error');
             });
         }

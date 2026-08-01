@@ -447,6 +447,9 @@ return [
             Route::post('/api/pengaturan/update')
                 ->action(Web\Pengaturan\UpdateAction::class)
                 ->name('pengaturan.update'),
+            Route::post('/api/pengaturan/migrate')
+                ->action(Web\Pengaturan\RunMigrationAction::class)
+                ->name('pengaturan.migrate'),
 
             // Audit Log
             Route::get('/audit-log')
