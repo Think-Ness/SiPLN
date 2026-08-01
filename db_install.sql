@@ -752,6 +752,4 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 SET FOREIGN_KEY_CHECKS=1;
-I N S E R T   I N T O   \ m a s t e r _ m e n u s \   ( \ k a t e g o r i \ ,   \ 
- a m a _ m e n u \ ,   \ u r l \ ,   \ i c o n \ ,   \ p e r m i s s i o n _ k e y \ ,   \ u r u t \ ,   \ i s _ a c t i v e \ )   V A L U E S   ( ' l a i n l a i n ' ,   ' K e l o l a   T e m p l a t e ' ,   ' / s u r a t - t e m p l a t e s ' ,   ' b i   b i - f i l e - w o r d ' ,   ' m e n u _ s u r a t _ t e m p l a t e s ' ,   4 1 ,   1 ) ;  
- 
+INSERT INTO `master_menus` (`kategori`, `nama_menu`, `url`, `icon`, `permission_key`, `urut`, `is_active`) VALUES ('lainlain', 'Kelola Template', '/surat-templates', 'bi bi-file-word', 'menu_surat_templates', 41, 1);
