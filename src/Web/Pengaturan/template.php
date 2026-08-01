@@ -34,12 +34,12 @@ $this->setTitle('Pengaturan Sistem | Manajemen Terpusat');
     </div>
 <?php endif; ?>
 
-<div class="row g-4">
-    <div class="col-lg-8">
-        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-            <div class="card-header bg-white border-bottom p-4">
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+    <div class="card-header bg-white p-4" data-bs-toggle="collapse" data-bs-target="#collapseAkses" style="cursor: pointer;">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
                 <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-shield-lock-fill text-primary"></i>
+                    <i class="bi bi-shield-lock-fill text-primary fs-5"></i>
                     <h5 class="fw-bold mb-0">Hak Akses Instansi Pindahan</h5>
                 </div>
                 <p class="text-muted small mb-0 mt-2">
@@ -47,7 +47,12 @@ $this->setTitle('Pengaturan Sistem | Manajemen Terpusat');
                     <span class="text-danger fw-bold">tanpa perlu persetujuan (Request Edit)</span> dari kepengurusan asli santri tersebut.
                 </p>
             </div>
-            <div class="card-body p-4 bg-light bg-opacity-50">
+            <i class="bi bi-chevron-expand fs-4 text-secondary"></i>
+        </div>
+    </div>
+    <div id="collapseAkses" class="collapse border-top">
+        <div class="row g-0">
+            <div class="col-lg-8 p-4 bg-light bg-opacity-50">
                 <form id="settingsForm">
                     <div class="row g-3">
                         <?php foreach ($availableFields as $key => $label): 
@@ -74,11 +79,7 @@ $this->setTitle('Pengaturan Sistem | Manajemen Terpusat');
                     <?php endif; ?>
                 </form>
             </div>
-        </div>
-    </div>
-    <div class="col-lg-4">
-        <div class="card border-0 shadow-sm rounded-4 h-100" style="background: linear-gradient(145deg, #1e293b, #0f172a); color: white;">
-            <div class="card-body p-4 text-center d-flex flex-column justify-content-center">
+            <div class="col-lg-4 p-4 text-center d-flex flex-column justify-content-center" style="background: linear-gradient(145deg, #1e293b, #0f172a); color: white;">
                 <i class="bi bi-info-circle-fill text-primary fs-1 mb-3 opacity-75"></i>
                 <h5 class="fw-bold mb-3">Informasi Sistem</h5>
                 <p class="text-white-50 small mb-4" style="line-height: 1.6;">
@@ -100,12 +101,12 @@ $this->setTitle('Pengaturan Sistem | Manajemen Terpusat');
 
 <?php if (in_array($role, ['super_admin', 'admin_instansi'])): ?>
 <!-- Firebase Cloud Sync Section -->
-<div class="row g-4 mt-1">
-    <div class="col-lg-8">
-        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-            <div class="card-header bg-white border-bottom p-4">
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+    <div class="card-header bg-white p-4" data-bs-toggle="collapse" data-bs-target="#collapseFirebase" style="cursor: pointer;">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
                 <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-cloud-arrow-up-fill text-warning"></i>
+                    <i class="bi bi-cloud-arrow-up-fill text-warning fs-5"></i>
                     <h5 class="fw-bold mb-0">Firebase Cloud Sync</h5>
                     <span id="firebase-status-badge" class="badge bg-secondary ms-2">Memeriksa...</span>
                 </div>
@@ -113,7 +114,12 @@ $this->setTitle('Pengaturan Sistem | Manajemen Terpusat');
                     Sinkronisasi data lokal (Santri, Paspor, ITAS, Users) ke Firebase Firestore untuk pemantauan online secara real-time.
                 </p>
             </div>
-            <div class="card-body p-4">
+            <i class="bi bi-chevron-expand fs-4 text-secondary"></i>
+        </div>
+    </div>
+    <div id="collapseFirebase" class="collapse border-top">
+        <div class="row g-0">
+            <div class="col-lg-8 p-4 bg-white">
                 <div class="row g-3">
                     <div class="col-md-6">
                         <div class="p-3 bg-light rounded-3 border">
@@ -154,11 +160,7 @@ $this->setTitle('Pengaturan Sistem | Manajemen Terpusat');
                     </button>
                 </div>
             </div>
-        </div>
-    </div>
-    <div class="col-lg-4">
-        <div class="card border-0 shadow-sm rounded-4 h-100" style="background: linear-gradient(145deg, #f97316, #ea580c); color: white;">
-            <div class="card-body p-4 text-center d-flex flex-column justify-content-center">
+            <div class="col-lg-4 p-4 text-center d-flex flex-column justify-content-center" style="background: linear-gradient(145deg, #f97316, #ea580c); color: white;">
                 <i class="bi bi-cloud-fill fs-1 mb-3 opacity-75"></i>
                 <h5 class="fw-bold mb-3">Cara Kerja</h5>
                 <p class="text-white small mb-3" style="line-height: 1.6; opacity: .9;">
@@ -182,28 +184,31 @@ $this->setTitle('Pengaturan Sistem | Manajemen Terpusat');
 
 <?php if ($role === 'super_admin'): ?>
 <!-- Database Migration / Update Section -->
-<div class="row g-4 mt-1">
-    <div class="col-lg-12">
-        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-            <div class="card-header bg-white border-bottom p-4">
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+    <div class="card-header bg-white p-4" data-bs-toggle="collapse" data-bs-target="#collapseMaintenance" style="cursor: pointer;">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
                 <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-tools text-danger"></i>
+                    <i class="bi bi-tools text-danger fs-5"></i>
                     <h5 class="fw-bold mb-0">Maintenance & Pembaruan Sistem</h5>
                 </div>
                 <p class="text-muted small mb-0 mt-2">
                     Gunakan fitur di bawah ini hanya setelah melakukan pembaruan file source code aplikasi (Update Aplikasi).
                 </p>
             </div>
-            <div class="card-body p-4">
-                <div class="d-flex flex-wrap align-items-center justify-content-between bg-light p-3 border rounded-3">
-                    <div class="mb-3 mb-md-0 me-3">
-                        <h6 class="fw-bold mb-1"><i class="bi bi-database-up text-primary me-2"></i>Suntik / Sinkronisasi Struktur Database</h6>
-                        <p class="text-muted small mb-0" style="line-height: 1.5;">Terapkan perubahan skema database terbaru secara otomatis (misalnya penambahan kolom <code>instansi_tujuan</code> pada fitur Surat Generator / Pengaturan Template). Cukup tekan sekali setelah mengupdate aplikasi.</p>
-                    </div>
-                    <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm flex-shrink-0" onclick="triggerDatabaseMigration()" id="btn-db-migrate">
-                        <i class="bi bi-lightning-fill me-2"></i>Suntik Database Baru
-                    </button>
+            <i class="bi bi-chevron-expand fs-4 text-secondary"></i>
+        </div>
+    </div>
+    <div id="collapseMaintenance" class="collapse border-top">
+        <div class="card-body p-4 bg-white">
+            <div class="d-flex flex-wrap align-items-center justify-content-between bg-light p-3 border rounded-3">
+                <div class="mb-3 mb-md-0 me-3">
+                    <h6 class="fw-bold mb-1"><i class="bi bi-database-up text-primary me-2"></i>Suntik / Sinkronisasi Struktur Database</h6>
+                    <p class="text-muted small mb-0" style="line-height: 1.5;">Terapkan perubahan skema database terbaru secara otomatis (misalnya penambahan kolom <code>instansi_tujuan</code> pada fitur Surat Generator / Pengaturan Template). Cukup tekan sekali setelah mengupdate aplikasi.</p>
                 </div>
+                <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm flex-shrink-0" onclick="triggerDatabaseMigration()" id="btn-db-migrate">
+                    <i class="bi bi-lightning-fill me-2"></i>Suntik Database Baru
+                </button>
             </div>
         </div>
     </div>
