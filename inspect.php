@@ -1,1 +1,0 @@
-<?php $pdo = new PDO('mysql:host=127.0.0.1;dbname=si_foreign_db', 'root', ''); print_r($pdo->query("SELECT kds, stambuk, nama, pondok, kepengurusan FROM master_santri WHERE pondok='G3' OR kepengurusan='Kediri' LIMIT 10")->fetchAll(PDO::FETCH_ASSOC));
