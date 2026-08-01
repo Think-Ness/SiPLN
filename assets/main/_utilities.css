@@ -1,0 +1,208 @@
+.text-center {
+    text-align: center;
+}
+
+/* --- Spacing & Flexbox Utility Classes --- */
+.mb-1 { margin-bottom: 0.25rem !important; }
+.mb-2 { margin-bottom: 0.5rem !important; }
+.mb-3 { margin-bottom: 1rem !important; }
+.mb-4 { margin-bottom: 1.5rem !important; }
+.mb-5 { margin-bottom: 3rem !important; }
+
+.mt-1 { margin-top: 0.25rem !important; }
+.mt-2 { margin-top: 0.5rem !important; }
+.mt-3 { margin-top: 1rem !important; }
+.mt-4 { margin-top: 1.5rem !important; }
+.mt-5 { margin-top: 3rem !important; }
+
+.d-flex { display: flex !important; }
+.justify-content-start { justify-content: flex-start !important; }
+.justify-content-end { justify-content: flex-end !important; }
+.justify-content-center { justify-content: center !important; }
+.justify-content-between { justify-content: space-between !important; }
+.align-items-center { align-items: center !important; }
+.flex-wrap { flex-wrap: wrap !important; }
+
+.gap-1 { gap: 0.25rem !important; }
+.gap-2 { gap: 0.5rem !important; }
+.gap-3 { gap: 1rem !important; }
+.gap-4 { gap: 1.5rem !important; }
+
+.text-center { text-align: center !important; }
+.overflow-hidden { overflow: hidden !important; }
+
+/* --- Text Color Utilities --- */
+.text-danger { color: var(--danger) !important; }
+.text-primary { color: var(--primary) !important; }
+.text-success { color: var(--success) !important; }
+.text-muted { color: var(--text-muted) !important; }
+
+/* --- Max-width Containers --- */
+.max-w-2xl { max-width: 650px !important; margin-left: auto; margin-right: auto; }
+.max-w-sm  { max-width: 480px !important; margin-left: auto; margin-right: auto; }
+
+/* --- Width --- */
+.w-full, .w-100 { width: 100% !important; }
+
+/* --- Font Size --- */
+.text-xs  { font-size: 0.75rem !important; }
+.text-sm  { font-size: 0.85rem !important; }
+.text-lg  { font-size: 1.25rem !important; }
+.text-xl  { font-size: 1.5rem !important; }
+.text-2xl { font-size: 1.75rem !important; }
+
+/* --- Font Weight --- */
+.fw-normal   { font-weight: 400 !important; }
+.fw-medium   { font-weight: 500 !important; }
+.fw-semibold { font-weight: 600 !important; }
+.fw-bold     { font-weight: 700 !important; }
+.fw-extrabold{ font-weight: 800 !important; }
+
+/* --- Text Color Extras --- */
+.text-warning { color: #f59e0b !important; }
+.text-info    { color: #3b82f6 !important; }
+.text-white   { color: #ffffff !important; }
+.text-color   { color: var(--text-main) !important; }
+
+/* --- Text Decoration / Transform --- */
+.text-uppercase { text-transform: uppercase !important; }
+.line-through   { text-decoration: line-through !important; }
+.white-space-pre{ white-space: pre-wrap !important; }
+.word-break     { word-break: break-word !important; }
+.letter-spacing { letter-spacing: 0.05em !important; }
+
+/* --- Flex Utilities Extras --- */
+.flex-col      { flex-direction: column !important; }
+.flex-grow     { flex-grow: 1 !important; }
+.flex-shrink-0 { flex-shrink: 0 !important; }
+.inline-flex   { display: inline-flex !important; }
+.items-start   { align-items: flex-start !important; }
+.items-end     { align-items: flex-end !important; }
+.self-end      { align-self: flex-end !important; }
+.flex-end      { justify-content: flex-end !important; }
+
+/* --- Grid Utilities --- */
+.grid            { display: grid !important; }
+.grid-auto-fill  { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)) !important; }
+.grid-auto-fit   { grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)) !important; }
+.grid-2col       { grid-template-columns: 1fr 1fr !important; }
+.grid-2col-left  { grid-template-columns: 2fr 1fr !important; }
+.grid-3col       { grid-template-columns: repeat(3, 1fr) !important; }
+.grid-img-2col   { grid-template-columns: 1fr 1fr !important; }
+
+/* --- Spacing Extras --- */
+.p-0  { padding: 0 !important; }
+.p-3  { padding: 0.75rem !important; }
+.p-4  { padding: 1rem !important; }
+.p-5  { padding: 1.5rem !important; }
+.px-3 { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
+.px-4 { padding-left: 1rem !important; padding-right: 1rem !important; }
+.py-1 { padding-top: 0.25rem !important; padding-bottom: 0.25rem !important; }
+.py-3 { padding-top: 0.75rem !important; padding-bottom: 0.75rem !important; }
+.py-4 { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+.py-5 { padding-top: 3rem !important; padding-bottom: 3rem !important; }
+
+.mx-auto { margin-left: auto !important; margin-right: auto !important; }
+.ms-auto { margin-left: auto !important; }
+.me-auto { margin-right: auto !important; }
+.m-0     { margin: 0 !important; }
+
+/* --- Overflow --- */
+.overflow-y-auto    { overflow-y: auto !important; }
+.overflow-hidden    { overflow: hidden !important; }
+.max-h-350          { max-height: 350px !important; }
+.max-h-400          { max-height: 400px !important; }
+
+/* --- Border Utils --- */
+.border-top    { border-top: 1px solid var(--border) !important; }
+.border-bottom { border-bottom: 1px solid var(--border) !important; }
+.border-start-primary { border-left: 5px solid var(--primary) !important; }
+.border-dashed { border: 1px dashed var(--border) !important; }
+.rounded       { border-radius: 6px !important; }
+.rounded-full  { border-radius: 9999px !important; }
+
+/* --- Visibility / Pointer --- */
+.pointer-events-none { pointer-events: none !important; }
+.cursor-not-allowed  { cursor: not-allowed !important; }
+.opacity-50          { opacity: 0.5 !important; }
+
+/* --- Line Clamp --- */
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* --- List Reset --- */
+.list-unstyled { margin: 0; padding-left: 1rem; }
+
+/* --- Separator Dot --- */
+.sep-dot {
+    display: inline-block;
+    height: 4px;
+    width: 4px;
+    background: #ccc;
+    border-radius: 50%;
+    vertical-align: middle;
+}
+
+/* Extra position / layout helpers */
+.position-relative { position: relative !important; }
+.text-ellipsis {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* --- Mobile Responsiveness --- */
+.flex-wrap { flex-wrap: wrap !important; }
+
+@media (max-width: 992px) {
+    .grid-2col-left, .grid-2col, .grid-3col, .grid-img-2col {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* --- Deadline colors (used via PHP conditional class) --- */
+.deadline-overdue { color: var(--danger) !important; }
+.deadline-ok      { color: var(--text-muted) !important; }
+
+/* --- Pelanggaran Grafik Dashboard Styles --- */
+.bg-gradient-primary {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+}
+.fs-7 {
+    font-size: 0.8rem;
+}
+.placeholder-white-50::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+.pointer {
+    cursor: pointer;
+}
+.chart-container {
+    position: relative;
+    height: 320px;
+    width: 100%;
+}
+.custom-tabs .nav-link {
+    color: #4b5563;
+    border-radius: 0;
+    border: none;
+    transition: all 0.2s ease;
+}
+.custom-tabs .nav-link:hover {
+    background-color: #f3f4f6;
+    color: var(--primary);
+}
+.custom-tabs .nav-link.active {
+    background-color: #ffffff;
+    color: var(--primary);
+    border-bottom: 3px solid var(--primary);
+}
+.style-form input:focus {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    color: #fff !important;
+    box-shadow: none !important;
+}

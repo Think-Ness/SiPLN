@@ -1,0 +1,363 @@
+/* Table styling */
+.table-responsive {
+    overflow-x: auto;
+    border-radius: 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    box-shadow:
+        0 4px 6px -1px rgb(0 0 0 / 0.05),
+        0 2px 4px -2px rgb(0 0 0 / 0.05);
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.875rem;
+}
+
+.table th {
+    background: var(--bg-hover);
+    color: var(--text-muted);
+    font-weight: 600;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+
+.table td {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-main);
+    vertical-align: middle;
+}
+
+.table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.table tbody tr:hover td {
+    background: var(--bg-hover);
+}
+
+.email-text {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.email-text:hover {
+    text-decoration: underline;
+}
+
+/* Table Matrix switch controls */
+.table-matrix td {
+    padding: 12px 16px !important;
+}
+
+.perm-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.perm-info strong {
+    font-size: 0.9rem;
+    color: var(--text-main);
+}
+
+.perm-info small {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+/* User avatars in table */
+.user-avatar-initials {
+    width: 32px;
+    height: 32px;
+    background: var(--bg-hover);
+    color: var(--text-main);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.75rem;
+    border: 1px solid var(--border);
+}
+
+/* --- User row in table (avatar + name) --- */
+.user-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Filter Row Styles */
+.filter-row {
+    background: var(--bg-hover);
+}
+
+.filter-row td {
+    padding: 8px 12px !important;
+    border-bottom: 1px solid var(--border);
+}
+
+.filter-row .form-control {
+    padding: 6px 12px;
+    font-size: 0.825rem;
+    height: 34px;
+    border-radius: 6px;
+}
+
+.filter-row .gap-1 {
+    gap: 4px;
+}
+
+/* ── Custom Pagination Buttons ───────────────────────────────────── */
+.pg-btn {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 11px;
+    font-size: 0.8rem;
+    background: var(--bg-card);
+    color: var(--text-main);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    line-height: 1.4;
+    font-family: inherit;
+}
+.pg-btn:hover:not(:disabled) {
+    background: var(--bg-hover);
+}
+.pg-btn.active {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+    font-weight: 600;
+}
+.pg-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+
+@keyframes flashSlideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* --- DataTables Premium Custom Styling --- */
+.dt-container {
+    padding: 12px 0;
+}
+
+/* Align layout controls properly */
+.dt-container .dt-layout-row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 16px !important;
+    margin: 16px 0 !important;
+}
+
+.dt-container .dt-layout-row:first-child {
+    margin-top: 0 !important;
+    margin-bottom: 20px !important;
+}
+
+.dt-container .dt-layout-row:last-child {
+    margin-top: 20px !important;
+    margin-bottom: 0 !important;
+}
+
+.dt-container .dt-layout-cell {
+    display: flex !important;
+    align-items: center !important;
+}
+
+.dt-container .dt-layout-cell.dt-layout-start {
+    justify-content: flex-start !important;
+    margin-right: auto !important;
+}
+
+.dt-container .dt-layout-cell.dt-layout-end {
+    justify-content: flex-end !important;
+    margin-left: auto !important;
+}
+
+/* Length & Search text container styling */
+.dt-container .dt-length,
+.dt-container .dt-search {
+    color: var(--text-muted) !important;
+    font-size: 0.85rem !important;
+    font-weight: 500 !important;
+}
+
+/* Label styling to keep search/length inline and modern */
+.dt-container .dt-length label,
+.dt-container .dt-search label {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    white-space: nowrap !important;
+}
+
+/* Styling input and select elements */
+.dt-container .dt-input {
+    border: 1px solid var(--border) !important;
+    background-color: var(--bg-card) !important;
+    color: var(--text-main) !important;
+    border-radius: 8px !important;
+    padding: 8px 12px !important;
+    font-family: inherit !important;
+    font-size: 0.85rem !important;
+    outline: none !important;
+    box-sizing: border-box !important;
+    transition: border-color 0.2s, box-shadow 0.2s !important;
+}
+
+.dt-container .dt-input:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15) !important;
+}
+
+/* Search Box Custom Sizing */
+.dt-container .dt-search input {
+    width: 240px !important;
+    margin-left: 4px !important;
+}
+
+/* Length Select Sizing */
+.dt-container .dt-length select {
+    padding-right: 24px !important;
+    cursor: pointer !important;
+}
+
+/* Info Text Styling */
+.dt-container .dt-info {
+    color: var(--text-muted) !important;
+    font-size: 0.85rem !important;
+    font-weight: 500 !important;
+}
+
+/* Standard HTML Pagination styling */
+.pagination {
+    display: flex;
+    padding-left: 0;
+    list-style: none;
+    gap: 4px;
+    margin: 0;
+    align-items: center;
+}
+
+.pagination .page-item .page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 10px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-main);
+    text-decoration: none;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+}
+
+.pagination .page-item:not(.disabled):not(.active) .page-link:hover {
+    background: var(--bg-hover);
+    border-color: var(--border);
+    color: var(--text-main);
+}
+
+.pagination .page-item.active .page-link {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.pagination .page-item.disabled .page-link {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: var(--bg-card);
+    border-color: var(--border);
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+/* Pagination container and buttons */
+.dt-container .dt-paging {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+.dt-container .dt-paging .dt-paging-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 34px !important;
+    height: 34px !important;
+    padding: 0 10px !important;
+    font-size: 0.85rem !important;
+    font-weight: 500 !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--border) !important;
+    background: var(--bg-card) !important;
+    color: var(--text-main) !important;
+    cursor: pointer !important;
+    box-sizing: border-box !important;
+    transition: all 0.2s ease !important;
+}
+
+.dt-container .dt-paging .dt-paging-button:hover:not(.disabled):not(.current) {
+    background: var(--bg-hover) !important;
+    border-color: var(--border) !important;
+    color: var(--text-main) !important;
+}
+
+.dt-container .dt-paging .dt-paging-button.current {
+    background: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+}
+
+.dt-container .dt-paging .dt-paging-button.disabled {
+    opacity: 0.4 !important;
+    cursor: not-allowed !important;
+    background: var(--bg-card) !important;
+    border-color: var(--border) !important;
+    color: var(--text-muted) !important;
+}
+
+/* Sorting indicators adjustment to prevent broken headers */
+table.dataTable thead>tr>th.dt-orderable-asc,
+table.dataTable thead>tr>th.dt-orderable-desc,
+table.dataTable thead>tr>th.dt-ordering-asc,
+table.dataTable thead>tr>th.dt-ordering-desc {
+    padding-right: 32px !important;
+    position: relative !important;
+}
+
+table.dataTable thead .dt-column-order {
+    right: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    opacity: 0.4 !important;
+}
+
+table.dataTable thead th.dt-ordering-asc .dt-column-order,
+table.dataTable thead th.dt-ordering-desc .dt-column-order {
+    opacity: 1 !important;
+    color: var(--primary) !important;
+}

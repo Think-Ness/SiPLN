@@ -1,0 +1,63 @@
+/* 403 Forbidden Screen */
+.error-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 65vh;
+    padding: 20px;
+}
+
+.error-card {
+    max-width: 480px;
+    width: 100%;
+    padding: 48px 36px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    box-shadow:
+        0 10px 15px -3px rgb(0 0 0 / 0.05),
+        0 4px 6px -4px rgb(0 0 0 / 0.05);
+}
+
+.error-icon-container {
+    width: 72px;
+    height: 72px;
+    background: var(--btn-delete-bg);
+    color: var(--danger);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+}
+
+.error-illustration {
+    width: 36px;
+    height: 36px;
+}
+
+.error-code {
+    font-size: 4rem;
+    font-weight: 800;
+    margin: 0 0 8px 0;
+    color: var(--text-main);
+    line-height: 1;
+}
+
+.error-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0 0 12px 0;
+}
+
+.error-description {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0 0 28px 0;
+}
+
+.error-actions {
+    display: flex;
+    justify-content: center;
+}

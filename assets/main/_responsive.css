@@ -1,0 +1,75 @@
+/* Responsive Overrides and Mobile Fixes */
+
+/* Prevent title and badge from overlapping in module card headers */
+.module-card-header {
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.module-card-header > span:first-child {
+    word-break: break-word;
+}
+
+@media (max-width: 768px) {
+    /* Hide Page Title on mobile header to save space */
+    .admin-header .page-title {
+        display: none;
+    }
+
+    /* Reduce gaps in header actions */
+    .header-left-actions,
+    .header-right-actions {
+        gap: 8px;
+    }
+
+    /* Compact Campus and App Switcher buttons */
+    .campus-dropdown-btn {
+        padding: 8px;
+        border-radius: 50%;
+        width: 38px;
+        height: 38px;
+        justify-content: center;
+    }
+    
+    .campus-dropdown-btn .active-campus-name,
+    .campus-dropdown-btn .campus-arrow {
+        display: none;
+    }
+
+    /* Compact Single Campus badge */
+    .campus-badge-single {
+        padding: 8px;
+        border-radius: 50%;
+        width: 38px;
+        height: 38px;
+        justify-content: center;
+    }
+
+    .campus-badge-single span {
+        display: none;
+    }
+
+    /* Compact User Profile Badge */
+    .user-profile-badge {
+        padding: 4px;
+        gap: 6px;
+    }
+
+    .user-profile-badge .user-meta {
+        display: none;
+    }
+}
+
+@media (max-width: 640px) {
+    .admin-header {
+        padding: 0 12px;
+    }
+}
+
+@media (max-width: 576px) {
+    .module-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+}
+

@@ -1,1 +1,0 @@
-<?php file_put_contents(__DIR__ . '/test_output2.txt', 'Worker ran via COM at ' . time());

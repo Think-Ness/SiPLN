@@ -1,0 +1,187 @@
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 6px;
+}
+
+.badge-id {
+    background: #e0e7ff;
+    color: var(--primary);
+}
+
+.bg-primary   { background-color: #2563eb !important; color: #ffffff !important; }
+.bg-success   { background-color: #16a34a !important; color: #ffffff !important; }
+.bg-warning   { background-color: #d97706 !important; color: #ffffff !important; }
+.bg-danger    { background-color: #dc2626 !important; color: #ffffff !important; }
+.bg-info      { background-color: #0284c7 !important; color: #ffffff !important; }
+.bg-secondary { background-color: #475569 !important; color: #ffffff !important; }
+.bg-purple    { background-color: #7c3aed !important; color: #ffffff !important; }
+.bg-dark      { background-color: #1e293b !important; color: #ffffff !important; }
+.bg-indigo    { background-color: #4f46e5 !important; color: #ffffff !important; }
+
+/* Badges for User Roles */
+.badge-role {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 4px 8px;
+    border-radius: 9999px;
+}
+
+.badge-role-admin {
+    background-color: var(--badge-admin-bg);
+    color: var(--badge-admin-text);
+}
+
+.badge-role-operator {
+    background-color: var(--badge-operator-bg);
+    color: var(--badge-operator-text);
+}
+
+.badge-role-guru {
+    background-color: var(--badge-guru-bg);
+    color: var(--badge-guru-text);
+}
+
+/* --- Badge Variants --- */
+.badge-primary-light {
+    background: rgba(13, 148, 136, 0.1);
+    color: var(--primary);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+
+body[data-theme="dark"] .badge-primary-light {
+    background: rgba(20, 184, 166, 0.15);
+}
+
+.badge-success {
+    background: rgba(16, 185, 129, 0.12);
+    color: #065f46;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+
+body[data-theme="dark"] .badge-success {
+    background: rgba(52, 211, 153, 0.15);
+    color: #34d399;
+}
+
+.badge-secondary {
+    background: var(--bg-hover);
+    color: var(--text-muted);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+
+.badge-dark {
+    background: rgba(15, 23, 42, 0.12);
+    color: #1e293b;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+
+body[data-theme="dark"] .badge-dark {
+    background: rgba(148, 163, 184, 0.2);
+    color: #cbd5e1;
+}
+
+.badge-on-dark {
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 9999px;
+}
+
+.badge-open {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+    border-radius: 4px;
+    padding: 0.1rem 0.3rem;
+    font-size: 0.7rem;
+}
+
+.badge-closed {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    border-radius: 4px;
+    padding: 0.1rem 0.3rem;
+    font-size: 0.7rem;
+}
+
+/* --- Code Badge (monospace token) --- */
+.code-badge {
+    font-family: monospace;
+    font-size: 0.9rem;
+    background: var(--bg-hover);
+    padding: 4px 8px;
+    border-radius: 6px;
+    color: var(--primary);
+    font-weight: 700;
+}
+
+/* --- Badge Status Variants (Warning, Danger, Info) --- */
+.badge-warning {
+    background: rgba(245, 158, 11, 0.15);
+    color: #b45309;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+body[data-theme="dark"] .badge-warning {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+}
+
+.badge-danger {
+    background: rgba(239, 68, 68, 0.12);
+    color: #991b1b;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+body[data-theme="dark"] .badge-danger {
+    background: rgba(248, 113, 113, 0.2);
+    color: #f87171;
+}
+
+.badge-info {
+    background: rgba(59, 130, 246, 0.15);
+    color: #1e40af;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+body[data-theme="dark"] .badge-info {
+    background: rgba(96, 165, 250, 0.2);
+    color: #60a5fa;
+}
+
+.badge-indigo {
+    background: rgba(99, 102, 241, 0.15);
+    color: #3730a3;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+body[data-theme="dark"] .badge-indigo {
+    background: rgba(129, 140, 248, 0.2);
+    color: #818cf8;
+}

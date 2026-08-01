@@ -1,0 +1,492 @@
+/* Pantauan Common Styles */
+.pantauan-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+.pantauan-title h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-main);
+}
+.pantauan-title p {
+    margin: 4px 0 0 0;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+.metric-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+.metric-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+.metric-icon.blue { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+.metric-icon.green { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+.metric-icon.warning { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+.metric-icon.danger { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.metric-info h3 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1.2;
+}
+.metric-info p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+.filter-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+.filter-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    align-items: end;
+}
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.form-group label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-main);
+}
+.form-control-custom {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-main);
+    color: var(--text-main);
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s;
+}
+.form-control-custom:focus {
+    border-color: var(--primary);
+}
+.btn-filter {
+    padding: 11px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: none;
+    background: var(--primary);
+    color: white;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: opacity 0.2s;
+}
+.btn-filter:hover {
+    opacity: 0.9;
+}
+.table-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    margin-bottom: 24px;
+}
+.table-custom {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+.table-custom th {
+    background: rgba(0, 0, 0, 0.02);
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: 0.5px;
+}
+.table-custom td {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-main);
+    font-size: 0.95rem;
+    vertical-align: middle;
+}
+.table-custom tr:last-child td {
+    border-bottom: none;
+}
+.table-custom tr:hover {
+    background: rgba(0, 0, 0, 0.01);
+}
+.badge-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+.badge-status.success { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+.badge-status.warning { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+.badge-status.danger { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.teacher-sub {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+    display: block;
+}
+.teacher-active {
+    font-weight: 600;
+    color: var(--text-main);
+}
+.empty-state {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--text-muted);
+}
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 12px;
+    color: var(--text-muted);
+    opacity: 0.5;
+}
+
+/* Supervisi & Tahil Grouped Card Views Specific Styles */
+.sub-kategori-section {
+    margin-bottom: 40px;
+}
+.sub-kategori-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--border);
+}
+.sub-kategori-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.sub-kategori-badge {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    background: rgba(79, 70, 229, 0.08);
+    color: var(--primary);
+    border-radius: 9999px;
+    font-weight: 600;
+}
+.blocks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+    gap: 24px;
+    margin-bottom: 24px;
+}
+.blocks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+.block-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.block-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+}
+.block-card-header {
+    background: rgba(0, 0, 0, 0.015);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.block-card-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.block-card-badge {
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    border-radius: 9999px;
+    font-weight: 600;
+}
+
+/* Overrides for tables inside block cards (Supervisi & Tahil) */
+.block-card .table-custom th {
+    background: rgba(0, 0, 0, 0.01);
+    font-size: 0.8rem;
+    padding: 10px 14px;
+}
+.block-card .table-custom td {
+    padding: 10px 14px;
+    font-size: 0.9rem;
+}
+.block-card .badge-status {
+    font-size: 0.72rem;
+}
+.block-card .teacher-sub {
+    font-size: 0.75rem;
+}
+
+/* Tahil Specific Styles */
+.tahil-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+.tahil-card-header {
+    background: rgba(0, 0, 0, 0.015);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tahil-card-title-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.tahil-card-title {
+    font-weight: 700;
+    color: var(--text-main);
+    font-size: 1rem;
+}
+
+.tahil-card-subtitle {
+    font-size: 0.8rem;
+    padding: 2px 8px;
+    background: rgba(79, 70, 229, 0.08);
+    color: var(--primary);
+    border-radius: 9999px;
+    font-weight: 600;
+}
+
+.tahil-card-meta {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.tahil-card-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.teacher-row-item {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.01);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+.teacher-info-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.teacher-name-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.teacher-name-text {
+    font-weight: 600;
+    color: var(--text-main);
+    font-size: 0.95rem;
+}
+
+.teacher-action-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    border-top: 1px dashed var(--border);
+    padding-top: 10px;
+}
+
+/* Segmented Radio Button Control */
+.segmented-control {
+    display: inline-flex;
+    background: #f3f4f6;
+    padding: 3px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.segment-option {
+    position: relative;
+    cursor: pointer;
+}
+
+.segment-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.segment-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #4b5563;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+/* Hover effect */
+.segment-option:hover .segment-label {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+/* Checked states */
+.option-hadir input[type="radio"]:checked + .segment-label {
+    background: #10b981;
+    color: white;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.15);
+}
+
+.option-terlambat input[type="radio"]:checked + .segment-label {
+    background: #f59e0b;
+    color: white;
+    box-shadow: 0 2px 4px rgba(245, 158, 11, 0.15);
+}
+
+.option-tidak-hadir input[type="radio"]:checked + .segment-label {
+    background: #ef4444;
+    color: white;
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.15);
+}
+
+/* Meta badges */
+.meta-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #f3f4f6;
+    color: #4b5563;
+    border: 1px solid #e5e7eb;
+    display: inline-flex;
+    align-items: center;
+}
+.meta-badge.rank {
+    background: #eff6ff;
+    color: #2563eb;
+    border-color: #dbeafe;
+}
+.meta-badge.kamar {
+    background: #fdf2f8;
+    color: #db2777;
+    border-color: #fce7f3;
+}
+.meta-badge.pengabdian {
+    background: #f0fdf4;
+    color: #16a34a;
+    border-color: #dcfce7;
+}
+
+/* Export Button Style */
+.btn-export-excel {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #10b981;
+    color: white;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.1);
+    text-decoration: none;
+}
+.btn-export-excel:hover {
+    background-color: #059669;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    color: white;
+}
