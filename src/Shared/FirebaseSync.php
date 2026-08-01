@@ -671,8 +671,7 @@ final class FirebaseSync
                             'no_paspor' => $no_paspor,
                             'exp_paspor' => $exp_paspor ?: null,
                             'status_lokasi' => $status_lokasi ?: 'di_kantor',
-                            'aktif' => 1,
-                            'dibuat_pada' => date('Y-m-d H:i:s')
+                            'aktif' => 1
                         ])->execute();
                     } else {
                         $db->createCommand()->update('mtb_paspor', [
@@ -690,8 +689,7 @@ final class FirebaseSync
                             'no_itas' => $no_itas,
                             'exp_itas' => $exp_itas ?: null,
                             'level_itas' => (int)$level_itas,
-                            'aktif' => 1,
-                            'dibuat_pada' => date('Y-m-d H:i:s')
+                            'aktif' => 1
                         ])->execute();
                     } else {
                         $db->createCommand()->update('mtb_itas', [
