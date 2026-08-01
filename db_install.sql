@@ -774,3 +774,17 @@ CREATE TABLE `surat_template_dinamis` (
   PRIMARY KEY (`id`),
   KEY `idx_instansi` (`instansi_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+DROP TABLE IF EXISTS `surat_template_dinamis`;
+CREATE TABLE `surat_template_dinamis` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nama_template` varchar(255) NOT NULL,
+  `file_path` varchar(255) NOT NULL,
+  `instansi_tujuan` varchar(100) NOT NULL,
+  `peruntukan` enum('sekaligus','perseorangan') NOT NULL DEFAULT 'perseorangan',
+  `json_data_collection` text DEFAULT NULL,
+  `json_custom_inputs` text DEFAULT NULL,
+  `aktif` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT NULL ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

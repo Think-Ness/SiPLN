@@ -267,7 +267,9 @@ function runImportSql(string $rootPath, array $input): void
             return;
         }
 
+        $pdo->exec("SET FOREIGN_KEY_CHECKS=0;");
         $pdo->exec($sql);
+        $pdo->exec("SET FOREIGN_KEY_CHECKS=1;");
 
         $tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
         $count = count($tables);
