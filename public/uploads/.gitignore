@@ -1,2 +1,5 @@
 *
 !.gitignore
+!Surat_Menyurat/
+Surat_Menyurat/Output/
+!Surat_Menyurat/**/*.docx
