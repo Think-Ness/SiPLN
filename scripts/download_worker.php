@@ -11,6 +11,9 @@ try {
     $pdo = new PDO('mysql:host=127.0.0.1;dbname=si_foreign_db', 'root', '');
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
+    // Reset stuck downloading status from previous crashes
+    $pdo->exec("UPDATE capel_download_queue SET status = 'pending' WHERE status = 'downloading'");
+    
     // Check if another worker is already running (simple lock mechanism)
     // For simplicity we will just process pending items one by one.
     // If a worker is running, it will eventually clear the queue.
@@ -41,7 +44,8 @@ try {
         
         $baseFilename = $jenisClean . '_' . $namaClean . '_' . $kodeSantri . '_' . time();
         
-        $isAbsolute = str_starts_with(str_replace('\\', '/', $kategoriFolder), 'D:/') || str_starts_with(str_replace('\\', '/', $kategoriFolder), 'C:/') || str_starts_with($kategoriFolder, '/');
+        $kategoriFolderNorm = str_replace('\\', '/', $kategoriFolder);
+        $isAbsolute = (strpos($kategoriFolderNorm, 'D:/') === 0) || (strpos($kategoriFolderNorm, 'C:/') === 0) || (strpos($kategoriFolder, '/') === 0);
         
         if ($isAbsolute) {
             $targetFolder = rtrim($kategoriFolder, '\\/') . '/';
@@ -60,6 +64,7 @@ try {
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 120);
             $content = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
@@ -74,16 +79,26 @@ try {
         
         static $attempts = [];
         
+        if ($content !== false && stripos(substr($content, 0, 500), '<html') !== false && stripos(substr($content, 0, 500), 'google') !== false) {
+            // Google Drive returned HTML (e.g. virus scan warning) instead of the file
+            $content = false;
+            $isNetworkError = true;
+        }
+        
         if ($content !== false) {
-            $finfo = new finfo(FILEINFO_MIME_TYPE);
-            $mime = @$finfo->buffer($content) ?: 'application/pdf';
-            $ext = match($mime) {
-                'image/jpeg' => '.jpg',
-                'image/png' => '.png',
-                'image/gif' => '.gif',
-                'application/pdf' => '.pdf',
-                default => '.pdf'
-            };
+            $mime = 'application/pdf';
+            if (class_exists('finfo')) {
+                $finfo = new finfo(FILEINFO_MIME_TYPE);
+                $mime = @$finfo->buffer($content) ?: 'application/pdf';
+            }
+            
+            $ext = '.pdf';
+            switch($mime) {
+                case 'image/jpeg': $ext = '.jpg'; break;
+                case 'image/png': $ext = '.png'; break;
+                case 'image/gif': $ext = '.gif'; break;
+                case 'application/pdf': $ext = '.pdf'; break;
+            }
             
             $filename = $baseFilename . $ext;
             $filepath = $targetFolder . $filename;
@@ -97,10 +112,10 @@ try {
             file_put_contents($filepath, $content);
             
             // Update database based on category
-            if (str_contains($kategoriFolder, 'foto santri')) {
+            if (strpos($kategoriFolder, 'foto santri') !== false) {
                 $pdo->prepare("UPDATE master_santri SET path_foto = :p WHERE kode = :k")
                     ->execute([':p' => $dbPath, ':k' => $kodeSantri]);
-            } elseif (str_contains($kategoriFolder, 'paspor')) {
+            } elseif (strpos($kategoriFolder, 'paspor') !== false) {
                 // Find kds
                 $kdsStmt = $pdo->prepare("SELECT kds FROM master_santri WHERE kode = :k");
                 $kdsStmt->execute([':k' => $kodeSantri]);
@@ -146,6 +161,6 @@ try {
         }
     }
 
-} catch (Exception $e) {
+} catch (\Throwable $e) {
     file_put_contents(__DIR__ . '/worker_error.log', date('Y-m-d H:i:s') . " - " . $e->getMessage() . "\n", FILE_APPEND);
 }
