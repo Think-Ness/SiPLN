@@ -384,9 +384,9 @@ function lihatBerkas(id) {
             foundLinks.forEach(link => {
                 const fileId = extractDriveId(link.trim());
                 if (fileId) {
-                    presentHtml += `<a href="https://drive.google.com/file/d/${fileId}/view" target="_blank" class="btn btn-sm btn-outline-success mb-2 w-100 text-start"><i class="bi bi-box-arrow-up-right me-2"></i> Buka File (G-Drive)</a>`;
+                    presentHtml += `<iframe src="https://drive.google.com/file/d/${fileId}/preview" width="100%" height="450" class="border rounded mb-2" allow="autoplay"></iframe>`;
                 } else {
-                    presentHtml += `<a href="${link.trim()}" target="_blank" class="btn btn-sm btn-outline-primary mb-2 w-100 text-start"><i class="bi bi-box-arrow-up-right me-2"></i> Buka File</a>`;
+                    presentHtml += `<a href="${link.trim()}" target="_blank" class="btn btn-sm btn-outline-primary mb-2"><i class="bi bi-box-arrow-up-right me-1"></i> Buka File</a>`;
                 }
             });
             presentHtml += `</div>`;
@@ -423,9 +423,9 @@ function lihatBerkas(id) {
             links.forEach(link => {
                 const fileId = extractDriveId(link.trim());
                 if (fileId) {
-                    html += `<a href="https://drive.google.com/file/d/${fileId}/view" target="_blank" class="btn btn-sm btn-outline-info mb-2 w-100 text-start"><i class="bi bi-box-arrow-up-right me-2"></i> Buka File (G-Drive)</a>`;
+                    html += `<iframe src="https://drive.google.com/file/d/${fileId}/preview" width="100%" height="450" class="border rounded mb-2" allow="autoplay"></iframe>`;
                 } else {
-                    html += `<a href="${link.trim()}" target="_blank" class="btn btn-sm btn-outline-primary mb-2 w-100 text-start"><i class="bi bi-box-arrow-up-right me-2"></i> Buka File</a>`;
+                    html += `<a href="${link.trim()}" target="_blank" class="btn btn-sm btn-outline-primary mb-2"><i class="bi bi-box-arrow-up-right me-1"></i> Buka File</a>`;
                 }
             });
             html += `</div>`;
