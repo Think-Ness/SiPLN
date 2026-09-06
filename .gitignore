@@ -10,6 +10,11 @@ config/installed.lock
 config/installed.lock.bak
 config/.migration_schema_v3.lock
 
+# User uploads & backups (Data berkas santri & foto - SANGAT PENTING DILINDUNGI)
+public/uploads/*
+!public/uploads/.gitkeep
+_backup*
+
 # Runtime & cache
 runtime/
 vendor/
