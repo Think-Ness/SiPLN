@@ -7,6 +7,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\Db\Connection\ConnectionInterface;
 use Yiisoft\Router\CurrentRoute;
+use App\Shared\UploadPath;
 use ZipArchive;
 
 final class DownloadSuratAction
@@ -69,23 +70,37 @@ final class DownloadSuratAction
             "SELECT * FROM master_instansi WHERE kode = :kode",
             [':kode' => $instansiId]
         )->queryOne();
-        if (!$instansi || empty($instansi['path_folder'])) {
-            return $this->errorResponse("Path Folder Instansi belum diatur. Silakan atur di menu Profil Instansi.", 400);
+        if ($instansi && !empty($instansi['path_folder'])) {
+            $basePath = rtrim(str_replace('\\', '/', $instansi['path_folder']), '/');
+        } else {
+            // Fallback ke default public/uploads
+            $basePath = dirname(__DIR__, 3) . '/public/uploads';
         }
-
-        $basePath = rtrim(str_replace('\\', '/', $instansi['path_folder']), '/');
         $kantor = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $jenisPengajuan['kantor']);
-        $publicSuratDir = dirname(__DIR__, 3) . '/public/uploads/Surat_Menyurat';
+        // Resolve Surat_Menyurat base dari path_folder instansi
+        $instansiBase = UploadPath::getBase($db, (int)$instansiId);
+        $publicSuratDir = $instansiBase !== null ? $instansiBase . '/Surat_Menyurat' : dirname(__DIR__, 3) . '/public/uploads/Surat_Menyurat';
 
         // Locate template file — use Windows-style backslash path for COM
         $templatePathSlash = $publicSuratDir . '/' . $kantor . '/' . $templateFileName;
-        $templatePath = str_replace('/', '\\', $templatePathSlash); // COM requires backslash
         
         if (!file_exists($templatePathSlash)) {
             return $this->errorResponse(
                 "File template tidak ditemukan: {$templatePathSlash}\n\nPastikan file '{$templateFileName}' ada di folder:\n" . str_replace('/', '\\', $publicSuratDir) . "\\{$kantor}\\"
             );
         }
+
+        $tempFiles = []; // Initialize cleanup array early
+        
+        // Gunakan temp dir lokal proyek agar Word COM (yang jalan sebagai LocalSystem) bisa akses
+        // sys_get_temp_dir() return C:\Windows\Temp saat Apache jalan sebagai LocalSystem — Word COM tidak bisa buka file dari sana
+        $safeTempDir = $this->getSafeTempDir();
+        
+        // Buat copy temporary untuk membuang Zone.Identifier (Protected View) dari file yang di-download
+        $cleanTemplatePath = tempnam($safeTempDir, 'tpl_clean_') . '.docx';
+        file_put_contents($cleanTemplatePath, file_get_contents($templatePathSlash));
+        $templatePath = str_replace('/', '\\', $cleanTemplatePath); // COM requires backslash
+        $tempFiles[] = $cleanTemplatePath;
 
         // Tentukan save directory berdasarkan Tahun dan Bulan ITAS
         $tanggalSurat = $mailing['tanggal_surat'] ?? date('Y-m-d');
@@ -137,6 +152,11 @@ final class DownloadSuratAction
         } else {
             // Default auto-path
             $saveDir = $publicSuratDir . '/Output/' . $safeJenis . '/' . $safeTipeSurat . '/' . $tahunItas . '/' . $bulanItas . '/';
+        }
+
+        // Tambahkan subfolder Sekaligus jika mode Sekaligus
+        if ($isSekaligus) {
+            $saveDir = rtrim($saveDir, '/') . '/Sekaligus/';
         }
 
         if (!is_dir($saveDir)) {
@@ -203,11 +223,10 @@ final class DownloadSuratAction
         if ($logProgress) $logProgress("Menginisiasi Microsoft Word...");
         
         // --- PROCESS DYNAMIC DATA WITH PHPWORD TEMPLATEPROCESSOR ---
-        $tempFiles = [];
         if ($jsonDynamicData && is_array($jsonDynamicData)) {
             try {
                 if ($logProgress) $logProgress("Memproses tabel dinamis (Data Collection)...");
-                $tempPath = tempnam(sys_get_temp_dir(), 'tpl_') . '.docx';
+                $tempPath = tempnam($safeTempDir, 'tpl_') . '.docx';
                 $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor($templatePath);
                 
                 foreach ($jsonDynamicData as $macroName => $rows) {
@@ -241,6 +260,10 @@ final class DownloadSuratAction
         if (!class_exists('COM')) {
             return $this->errorResponse("Class COM tidak ditemukan. PHP INI: " . php_ini_loaded_file() . " | PHP EXE: " . PHP_BINARY . " | SAPI: " . php_sapi_name(), 500);
         }
+
+        // Pastikan tidak ada WINWORD.EXE zombie yang memblokir file dari proses sebelumnya yang crash
+        @shell_exec("taskkill /F /IM WINWORD.EXE > NUL 2>&1");
+
         try {
             $wd = new \COM("Word.Application");
             $wd->DisplayAlerts = 0; // wdAlertsNone
@@ -248,6 +271,14 @@ final class DownloadSuratAction
             return $this->errorResponse("Gagal membuka Microsoft Word. Error: " . $e->getMessage(), 500);
         }
         $wd->Visible = false;
+        
+        // Coba disable Protected View / Macro security warning via COM (1 = msoAutomationSecurityLow)
+        try {
+            $wd->AutomationSecurity = 1; 
+        } catch (\Exception $e) {
+            // Abaikan jika tidak didukung
+        }
+        
         error_log("[".date('Y-m-d H:i:s')."] 2. COM Ready.", 3, sys_get_temp_dir() . '/surat.log');
 
         $generatedFiles = [];
@@ -258,6 +289,9 @@ final class DownloadSuratAction
                 error_log("\n[".date('Y-m-d H:i:s')."] 3. Opening doc...", 3, sys_get_temp_dir() . '/surat.log');
                 if ($logProgress) $logProgress("Membuka template surat...");
                 $doc = $wd->Documents->Open($templatePath, false, true);
+                if (!$doc) {
+                    throw new \Exception("COM gagal membuka dokumen template: " . $templatePath . " (Dokumen mungkin rusak, diblokir oleh Protected View, atau sedang digunakan oleh proses lain).");
+                }
                 
                 $pagesBefore = $doc->ComputeStatistics(2); // 2 = wdStatisticPages
                 
@@ -327,6 +361,9 @@ final class DownloadSuratAction
 
                         if ($logProgress) $logProgress("Memproses surat $curSantri dari $totalSantri...");
                         $doc = $wd->Documents->Open($templatePath, false, true);
+                        if (!$doc) {
+                            throw new \Exception("COM gagal membuka dokumen template untuk santri " . $s['nama']);
+                        }
                         $this->fillHeaderBookmarks($doc, $currentNomorSurat, $tanggalSurat, $jenisPengajuan, $userStaf, null, $customInputsData);
                         $this->fillPersonalBookmarks($doc, $s);
 
@@ -356,7 +393,7 @@ final class DownloadSuratAction
                         if ($logProgress) $logProgress("Memproses surat $curRow dari $totalRows...");
                         
                         // Use PhpWord to fill each row's data into template
-                        $tempPath = tempnam(sys_get_temp_dir(), 'tpl_') . '.docx';
+                        $tempPath = tempnam($safeTempDir, 'tpl_') . '.docx';
                         $tp = new \PhpOffice\PhpWord\TemplateProcessor($templatePath);
                         
                         // Fill each column value as a simple variable ${ColumnName}
@@ -366,6 +403,9 @@ final class DownloadSuratAction
                         $tp->saveAs($tempPath);
                         
                         $doc = $wd->Documents->Open(str_replace('/', '\\', $tempPath), false, true);
+                        if (!$doc) {
+                            throw new \Exception("COM gagal membuka dokumen template untuk baris data dinamis.");
+                        }
                         $this->fillHeaderBookmarks($doc, $nomorSurat, $tanggalSurat, $jenisPengajuan, $userStaf, null, $customInputsData);
 
                         // Use first column value as identifier for filename
@@ -400,6 +440,11 @@ final class DownloadSuratAction
             try { $wd->Quit(); } catch (\Throwable $ex) {}
         }
         @shell_exec("taskkill /F /IM WINWORD.EXE > NUL 2>&1");
+        
+        foreach ($tempFiles as $tmp) {
+            @unlink($tmp);
+        }
+        @shell_exec("taskkill /F /IM WINWORD.EXE > NUL 2>&1");
 
 
         // Serve response
@@ -416,7 +461,7 @@ final class DownloadSuratAction
                 ->withHeader('Content-Disposition', 'attachment; filename="' . $file['name'] . '"')
                 ->withHeader('Cache-Control', 'no-cache');
         } else {
-            $zipPath = tempnam(sys_get_temp_dir(), 'surat_zip') . '.zip';
+            $zipPath = tempnam($safeTempDir, 'surat_zip') . '.zip';
             $zip = new ZipArchive();
             $zip->open($zipPath, ZipArchive::CREATE);
             foreach ($generatedFiles as $f) {
@@ -682,7 +727,7 @@ final class DownloadSuratAction
             if ($logProgress) $logProgress("Menyisipkan tabel data ke dalam Word...");
             
             // Simpan ke temp file
-            $tmpHtml = tempnam(sys_get_temp_dir(), 'lampiran') . '.html';
+            $tmpHtml = tempnam($this->getSafeTempDir(), 'lampiran') . '.html';
             file_put_contents($tmpHtml, $html);
             
             // Sisipkan file HTML ke akhir dokumen dengan aman menggunakan object Selection
@@ -717,6 +762,19 @@ final class DownloadSuratAction
     {
         $romawi = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
         return $romawi[$bulan - 1] ?? (string)$bulan;
+    }
+
+    /**
+     * Return a project-local temp directory that is accessible by both PHP and Word COM.
+     * Apache running as LocalSystem uses C:\Windows\Temp which Word COM cannot open files from.
+     */
+    private function getSafeTempDir(): string
+    {
+        $dir = dirname(__DIR__, 3) . '/runtime/tmp';
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0777, true);
+        }
+        return $dir;
     }
 }
 

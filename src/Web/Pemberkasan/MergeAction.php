@@ -152,8 +152,19 @@ final class MergeAction
 
         // Resolving dbIdsVirtual (file_ / surat_)
         if (!empty($dbIdsVirtual) || !empty($dbIdsSurat)) {
-            $instansi = $db->createCommand("SELECT path_folder FROM master_instansi WHERE kode = " . (int)($_SESSION['instansi_id'] ?? 0) . " LIMIT 1")->queryOne();
-            $baseBerkasDir = !empty($instansi['path_folder']) ? rtrim($instansi['path_folder'], '/\\') : dirname(__DIR__, 4) . '/berkas';
+            $targetInstansiId = !empty($_SESSION['instansi_id']) ? (int)$_SESSION['instansi_id'] : null;
+            if (!$targetInstansiId) {
+                $targetInstansiId = (int) $db->createCommand("SELECT kode FROM master_instansi WHERE def_kepengurusan LIKE '%Ponorogo%' ORDER BY kode ASC LIMIT 1")->queryScalar();
+            }
+
+            $baseBerkasDir = null;
+            if ($targetInstansiId) {
+                $baseBerkasDir = \App\Shared\UploadPath::getBase($db, $targetInstansiId);
+            }
+            if (!$baseBerkasDir) {
+                $baseBerkasDir = dirname(__DIR__, 4) . '/berkas';
+            }
+            $baseBerkasDir = rtrim(str_replace('\\', '/', $baseBerkasDir), '/');
             
             // Resolve file_
             foreach ($dbIdsVirtual as $v) {
@@ -332,14 +343,7 @@ final class MergeAction
                         $f = fopen($physicalPath, 'r');
                         $firstLine = fgets($f);
                         fclose($f);
-                        $needsFallback = false;
-                        
-                        if (preg_match('/%PDF-1\.[5-9]/', $firstLine) || preg_match('/%PDF-[2-9]/', $firstLine)) {
-                            $needsFallback = true;
-                        }
-
                         try {
-                            if ($needsFallback) throw new \Exception("PDF version is higher than 1.4, forcing fallback");
                             $pageCount = $pdf->setSourceFile($physicalPath);
                         } catch (\Exception $e) {
                             $tempPdf = tempnam(sys_get_temp_dir(), 'pdf_fix_');
@@ -409,8 +413,19 @@ final class MergeAction
                 return $response;
 
             } elseif ($mergeMode === 'save_storage') {
-                $instansi = $db->createCommand("SELECT path_folder FROM master_instansi WHERE kode = " . (int)($_SESSION['instansi_id'] ?? 0) . " LIMIT 1")->queryOne();
-                $baseBerkasDir = !empty($instansi['path_folder']) ? rtrim($instansi['path_folder'], '/\\') : dirname(__DIR__, 4) . '/berkas';
+                $targetInstansiId = !empty($_SESSION['instansi_id']) ? (int)$_SESSION['instansi_id'] : null;
+                if (!$targetInstansiId) {
+                    $targetInstansiId = (int) $db->createCommand("SELECT kode FROM master_instansi WHERE def_kepengurusan LIKE '%Ponorogo%' ORDER BY kode ASC LIMIT 1")->queryScalar();
+                }
+
+                $baseBerkasDir = null;
+                if ($targetInstansiId) {
+                    $baseBerkasDir = \App\Shared\UploadPath::getBase($db, $targetInstansiId);
+                }
+                if (!$baseBerkasDir) {
+                    $baseBerkasDir = dirname(__DIR__, 4) . '/berkas';
+                }
+                $baseBerkasDir = rtrim(str_replace('\\', '/', $baseBerkasDir), '/');
                 
                 $saveDir = $baseBerkasDir . '/Hasil_Merge/' . date('Y-m-d_H-i-s') . '/';
                 if (!is_dir($saveDir)) {

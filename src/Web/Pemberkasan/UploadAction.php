@@ -5,6 +5,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\Db\Connection\ConnectionInterface;
 use App\Shared\AuditLogger;
+use App\Shared\UploadPath;
 
 final class UploadAction
 {
@@ -27,18 +28,20 @@ final class UploadAction
             $targetKode = $data['target_kode'];
         }
         
-        $instansi = null;
-        if ($targetKode) {
-            $instansi = $db->createCommand("SELECT kode, path_folder FROM master_instansi WHERE kode = :kode", [':kode' => $targetKode])->queryOne();
-        } else {
-            $instansi = $db->createCommand("SELECT kode, path_folder FROM master_instansi WHERE kode = " . (int)($_SESSION['instansi_id'] ?? 0) . " LIMIT 1")->queryOne();
+        if (empty($targetKode)) {
+            $targetKode = (int) $db->createCommand("SELECT kode FROM master_instansi WHERE def_kepengurusan LIKE '%Ponorogo%' ORDER BY kode ASC LIMIT 1")->queryScalar();
         }
-        $kodeInstansi = $instansi ? $instansi['kode'] : '1';
+
+        $kodeInstansi = $targetKode ?: 1;
 
         $filePath = '';
         if (isset($files['berkas_file']) && $files['berkas_file']->getError() === UPLOAD_ERR_OK) {
             // Get path_folder from master_instansi
-            $baseDir = !empty($instansi['path_folder']) ? rtrim($instansi['path_folder'], '/\\') : __DIR__ . '/../../../../public/uploads/berkas';
+            try {
+                $baseDir = UploadPath::requireBase($db, $targetKode);
+            } catch (\RuntimeException $e) {
+                return JsonResponse::create(['success' => false, 'message' => $e->getMessage()], 400);
+            }
             $baseDir .= DIRECTORY_SEPARATOR . 'berkas penting';
             
             if (!is_dir($baseDir)) {

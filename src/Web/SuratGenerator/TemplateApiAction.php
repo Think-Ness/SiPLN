@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Web\SuratGenerator;
 
 use App\Shared\JsonResponse;
+use App\Shared\UploadPath;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\Db\Connection\ConnectionInterface;
@@ -21,10 +22,17 @@ final class TemplateApiAction
      */
     public function list(ServerRequestInterface $request): ResponseInterface
     {
+        @session_start();
+        $targetInstansiId = !empty($_SESSION['instansi_id']) ? (int)$_SESSION['instansi_id'] : null;
+        if (!$targetInstansiId) {
+            $targetInstansiId = (int) $this->db->createCommand("SELECT kode FROM master_instansi WHERE def_kepengurusan LIKE '%Ponorogo%' ORDER BY kode ASC LIMIT 1")->queryScalar();
+        }
+
         $templates = $this->db->createCommand("
             SELECT * FROM surat_template_dinamis
+            WHERE instansi_id = :instansi_id
             ORDER BY instansi_tujuan ASC, nama_template ASC
-        ")->queryAll();
+        ", [':instansi_id' => $targetInstansiId])->queryAll();
 
         return JsonResponse::create(['success' => true, 'data' => $templates]);
     }
@@ -60,8 +68,13 @@ final class TemplateApiAction
         $folderName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $instansiTujuan);
         // Trim trailing/leading underscores
         $folderName = trim($folderName, '_');
-        
-        $baseUploadDir = dirname(__DIR__, 3) . '/public/uploads/Surat_Menyurat';
+
+        // Resolve base per instansi
+        $instansiBase = UploadPath::getBase($this->db);
+        if ($instansiBase === null) {
+            return JsonResponse::create(['success' => false, 'message' => UploadPath::notConfiguredMessage()], 400);
+        }
+        $baseUploadDir = $instansiBase . '/Surat_Menyurat';
         $instansiDir = $baseUploadDir . '/' . $folderName;
 
         if (!is_dir($instansiDir)) {
@@ -93,8 +106,10 @@ final class TemplateApiAction
             ], 400);
         }
 
-        // Relative path to store in DB
-        $relativePath = 'uploads/Surat_Menyurat/' . $folderName . '/' . $filename;
+        // Store as uploads/{kepengurusan}/Surat_Menyurat/... as requested by user
+        $normalizedBase = rtrim(str_replace('\\', '/', $instansiBase), '/');
+        $kepengurusan = basename($normalizedBase); // e.g. 'Ponorogo' atau 'berkas'
+        $relativePath = 'uploads/' . $kepengurusan . '/Surat_Menyurat/' . $folderName . '/' . $filename;
 
         $jsonDataCollection = $parsedBody['json_data_collection'] ?? null;
         if ($jsonDataCollection && !is_string($jsonDataCollection)) {
@@ -106,18 +121,24 @@ final class TemplateApiAction
             $jsonCustomInputs = json_encode($jsonCustomInputs);
         }
 
+        $targetInstansiId = !empty($_SESSION['instansi_id']) ? (int)$_SESSION['instansi_id'] : null;
+        if (!$targetInstansiId) {
+            $targetInstansiId = (int) $this->db->createCommand("SELECT kode FROM master_instansi WHERE def_kepengurusan LIKE '%Ponorogo%' ORDER BY kode ASC LIMIT 1")->queryScalar();
+        }
+
         try {
             $file->moveTo($targetPath);
 
             // Insert to DB or update if overwrite
             if ($isOverwrite) {
                 // Check if it exists in DB to update timestamp (optional)
-                $existing = $this->db->createCommand("SELECT id FROM surat_template_dinamis WHERE file_path = :path", [':path' => $relativePath])->queryOne();
+                $existing = $this->db->createCommand("SELECT id FROM surat_template_dinamis WHERE file_path = :path AND instansi_id = :instansi_id", [':path' => $relativePath, ':instansi_id' => $targetInstansiId])->queryOne();
                 if (!$existing) {
                      $this->db->createCommand("
-                        INSERT INTO surat_template_dinamis (nama_template, file_path, instansi_tujuan, peruntukan, json_data_collection, json_custom_inputs)
-                        VALUES (:nama, :path, :instansi, :peruntukan, :json_data, :json_custom)
+                        INSERT INTO surat_template_dinamis (instansi_id, nama_template, file_path, instansi_tujuan, peruntukan, json_data_collection, json_custom_inputs)
+                        VALUES (:instansi_id, :nama, :path, :instansi, :peruntukan, :json_data, :json_custom)
                     ", [
+                        ':instansi_id' => $targetInstansiId,
                         ':nama' => $namaTemplate,
                         ':path' => $relativePath,
                         ':instansi' => $instansiTujuan,
@@ -141,9 +162,10 @@ final class TemplateApiAction
                 }
             } else {
                 $this->db->createCommand("
-                    INSERT INTO surat_template_dinamis (nama_template, file_path, instansi_tujuan, peruntukan, json_data_collection, json_custom_inputs)
-                    VALUES (:nama, :path, :instansi, :peruntukan, :json_data, :json_custom)
+                    INSERT INTO surat_template_dinamis (instansi_id, nama_template, file_path, instansi_tujuan, peruntukan, json_data_collection, json_custom_inputs)
+                    VALUES (:instansi_id, :nama, :path, :instansi, :peruntukan, :json_data, :json_custom)
                 ", [
+                    ':instansi_id' => $targetInstansiId,
                     ':nama' => $namaTemplate,
                     ':path' => $relativePath,
                     ':instansi' => $instansiTujuan,
@@ -172,7 +194,26 @@ final class TemplateApiAction
             return JsonResponse::create(['success' => false, 'message' => 'Template tidak ditemukan.'], 404);
         }
 
-        $fullPath = dirname(__DIR__, 3) . '/public/' . ltrim($template['file_path'], '/');
+        // Path di DB berupa uploads/{kepengurusan}/...
+        $filePath = $template['file_path'];
+        if (UploadPath::isAbsolutePath($filePath)) {
+            $fullPath = $filePath;
+        } else {
+            $instansiBase = UploadPath::getBase($this->db);
+            if ($instansiBase !== null) {
+                $normalizedBase = rtrim(str_replace('\\', '/', $instansiBase), '/');
+                $kepengurusan = basename($normalizedBase);
+                $prefix = 'uploads/' . $kepengurusan . '/';
+                if (str_starts_with($filePath, $prefix)) {
+                    $stripped = substr($filePath, strlen($prefix));
+                    $fullPath = $instansiBase . '/' . $stripped;
+                } else {
+                    $fullPath = dirname(__DIR__, 3) . '/public/' . ltrim($filePath, '/');
+                }
+            } else {
+                $fullPath = dirname(__DIR__, 3) . '/public/' . ltrim($filePath, '/');
+            }
+        }
         
         try {
             $this->db->createCommand("DELETE FROM surat_template_dinamis WHERE id = :id", [':id' => $id])->execute();
@@ -198,7 +239,26 @@ final class TemplateApiAction
             return JsonResponse::create(['success' => false, 'message' => 'Template tidak ditemukan.'], 404);
         }
 
-        $fullPath = dirname(__DIR__, 3) . '/public/' . ltrim($template['file_path'], '/');
+        // Path di DB berupa uploads/{kepengurusan}/...
+        $filePath = $template['file_path'];
+        if (UploadPath::isAbsolutePath($filePath)) {
+            $fullPath = str_replace('\\', '/', $filePath);
+        } else {
+            $instansiBase = UploadPath::getBase($this->db);
+            if ($instansiBase !== null) {
+                $normalizedBase = rtrim(str_replace('\\', '/', $instansiBase), '/');
+                $kepengurusan = basename($normalizedBase);
+                $prefix = 'uploads/' . $kepengurusan . '/';
+                if (str_starts_with($filePath, $prefix)) {
+                    $stripped = substr($filePath, strlen($prefix));
+                    $fullPath = $instansiBase . '/' . $stripped;
+                } else {
+                    $fullPath = dirname(__DIR__, 3) . '/public/' . ltrim($filePath, '/');
+                }
+            } else {
+                $fullPath = dirname(__DIR__, 3) . '/public/' . ltrim($filePath, '/');
+            }
+        }
         
         if (!file_exists($fullPath)) {
             return JsonResponse::create(['success' => false, 'message' => 'File fisik tidak ditemukan: ' . $fullPath], 404);
@@ -218,7 +278,21 @@ final class TemplateApiAction
      */
     public function instansiTujuanList(ServerRequestInterface $request): ResponseInterface
     {
-        $suratDir = dirname(__DIR__, 3) . '/public/uploads/Surat_Menyurat';
+        $instansiBase = UploadPath::getBase($this->db);
+        $suratDir = $instansiBase !== null ? $instansiBase . '/Surat_Menyurat' : dirname(__DIR__, 3) . '/public/uploads/Surat_Menyurat';
+        
+        // Ensure default 3 folders exist
+        $defaultFolders = ['Imigrasi', 'Kemenag', 'Lain-Lain'];
+        if (!is_dir($suratDir)) {
+            @mkdir($suratDir, 0777, true);
+        }
+        foreach ($defaultFolders as $df) {
+            $dfPath = $suratDir . '/' . $df;
+            if (!is_dir($dfPath)) {
+                @mkdir($dfPath, 0777, true);
+            }
+        }
+
         $folders = [];
         if (is_dir($suratDir)) {
             $items = scandir($suratDir);
@@ -233,7 +307,13 @@ final class TemplateApiAction
         // Gabungkan juga dengan data yang sudah ada di database (kantor dari jenis pengajuan)
         $dbInstansi = $this->db->createCommand("SELECT DISTINCT kantor FROM surat_jenis_pengajuan WHERE kantor IS NOT NULL AND kantor != ''")->queryColumn();
         
-        $dbTemplateInstansi = $this->db->createCommand("SELECT DISTINCT instansi_tujuan FROM surat_template_dinamis WHERE instansi_tujuan IS NOT NULL AND instansi_tujuan != ''")->queryColumn();
+        @session_start();
+        $targetInstansiId = !empty($_SESSION['instansi_id']) ? (int)$_SESSION['instansi_id'] : null;
+        if (!$targetInstansiId) {
+            $targetInstansiId = (int) $this->db->createCommand("SELECT kode FROM master_instansi WHERE def_kepengurusan LIKE '%Ponorogo%' ORDER BY kode ASC LIMIT 1")->queryScalar();
+        }
+        
+        $dbTemplateInstansi = $this->db->createCommand("SELECT DISTINCT instansi_tujuan FROM surat_template_dinamis WHERE instansi_tujuan IS NOT NULL AND instansi_tujuan != '' AND instansi_id = :instansi_id", [':instansi_id' => $targetInstansiId])->queryColumn();
         
         $all = array_unique(array_merge($folders, $dbInstansi, $dbTemplateInstansi));
         $finalList = array_values($all);
@@ -253,11 +333,18 @@ final class TemplateApiAction
         }
 
         $safeName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $nama);
-        $folderPath = dirname(__DIR__, 3) . '/public/uploads/Surat_Menyurat/' . $safeName;
+        $instansiBase = UploadPath::getBase($this->db);
+        $folderPath = ($instansiBase !== null ? $instansiBase : dirname(__DIR__, 3) . '/public/uploads') . '/Surat_Menyurat/' . $safeName;
+        
+        @session_start();
+        $targetInstansiId = !empty($_SESSION['instansi_id']) ? (int)$_SESSION['instansi_id'] : null;
+        if (!$targetInstansiId) {
+            $targetInstansiId = (int) $this->db->createCommand("SELECT kode FROM master_instansi WHERE def_kepengurusan LIKE '%Ponorogo%' ORDER BY kode ASC LIMIT 1")->queryScalar();
+        }
         
         $dbTemplates = $this->db->createCommand(
-            "SELECT nama_template, json_data_collection FROM surat_template_dinamis WHERE instansi_tujuan = :inst", 
-            [':inst' => $nama]
+            "SELECT nama_template, json_data_collection FROM surat_template_dinamis WHERE instansi_tujuan = :inst AND instansi_id = :instansi_id", 
+            [':inst' => $nama, ':instansi_id' => $targetInstansiId]
         )->queryAll();
         
         $dbMap = [];

@@ -1064,7 +1064,15 @@ function setupStep3() {
         if (currentMailingData && currentMailingData.surats) {
             let generatedSurat = currentMailingData.surats.find(surat => surat.tipe_surat === t);
             if (generatedSurat) {
-                generatedBadge = `<div class="badge bg-success bg-opacity-10 text-success mt-1 border border-success border-opacity-25" style="font-size: 0.65rem;"><i class="bi bi-check2-all me-1"></i>Sudah di-generate (${generatedSurat.nomor_surat})</div>`;
+                generatedBadge = `
+                <div class="d-flex align-items-center flex-wrap gap-1 mt-1">
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25" style="font-size: 0.65rem;">
+                        <i class="bi bi-check2-all me-1"></i>Sudah di-generate (${generatedSurat.nomor_surat})
+                    </span>
+                    <a href="<?= API_URL ?>/api/surat/download/${m.id}?tipe=${t}" target="_blank" onclick="event.stopPropagation()" class="btn btn-sm btn-success text-white py-0 px-2 rounded-pill shadow-sm" style="font-size: 0.65rem;" title="Unduh File Surat">
+                        <i class="bi bi-download me-1"></i>Unduh
+                    </a>
+                </div>`;
             }
         }
 
@@ -1078,6 +1086,10 @@ function setupStep3() {
         </div>`;
     });
     document.getElementById('suratTypeCards').innerHTML = html;
+
+    if (currentSuratType) {
+        document.getElementById('stCard_' + currentSuratType)?.classList.add('selected');
+    }
 }
 
 function selectSuratType(type) {
@@ -1413,6 +1425,20 @@ function addCollectionRow(name, colsStr) {
 
         Swal.close();
         
+        // Update local currentMailingData state real-time
+        if (data.surat) {
+            if (!currentMailingData.surats) currentMailingData.surats = [];
+            const existingIdx = currentMailingData.surats.findIndex(s => s.tipe_surat === data.surat.tipe_surat);
+            if (existingIdx >= 0) {
+                currentMailingData.surats[existingIdx] = data.surat;
+            } else {
+                currentMailingData.surats.push(data.surat);
+            }
+        }
+        
+        // Refresh cards display in Step 3 so the badge and download button appear immediately
+        setupStep3();
+
         if (data.is_docx && data.download_url) {
             // Setup Progress Tracker
             const progressId = Date.now() + Math.random().toString(36).substr(2, 5);
@@ -1486,11 +1512,15 @@ function addCollectionRow(name, colsStr) {
                 URL.revokeObjectURL(blobUrl);
 
                 Swal.close();
+                
                 document.getElementById('suratPreviewArea').innerHTML = `
-                    <div class="d-flex flex-column align-items-center justify-content-center text-center h-100 text-muted p-5 bg-white rounded-4 shadow-sm border">
-                        <i class="bi bi-file-earmark-check-fill text-success" style="font-size: 5rem; margin-bottom: 1rem;"></i>
-                        <h4 class="fw-bold text-dark">PDF Berhasil Diunduh!</h4>
-                        <p class="mb-0 text-secondary">File PDF telah tersimpan otomatis ke folder instansi Anda.</p>
+                    <div class="d-flex flex-column align-items-center justify-content-center text-center h-100 text-muted p-4 bg-white rounded-4 shadow-sm border">
+                        <i class="bi bi-file-earmark-check-fill text-success" style="font-size: 4.5rem; margin-bottom: 1rem;"></i>
+                        <h5 class="fw-bold text-dark mb-1">PDF Berhasil Diunduh!</h5>
+                        <p class="mb-3 text-secondary small">File <strong>${data.surat.nomor_surat}</strong> telah tersimpan di folder instansi.</p>
+                        <a href="${data.download_url}" target="_blank" class="btn btn-sm btn-success rounded-pill px-4 shadow-sm">
+                            <i class="bi bi-download me-1"></i>Unduh Ulang PDF
+                        </a>
                     </div>`;
             } catch (dlErr) {
                 Swal.fire('Gagal Generate PDF', dlErr.message || 'Terjadi kesalahan saat generate.', 'error');
@@ -1705,9 +1735,9 @@ async function openMailingDetail(id) {
             suratHtml = '<div class="d-flex flex-wrap gap-2">';
             data.surats.forEach(s => {
                 const sl = SURAT_LABELS[s.tipe_surat];
-                suratHtml += `<div class="badge rounded-pill px-3 py-2 fw-medium" style="background:${sl?.bg};color:${sl?.color};border:1px solid ${sl?.color}20;font-size:.8rem;">
-                    <i class="bi ${sl?.icon} me-1"></i>${sl?.label} — ${s.nomor_surat}
-                </div>`;
+                suratHtml += `<a href="<?= API_URL ?>/api/surat/download/${id}?tipe=${s.tipe_surat}" target="_blank" class="badge rounded-pill px-3 py-2 fw-medium text-decoration-none shadow-sm hover-shadow" style="background:${sl?.bg};color:${sl?.color};border:1px solid ${sl?.color}20;font-size:.8rem;">
+                    <i class="bi ${sl?.icon || 'bi-file-pdf'} me-1"></i>${sl?.label || s.tipe_surat} — ${s.nomor_surat}
+                </a>`;
             });
             suratHtml += '</div>';
         } else {

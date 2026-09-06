@@ -10,7 +10,7 @@ return [
     ConnectionInterface::class => [
         'class' => Connection::class,
         '__construct()' => [
-            'driver' => new Driver('mysql:host=127.0.0.1;dbname=si_foreign_db', 'root', ''),
+            'driver' => new Driver('mysql:host=100.68.135.3;dbname=si_foreign_db', 'root', ''),
         ],
     ],
 ];

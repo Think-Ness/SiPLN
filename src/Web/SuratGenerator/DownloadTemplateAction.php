@@ -7,6 +7,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\Db\Connection\ConnectionInterface;
 use App\Shared\JsonResponse;
+use App\Shared\UploadPath;
 use HttpSoft\Message\Response;
 
 final class DownloadTemplateAction
@@ -44,7 +45,12 @@ final class DownloadTemplateAction
         ];
 
         $kantor = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $jenisPengajuan['kantor']);
-        $publicSuratDir = dirname(__DIR__, 3) . '/public/uploads/Surat_Menyurat';
+        
+        // Resolve Surat_Menyurat base dari path_folder instansi
+        @session_start();
+        $instansiId = $_SESSION['instansi_id'] ?? null;
+        $instansiBase = $instansiId ? UploadPath::getBase($db, (int)$instansiId) : null;
+        $publicSuratDir = $instansiBase !== null ? $instansiBase . '/Surat_Menyurat' : dirname(__DIR__, 3) . '/public/uploads/Surat_Menyurat';
 
         if (!isset($templateFiles[$tipeSurat])) {
             // Check dynamic template
@@ -57,7 +63,26 @@ final class DownloadTemplateAction
             if (!$dynamicTemplate) {
                 return $this->errorResponse("Parameter tipe surat tidak valid.", 400);
             }
-            $templatePath = dirname(__DIR__, 3) . '/public/' . ltrim($dynamicTemplate['file_path'], '/');
+            // Path di DB berupa uploads/{kepengurusan}/...
+            $fp = $dynamicTemplate['file_path'];
+            if (UploadPath::isAbsolutePath($fp)) {
+                $templatePath = str_replace('\\', '/', $fp);
+            } else {
+                $instansiBaseDL = UploadPath::getBase($db);
+                if ($instansiBaseDL !== null) {
+                    $normalizedBase = rtrim(str_replace('\\', '/', $instansiBaseDL), '/');
+                    $kepengurusan = basename($normalizedBase);
+                    $prefix = 'uploads/' . $kepengurusan . '/';
+                    if (str_starts_with($fp, $prefix)) {
+                        $stripped = substr($fp, strlen($prefix));
+                        $templatePath = $instansiBaseDL . '/' . $stripped;
+                    } else {
+                        $templatePath = dirname(__DIR__, 3) . '/public/' . ltrim($fp, '/');
+                    }
+                } else {
+                    $templatePath = dirname(__DIR__, 3) . '/public/' . ltrim($fp, '/');
+                }
+            }
         } else {
             $templateFileName = $templateFiles[$tipeSurat];
             $templatePath = $publicSuratDir . '/' . $kantor . '/' . $templateFileName;

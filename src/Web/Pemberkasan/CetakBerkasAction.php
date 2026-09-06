@@ -17,8 +17,21 @@ final class CetakBerkasAction
     ): ResponseInterface {
         $search = $request->getQueryParams()['q'] ?? '';
         
+        // Base directory logic with Super Admin fallback to Ponorogo
+        $targetInstansiId = !empty($_SESSION['instansi_id']) ? (int)$_SESSION['instansi_id'] : null;
+        if (!$targetInstansiId) {
+            $targetInstansiId = (int) $db->createCommand("SELECT kode FROM master_instansi WHERE def_kepengurusan LIKE '%Ponorogo%' ORDER BY kode ASC LIMIT 1")->queryScalar();
+        }
+        
         $params = [];
         $whereConds = [];
+        
+        $kepengurusanStr = $db->createCommand("SELECT def_kepengurusan FROM master_instansi WHERE kode = :kode", [':kode' => $targetInstansiId])->queryScalar();
+        if ($kepengurusanStr) {
+            $whereConds[] = "s.kepengurusan = :kepengurusan";
+            $params[':kepengurusan'] = $kepengurusanStr;
+        }
+
         if ($search !== '') {
             $whereConds[] = "(s.nama LIKE :q OR s.kds LIKE :q OR p.no_paspor LIKE :q OR s.negara LIKE :q)";
             $params[':q'] = "%$search%";
@@ -122,7 +135,8 @@ final class CetakBerkasAction
         $instansiDocList = $db->createCommand(
             "SELECT b.id, b.nama_berkas, b.path_file
              FROM mtb_berkas_penting b
-             WHERE b.is_public = 1 OR b.kode IN (SELECT id FROM master_instansi)"
+             WHERE b.is_public = 1 OR b.kode = :instansiId",
+             [':instansiId' => (string)$targetInstansiId]
         )->queryAll();
 
         $instansiBerkas = [];
@@ -156,9 +170,14 @@ final class CetakBerkasAction
             }
         }
 
-        // Base fallback directory from instansi settings
-        $instansi = $db->createCommand("SELECT path_folder FROM master_instansi WHERE kode = " . (int)($_SESSION['instansi_id'] ?? 0) . " LIMIT 1")->queryOne();
-        $baseBerkasDir = !empty($instansi['path_folder']) ? rtrim($instansi['path_folder'], '/\\') : dirname(__DIR__, 4) . '/berkas';
+        $baseBerkasDir = null;
+        if ($targetInstansiId) {
+            $baseBerkasDir = \App\Shared\UploadPath::getBase($db, $targetInstansiId);
+        }
+        if (!$baseBerkasDir) {
+            $baseBerkasDir = dirname(__DIR__, 4) . '/berkas';
+        }
+        $baseBerkasDir = rtrim(str_replace('\\', '/', $baseBerkasDir), '/');
         
         $fotoDir = $baseBerkasDir . '/foto santri';
         $pasporDir = $baseBerkasDir . '/paspor';

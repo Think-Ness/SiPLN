@@ -34,6 +34,8 @@ final class StoreAction
         $ttl = trim($body['ttl'] ?? '');
         $password = $body['password'] ?? '';
         $role = $body['role'] ?? 'staff_instansi';
+        $bagian = trim($body['bagian'] ?? '');
+        $no_telepon = trim($body['no_telepon'] ?? '');
         $instansi_id = !empty($body['instansi_id']) ? (int)$body['instansi_id'] : null;
 
         // Validasi Role
@@ -42,7 +44,7 @@ final class StoreAction
                 return JsonResponse::create(['success' => false, 'message' => 'Anda tidak berhak membuat akun Super Admin!'], 403);
             }
             // Paksa instansi sesuai milik Admin Instansi pembuat
-            $instansi_id = $_SESSION['instansi_id'];
+            $instansi_id = (int)($_SESSION['instansi_id'] ?? 0);
         }
 
         if (empty($username) || empty($nama_lengkap)) {
@@ -61,10 +63,14 @@ final class StoreAction
             return JsonResponse::create(['success' => false, 'message' => 'Username ini sudah digunakan, silakan pilih yang lain.'], 400);
         }
 
+
+
         $data = [
             'username' => $username,
             'nama_lengkap' => $nama_lengkap,
             'ttl' => $ttl,
+            'bagian' => $bagian,
+            'no_telepon' => !empty($no_telepon) ? $no_telepon : null,
             'role' => $role,
             'instansi_id' => $role === 'super_admin' ? null : $instansi_id,
         ];
@@ -90,6 +96,42 @@ final class StoreAction
         }
 
         try {
+            // Upload handling
+            $fotoProfileName = null;
+            $files = $request->getUploadedFiles();
+            if (isset($files['foto_profile']) && $files['foto_profile']->getError() === UPLOAD_ERR_OK) {
+                $ext = pathinfo($files['foto_profile']->getClientFilename(), PATHINFO_EXTENSION);
+                $fotoProfileName = 'Profile_' . $username . '_' . time() . '.' . $ext;
+                
+                // Base dir setup
+                $basePath = null;
+                $targetInstansiId = !empty($instansi_id) ? (int)$instansi_id : null;
+                
+                if (!$targetInstansiId) {
+                    // Jika Super Admin (tanpa instansi), numpang ke kampus pusat (Ponorogo)
+                    $targetInstansiId = (int) $db->createCommand("SELECT kode FROM master_instansi WHERE def_kepengurusan LIKE '%Ponorogo%' ORDER BY kode ASC LIMIT 1")->queryScalar();
+                }
+
+                if ($targetInstansiId) {
+                    $basePath = \App\Shared\UploadPath::getBase($db, $targetInstansiId);
+                }
+
+                if (!$basePath) {
+                    // Fallback terakhir jika path config masih gagal
+                    $basePath = dirname(__DIR__, 3) . '/public/uploads';
+                }
+                
+                $dir = $basePath . '/profil_staf';
+                if (!is_dir($dir)) {
+                    mkdir($dir, 0777, true);
+                }
+                $files['foto_profile']->moveTo($dir . DIRECTORY_SEPARATOR . $fotoProfileName);
+            }
+
+            if ($fotoProfileName) {
+                $data['foto_profile'] = $fotoProfileName;
+            }
+
             if ($id) {
                 // Update pastikan Admin Instansi hanya mengubah usernya sendiri
                 if ($myRole === 'admin_instansi') {
@@ -140,7 +182,7 @@ final class StoreAction
                 
                 return JsonResponse::create(['success' => true, 'message' => 'Pengguna baru berhasil ditambahkan!' . $extraMsg]);
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return JsonResponse::create(['success' => false, 'message' => 'Kesalahan server: ' . $e->getMessage()], 500);
         }
     }

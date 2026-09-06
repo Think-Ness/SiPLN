@@ -67,6 +67,14 @@ final class GenerateSuratAction
             $nomorSurat = str_pad((string)$nextNo, 3, '0', STR_PAD_LEFT) . "/$tipeSurat/PLN/$bulanRomawi/$year";
         }
 
+        // Cek instansi untuk notifikasi path folder
+        @session_start();
+        $instansiId = $mailingInfo['instansi_id'] ?? ($_SESSION['instansi_id'] ?? null);
+        $instansiPath = '';
+        if ($instansiId) {
+            $instansiPath = $db->createCommand("SELECT path_folder FROM master_instansi WHERE kode = :kode", [':kode' => $instansiId])->queryScalar();
+        }
+
         // Kalkulasi nomor_akhir jika Perseorangan
         $nomorAkhir = null;
         if ($mode === 'Perseorangan' && $santriCount > 1) {
@@ -134,9 +142,14 @@ final class GenerateSuratAction
         AuditLogger::log($db, 'CREATE', 'SURAT_GENERATED', (string)$suratId, null,
             "Generate {$label} nomor $nomorSurat untuk mailing #$mailingId");
 
+        $responseMessage = "{$label} berhasil di-generate.";
+        if (empty($instansiPath)) {
+            $responseMessage .= "\n\n(Catatan: Path Folder Instansi belum diatur. Dokumen disimpan di lokasi default: /webapp/public/uploads)";
+        }
+
         return JsonResponse::create([
             'success' => true,
-            'message' => "{$label} berhasil di-generate.",
+            'message' => $responseMessage,
             'is_docx' => $hasTemplate,
             'download_url' => $hasTemplate ? API_URL . "/api/surat/download/{$mailingId}?tipe={$tipeSurat}&with_lampiran={$withLampiran}" : null,
             'surat' => [

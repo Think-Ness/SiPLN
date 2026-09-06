@@ -47,12 +47,12 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Dashboard Analitik</h1>
-          <p className="text-slate-500 text-sm">Visualisasi data santri terintegrasi (React v2.0)</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Dashboard Analitik</h1>
+          <p className="text-slate-500 text-xs sm:text-sm">Visualisasi data santri terintegrasi (React v2.0)</p>
         </div>
-        <div className="flex bg-white rounded-lg p-1 shadow-sm border border-slate-200">
+        <div className="flex bg-white rounded-lg p-1 shadow-sm border border-slate-200 self-start sm:self-auto">
           {[
             { id: '1', label: 'Aktif' },
             { id: '0', label: 'Inaktif' },
@@ -61,7 +61,7 @@ const Dashboard = () => {
             <button
               key={opt.id}
               onClick={() => setStatus(opt.id)}
-              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
+              className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all ${
                 status === opt.id 
                   ? 'bg-primary text-white shadow-sm' 
                   : 'text-slate-600 hover:bg-slate-50'
@@ -74,56 +74,60 @@ const Dashboard = () => {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-success/10 text-success flex items-center justify-center">
-            <Users size={24} />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-white rounded-xl p-3 sm:p-5 shadow-sm border border-slate-100 flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-success/10 text-success flex items-center justify-center shrink-0">
+            <Users size={20} className="sm:hidden" />
+            <Users size={24} className="hidden sm:block" />
           </div>
-          <div>
-            <div className="text-2xl font-bold text-slate-800">{data?.aktif || 0}</div>
-            <div className="text-slate-500 text-sm font-medium">Santri Aktif</div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-danger/10 text-danger flex items-center justify-center">
-            <UserX size={24} />
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-slate-800">{data?.inaktif || 0}</div>
-            <div className="text-slate-500 text-sm font-medium">Santri Inaktif</div>
+          <div className="min-w-0">
+            <div className="text-lg sm:text-2xl font-bold text-slate-800">{data?.aktif || 0}</div>
+            <div className="text-slate-500 text-[11px] sm:text-sm font-medium truncate">Santri Aktif</div>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-warning/10 text-warning flex items-center justify-center">
-            <FileWarning size={24} />
+        <div className="bg-white rounded-xl p-3 sm:p-5 shadow-sm border border-slate-100 flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-danger/10 text-danger flex items-center justify-center shrink-0">
+            <UserX size={20} className="sm:hidden" />
+            <UserX size={24} className="hidden sm:block" />
           </div>
-          <div>
-            <div className="text-2xl font-bold text-slate-800">{data?.expPasporSoon || 0}</div>
-            <div className="text-slate-500 text-sm font-medium">Paspor Exp &le; 1 Bln</div>
+          <div className="min-w-0">
+            <div className="text-lg sm:text-2xl font-bold text-slate-800">{data?.inaktif || 0}</div>
+            <div className="text-slate-500 text-[11px] sm:text-sm font-medium truncate">Santri Inaktif</div>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-100 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-            <AlertCircle size={24} />
+        <div className="bg-white rounded-xl p-3 sm:p-5 shadow-sm border border-slate-100 flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-warning/10 text-warning flex items-center justify-center shrink-0">
+            <FileWarning size={20} className="sm:hidden" />
+            <FileWarning size={24} className="hidden sm:block" />
           </div>
-          <div>
-            <div className="text-2xl font-bold text-slate-800">{data?.expItasSoon || 0}</div>
-            <div className="text-slate-500 text-sm font-medium">ITAS Exp &le; 3 Bln</div>
+          <div className="min-w-0">
+            <div className="text-lg sm:text-2xl font-bold text-slate-800">{data?.expPasporSoon || 0}</div>
+            <div className="text-slate-500 text-[11px] sm:text-sm font-medium truncate">Paspor Exp ≤ 1 Bln</div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl p-3 sm:p-5 shadow-sm border border-slate-100 flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+            <AlertCircle size={20} className="sm:hidden" />
+            <AlertCircle size={24} className="hidden sm:block" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-lg sm:text-2xl font-bold text-slate-800">{data?.expItasSoon || 0}</div>
+            <div className="text-slate-500 text-[11px] sm:text-sm font-medium truncate">ITAS Exp ≤ 3 Bln</div>
           </div>
         </div>
       </div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Negara */}
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-100">
-          <h3 className="font-bold text-slate-700 mb-4 flex items-center gap-2">
-            <span className="w-2 h-6 bg-primary rounded-full"></span> Distribusi Negara Asal
+        <div className="bg-white p-3 sm:p-5 rounded-xl shadow-sm border border-slate-100">
+          <h3 className="font-bold text-slate-700 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+            <span className="w-2 h-5 sm:h-6 bg-primary rounded-full"></span> Distribusi Negara Asal
           </h3>
-          <div className="h-64">
+          <div className="h-48 sm:h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={negaraData} innerRadius={60} outerRadius={100} paddingAngle={2} dataKey="value" nameKey="name">
+                <Pie data={negaraData} innerRadius={40} outerRadius={70} paddingAngle={2} dataKey="value" nameKey="name">
                   {negaraData.map((entry, index) => <Cell key={index} fill={COLORS[index % COLORS.length]} />)}
                 </Pie>
                 <Tooltip />
@@ -133,14 +137,14 @@ const Dashboard = () => {
         </div>
 
         {/* Pondok */}
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-100">
-          <h3 className="font-bold text-slate-700 mb-4 flex items-center gap-2">
-            <span className="w-2 h-6 bg-success rounded-full"></span> Distribusi Pondok
+        <div className="bg-white p-3 sm:p-5 rounded-xl shadow-sm border border-slate-100">
+          <h3 className="font-bold text-slate-700 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+            <span className="w-2 h-5 sm:h-6 bg-success rounded-full"></span> Distribusi Pondok
           </h3>
-          <div className="h-64">
+          <div className="h-48 sm:h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={pondokData} innerRadius={0} outerRadius={100} dataKey="value" nameKey="name">
+                <Pie data={pondokData} innerRadius={0} outerRadius={70} dataKey="value" nameKey="name">
                   {pondokData.map((entry, index) => <Cell key={index} fill={COLORS[(index+2) % COLORS.length]} />)}
                 </Pie>
                 <Tooltip />
@@ -150,18 +154,27 @@ const Dashboard = () => {
         </div>
 
         {/* Kepengurusan */}
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-100 lg:col-span-2">
-          <h3 className="font-bold text-slate-700 mb-4 flex items-center gap-2">
-            <span className="w-2 h-6 bg-warning rounded-full"></span> Distribusi Kepengurusan
+        <div className="bg-white p-3 sm:p-5 rounded-xl shadow-sm border border-slate-100 lg:col-span-2">
+          <h3 className="font-bold text-slate-700 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+            <span className="w-2 h-5 sm:h-6 bg-warning rounded-full"></span> Distribusi Kepengurusan
           </h3>
-          <div className="h-72">
+          <div className="h-56 sm:h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={kepengurusanData}>
+              <BarChart data={kepengurusanData} margin={{ bottom: 40 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                <YAxis axisLine={false} tickLine={false} />
+                <XAxis 
+                  dataKey="name" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  angle={-35} 
+                  textAnchor="end" 
+                  interval={0} 
+                  fontSize={11}
+                  height={60}
+                />
+                <YAxis axisLine={false} tickLine={false} width={35} />
                 <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
-                <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={40} />
+                <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={32} />
               </BarChart>
             </ResponsiveContainer>
           </div>

@@ -271,6 +271,7 @@ final class FirebaseSync
                 'nama_lengkap' => $data['nama_lengkap'] ?? '',
                 'role' => $data['role'] ?? '',
                 'instansi_id' => $data['instansi_id'] ?? null,
+                'is_active' => (int)($data['is_active'] ?? 1),
                 'synced_at' => date('c'),
             ];
 

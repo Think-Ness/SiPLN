@@ -36,10 +36,10 @@ foreach ($dataItas as $row) {
     $isLate = ($start !== null && $start < $today && !$isInProgress);
 
     $events[] = [
-        'id' => 'itas-start-' . $row['kds'],
-        'type' => 'itas_start',
-        'date' => $start,
-        'label' => 'Proses ITAS: ' . $row['nama'],
+        'id' => 'itas-' . $row['kds'],
+        'type' => 'itas_timeline',
+        'date' => $exp, // for sorting in list
+        'label' => 'ITAS: ' . $row['nama'],
         'nama' => $row['nama'],
         'kds' => $row['kds'],
         'kelas' => $row['kelas'] ?? '',
@@ -51,21 +51,6 @@ foreach ($dataItas as $row) {
         'is_expired' => $isExpired,
         'is_late' => $isLate,
         'is_in_progress' => $isInProgress,
-    ];
-    $events[] = [
-        'id' => 'itas-exp-' . $row['kds'],
-        'type' => 'itas_exp',
-        'date' => $exp,
-        'label' => 'Exp ITAS: ' . $row['nama'],
-        'nama' => $row['nama'],
-        'kds' => $row['kds'],
-        'kelas' => $row['kelas'] ?? '',
-        'daerah' => $row['daerah'] ?? '',
-        'kepengurusan' => $row['kepengurusan'] ?? '',
-        'no_paspor' => $row['no_paspor'] ?? '-',
-        'exp_date' => $exp,
-        'start_date' => $start,
-        'is_expired' => $isExpired,
     ];
 
     if ($start !== null && substr($start, 0, 7) === $currentMonth) $itasProcessMonth++;
@@ -79,23 +64,26 @@ foreach ($dataPaspor as $row) {
     $isLate = ($start !== null && $start < $today);
     $isInProgress = false; // Paspor tidak diproses di JobDesk sesuai request
 
-    $events[] = [
-        'id' => 'paspor-start-' . $row['kds'],
-        'type' => 'paspor_start',
-        'date' => $start,
-        'label' => 'Proses Paspor: ' . $row['nama'],
-        'nama' => $row['nama'],
-        'kds' => $row['kds'],
-        'kelas' => $row['kelas'] ?? '',
-        'daerah' => $row['daerah'] ?? '',
-        'kepengurusan' => $row['kepengurusan'] ?? '',
-        'no_paspor' => $row['no_paspor'] ?? '-',
-        'exp_date' => $exp,
-        'start_date' => $start,
-        'is_expired' => $isExpired,
-        'is_late' => $isLate,
-        'is_in_progress' => $isInProgress,
-    ];
+    if ($start !== null) {
+        $events[] = [
+            'id' => 'paspor-start-' . $row['kds'],
+            'type' => 'paspor_start',
+            'date' => $start,
+            'label' => 'Mulai Paspor: ' . $row['nama'],
+            'nama' => $row['nama'],
+            'kds' => $row['kds'],
+            'kelas' => $row['kelas'] ?? '',
+            'daerah' => $row['daerah'] ?? '',
+            'kepengurusan' => $row['kepengurusan'] ?? '',
+            'no_paspor' => $row['no_paspor'] ?? '-',
+            'exp_date' => $exp,
+            'start_date' => $start,
+            'is_expired' => false,
+            'is_late' => $isLate,
+            'is_in_progress' => false,
+        ];
+    }
+    
     $events[] = [
         'id' => 'paspor-exp-' . $row['kds'],
         'type' => 'paspor_exp',
@@ -110,6 +98,8 @@ foreach ($dataPaspor as $row) {
         'exp_date' => $exp,
         'start_date' => $start,
         'is_expired' => $isExpired,
+        'is_late' => false,
+        'is_in_progress' => false,
     ];
 
     if ($start !== null && substr($start, 0, 7) === $currentMonth) $pasporProcessMonth++;
@@ -127,29 +117,46 @@ $kepListJson = json_encode($kepList);
 .cal-aside { width: 300px; flex-shrink: 0; transition: all 0.3s ease; transform-origin: right; position: relative; }
 .cal-aside.collapsed { width: 0; opacity: 0; margin-left: -20px; }
 
-.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #cbd5e1; border: 1px solid #cbd5e1; border-radius: 12px; overflow: hidden; }
-.cal-header-cell { background: #e0e7ff; text-align: center; padding: 10px 4px; font-size: .7rem; font-weight: 700; color: #3730a3; text-transform: uppercase; letter-spacing: .05em; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #e2e8f0; border: 1px solid #e2e8f0; border-radius: 12px; }
+.cal-header-cell { background: white; text-align: center; padding: 10px 4px 6px; font-size: .7rem; font-weight: 600; color: #64748b; text-transform: uppercase; }
 .cal-cell {
-    background: white; min-height: 100px; padding: 6px; position: relative;
+    background: white; min-height: 100px; padding: 4px; position: relative;
     transition: background .15s;
     cursor: default;
 }
 .cal-cell:hover { background: #f8fafc; }
-.cal-cell.other-month { opacity: .35; }
+.cal-cell.other-month { opacity: .5; }
 .cal-cell.today { box-shadow: inset 0 0 0 2px #3461ff; }
-.cal-day { font-size: .75rem; font-weight: 700; color: #475569; margin-bottom: 3px; display: flex; align-items: center; justify-content: space-between; }
+.cal-day { font-size: .75rem; font-weight: 600; color: #475569; margin-bottom: 4px; margin-top: 2px; display: flex; justify-content: center; }
 .cal-day-num.is-today {
     background: #3461ff; color: white; width: 24px; height: 24px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center; font-size: .72rem;
 }
-.cal-day-count { font-size: .6rem; color: #94a3b8; font-weight: 600; background: #f1f5f9; padding: 1px 5px; border-radius: 4px; }
-
 .cal-event {
     font-size: .65rem; padding: 2px 6px; border-radius: 4px; margin-bottom: 2px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     cursor: pointer; font-weight: 600; transition: all .15s; display: block; border: none; width: 100%; text-align: left;
 }
-.cal-event:hover { filter: brightness(0.92); transform: translateX(1px); }
+.timeline-bar {
+    border: none;
+    padding: 2px 6px;
+    height: 22px;
+    margin-bottom: 2px !important;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: .65rem;
+    font-weight: 600;
+    transition: filter 0.2s;
+}
+.timeline-bar:hover { filter: brightness(1.1); }
+.border-radius-full { border-radius: 4px; }
+.border-radius-left { border-radius: 4px 0 0 4px; }
+.border-radius-right { border-radius: 0 4px 4px 0; }
+.border-radius-none { border-radius: 0; }
+.cal-more { font-size: .6rem; text-align: center; color: #3b82f6; cursor: pointer; font-weight: 700; margin-top: 2px; }
 
 /* Event type colors */
 .cal-event.itas_start { background: #b45309; color: white; }
@@ -162,10 +169,7 @@ $kepListJson = json_encode($kepList);
 @keyframes pulse-late { 0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.7); } 70% { box-shadow: 0 0 0 5px rgba(239,68,68,0); } 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); } }
 .cal-event.late { animation: pulse-late 2s infinite; border: 1px solid #ef4444; position: relative; z-index: 10; font-weight: 800; }
 
-.cal-more { font-size: .62rem; color: #3461ff; cursor: pointer; font-weight: 700; text-align: center; padding: 2px; }
-.cal-more:hover { text-decoration: underline; }
-
-/* â•â•â• Stat cards â•â•â• */
+/* â• â• â•  Stat cards â• â• â•  */
 .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
 .stat-mini {
     border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; gap: 12px;
@@ -180,7 +184,7 @@ $kepListJson = json_encode($kepList);
 .stat-mini .stat-label { font-size: .68rem; font-weight: 600; opacity: .75; }
 .stat-mini .stat-sub { font-size: .58rem; opacity: .55; margin-top: 1px; }
 
-/* â•â•â• Filter bar â•â•â• */
+/* â• â• â•  Filter bar â• â• â•  */
 .filter-bar {
     background: white; border-radius: 12px; border: 1px solid #e8ecf0; padding: 10px 16px;
     display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
@@ -193,7 +197,7 @@ $kepListJson = json_encode($kepList);
 .filter-btn.active { background: white; color: #3461ff; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
 .filter-btn:hover:not(.active) { color: #334155; }
 
-/* â•â•â• Upcoming panel â•â•â• */
+/* â• â• â•  Upcoming panel â• â• â•  */
 .upcoming-panel {
     background: white; border-radius: 12px; border: 1px solid #e8ecf0; overflow: hidden;
     display: flex; flex-direction: column; 
@@ -225,12 +229,12 @@ $kepListJson = json_encode($kepList);
 .type-paspor_start { color: #1e40af; }
 .type-paspor_exp { color: #7e22ce; }
 
-/* â•â•â• Legend â•â•â• */
+/* â• â• â•  Legend â• â• â•  */
 .cal-legend { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; padding: 12px 16px; background: #f8fafc; border-top: 1px solid #f1f5f9; }
 .legend-item { display: flex; align-items: center; gap: 6px; font-size: .7rem; color: #475569; font-weight: 500; }
 .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
 
-/* â•â•â• Detail Modal â•â•â• */
+/* â• â• â•  Detail Modal â• â• â•  */
 .cal-modal-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 2000;
     background: rgba(0,0,0,.4); backdrop-filter: blur(4px);
@@ -267,9 +271,25 @@ $kepListJson = json_encode($kepList);
 
 /* Popover for +N more */
 .cal-popover {
-    position: absolute; z-index: 100; left: 0; top: 100%; width: 220px;
-    background: white; border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,.18); border: 1px solid #e8ecf0;
-    padding: 8px; display: flex; flex-direction: column; gap: 2px;
+    position: absolute; z-index: 1000; left: 50%; top: -10px; transform: translateX(-50%); width: 220px;
+    background: white; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.2); border: none;
+    display: flex; flex-direction: column; overflow: hidden;
+}
+.cal-popover-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 12px 6px;
+}
+.cal-popover-title {
+    font-size: .75rem; font-weight: 700; color: #475569; letter-spacing: .02em;
+}
+.cal-popover-close {
+    background: transparent; border: none; color: #94a3b8; cursor: pointer; padding: 4px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    transition: all .2s; width: 24px; height: 24px;
+}
+.cal-popover-close:hover { background: #f1f5f9; color: #334155; }
+.cal-popover-body {
+    padding: 0 12px 12px; display: flex; flex-direction: column; gap: 2px;
+    max-height: 250px; overflow-y: auto;
 }
 
 /* Fullscreen tweaks */
@@ -279,7 +299,7 @@ $kepListJson = json_encode($kepList);
 .cal-main:-webkit-full-screen .cal-grid { flex: 1; grid-template-rows: 35px; grid-auto-rows: 1fr; border-radius: 0; overflow: hidden; }
 .cal-popover.show { display: block; }
 
-/* â•â•â• Responsive â•â•â• */
+/* â• â• â•  Responsive â• â• â•  */
 @media (max-width: 1100px) {
     .cal-wrapper { flex-direction: column; align-items: stretch; }
     .cal-aside { width: 100%; margin-top: 10px; }
@@ -287,16 +307,42 @@ $kepListJson = json_encode($kepList);
 }
 @media (max-width: 768px) {
     .cal-main:fullscreen .card { height: auto; min-height: 100vh; }
-    .stat-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-    .cal-cell { min-height: 75px; padding: 2px; }
-    .cal-event { font-size: .55rem; padding: 2px 4px; margin-bottom: 3px; }
-    .cal-event i { display: none; }
-    .cal-header-cell { font-size: .6rem; padding: 6px 1px; }
-    .cal-day { font-size: .65rem; }
+    
+    /* Stats horizontal scroll */
+    .stat-row { 
+        display: flex; 
+        flex-wrap: nowrap; 
+        overflow-x: auto; 
+        scroll-snap-type: x mandatory; 
+        padding-bottom: 10px;
+        -webkit-overflow-scrolling: touch;
+    }
+    .stat-row::-webkit-scrollbar { display: none; }
+    .stat-mini { 
+        flex: 0 0 85%; 
+        scroll-snap-align: center; 
+    }
+    
+    /* Calendar Cells */
+    .cal-cell { min-height: 60px; padding: 4px; display: flex; flex-direction: column; align-items: center; }
+    .cal-day { width: 100%; font-size: .65rem; justify-content: center; }
+    /* Use horizontal scroll for calendar cells on very small screens instead of dots */
+    .cal-grid { overflow-x: auto; }
+    .cal-cell { min-width: 60px; }
+    
+    /* Mobile Modal Overlay fixes */
+    .cal-modal-overlay { align-items: flex-end; padding: 0; }
+    .cal-modal { border-radius: 20px 20px 0 0; transform: translateY(100%); max-width: 100%; margin: 0; padding-bottom: env(safe-area-inset-bottom); }
+    .cal-modal-overlay.show .cal-modal { transform: translateY(0); }
+    
+    /* Upcoming Panel */
+    .cal-wrapper { flex-direction: column; }
+    .cal-aside.collapsed { display: block; opacity: 1; margin-left: 0; width: 100%; margin-top: 15px; }
+    .upcoming-panel { position: relative; height: 500px; max-height: 60vh; }
 }
 </style>
 
-<!-- â•â•â•â•â•â•â•â•â•â•â• PAGE HEADER â•â•â•â•â•â•â•â•â•â•â• -->
+<!-- â• â• â• â• â• â• â• â• â• â• â•  PAGE HEADER â• â• â• â• â• â• â• â• â• â• â•  -->
 <div class="d-flex align-items-center gap-3 mb-3">
     <a href="<?= API_URL ?>/auto-rekap" class="btn btn-light btn-sm rounded-circle shadow-sm" title="Kembali ke Auto Rekap" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
         <i class="bi bi-arrow-left"></i>
@@ -307,7 +353,7 @@ $kepListJson = json_encode($kepList);
     </div>
 </div>
 
-<!-- â•â•â•â•â•â•â•â•â•â•â• STATS â•â•â•â•â•â•â•â•â•â•â• -->
+<!-- â• â• â• â• â• â• â• â• â• â• â•  STATS â• â• â• â• â• â• â• â• â• â• â•  -->
 <div class="stat-row">
     <div class="stat-mini" style="background:#fffbeb;border-color:#fde68a;color:#92400e;">
         <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
@@ -343,26 +389,41 @@ $kepListJson = json_encode($kepList);
     </div>
 </div>
 
-<!-- â•â•â•â•â•â•â•â•â•â•â• FILTER BAR â•â•â•â•â•â•â•â•â•â•â• -->
-<div class="filter-bar">
+<!-- ═══════════ FILTER BAR & TOOLBAR ═══════════ -->
+<div class="filter-bar d-flex justify-content-between">
     <div class="d-flex align-items-center gap-2 text-muted">
         <i class="bi bi-funnel"></i>
-        <span style="font-size:.78rem;font-weight:600;">Filter:</span>
+        <div class="filter-group" id="typeFilter">
+            <button class="filter-btn active" data-type="all" onclick="setTypeFilter('all')">Semua</button>
+            <button class="filter-btn" data-type="itas" onclick="setTypeFilter('itas')">ITAS</button>
+            <button class="filter-btn" data-type="paspor" onclick="setTypeFilter('paspor')">Paspor</button>
+        </div>
+        <div class="vr mx-1"></div>
+        <select class="form-select form-select-sm border-0 bg-light text-secondary" style="width: 140px; font-size:.75rem;" onchange="setKepFilter(this.value)">
+            <option value="">Semua Kepengurusan</option>
+            <?php foreach ($kepList as $k): ?>
+                <option value="<?= htmlspecialchars($k) ?>"><?= htmlspecialchars($k) ?></option>
+            <?php endforeach; ?>
+        </select>
     </div>
-    <div class="filter-group" id="typeFilter">
-        <button class="filter-btn active" data-type="all" onclick="setTypeFilter('all')">Semua</button>
-        <button class="filter-btn" data-type="itas" onclick="setTypeFilter('itas')">ITAS</button>
-        <button class="filter-btn" data-type="paspor" onclick="setTypeFilter('paspor')">Paspor</button>
+    
+    <div class="d-flex align-items-center gap-2">
+        <div class="dropdown">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="viewModeDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="border-radius: 6px; font-weight: 600;">
+                Bulan
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="viewModeDropdown" style="font-size: .8rem; border-radius: 10px;">
+                <li><a class="dropdown-item mode-item active" href="javascript:void(0)" data-mode="month" onclick="switchViewMode('month', this, 'Bulan')">Bulan</a></li>
+                <li><a class="dropdown-item mode-item" href="javascript:void(0)" data-mode="week" onclick="switchViewMode('week', this, 'Minggu')">Minggu</a></li>
+                <li><a class="dropdown-item mode-item" href="javascript:void(0)" data-mode="day" onclick="switchViewMode('day', this, 'Hari')">Hari</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item mode-item" href="javascript:void(0)" data-mode="agenda" onclick="switchViewMode('agenda', this, 'Jadwal (Agenda)')">Jadwal (Agenda)</a></li>
+            </ul>
+        </div>
     </div>
-    <select class="form-select form-select-sm" style="width:180px;font-size:.78rem;" id="kepFilter" onchange="setKepFilter(this.value)">
-        <option value="">Semua Kepengurusan</option>
-        <?php foreach ($kepList as $k): ?>
-            <option value="<?= htmlspecialchars($k) ?>"><?= htmlspecialchars($k) ?></option>
-        <?php endforeach; ?>
-    </select>
 </div>
 
-<!-- â•â•â•â•â•â•â•â•â•â•â• CALENDAR + UPCOMING â•â•â•â•â•â•â•â•â•â•â• -->
+<!-- â• â• â• â• â• â• â• â• â• â• â•  CALENDAR + UPCOMING â• â• â• â• â• â• â• â• â• â• â•  -->
 <div class="cal-wrapper">
     <!-- Main Calendar -->
     <div class="cal-main">
@@ -395,7 +456,7 @@ $kepListJson = json_encode($kepList);
                 <div class="legend-item"><span class="legend-dot" style="background:#fecaca; border:1px solid #f87171;"></span> <span style="text-decoration:line-through;">Sudah Expired</span></div>
             </div>
 
-            <!-- â•â•â•â•â•â•â•â•â•â•â• DETAIL MODAL (Moved inside cal-main for fullscreen support) â•â•â•â•â•â•â•â•â•â•â• -->
+            <!-- â• â• â• â• â• â• â• â• â• â• â•  DETAIL MODAL (Moved inside cal-main for fullscreen support) â• â• â• â• â• â• â• â• â• â• â•  -->
             <div class="cal-modal-overlay" id="detailOverlay" onclick="closeDetail()">
                 <div class="cal-modal" onclick="event.stopPropagation()">
                     <div class="cal-modal-head" id="modalHead">
@@ -485,7 +546,7 @@ $kepListJson = json_encode($kepList);
 
 
 <script>
-// â•â•â•â•â•â•â•â•â•â•â• DATA & STATE â•â•â•â•â•â•â•â•â•â•â•
+// â• â• â• â• â• â• â• â• â• â• â•  DATA & STATE â• â• â• â• â• â• â• â• â• â• â• 
 const ALL_EVENTS = <?= $eventsJson ?>;
 const MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 const DAYS = ['Sen','Sel','Rab','Kam','Jum','Sab','Min'];
@@ -494,20 +555,41 @@ const TODAY_STR = `${TODAY.getFullYear()}-${String(TODAY.getMonth()+1).padStart(
 
 let curYear = TODAY.getFullYear();
 let curMonth = TODAY.getMonth();
+let currentViewMode = 'month';
+let currentViewDate = new Date(TODAY.getTime());
 let filterType = 'all';
 let filterKep = '';
 
+function switchViewMode(mode, el, label) {
+    currentViewMode = mode;
+    document.getElementById('viewModeDropdown').innerText = label;
+    document.querySelectorAll('.mode-item').forEach(item => item.classList.remove('active'));
+    if (el) el.classList.add('active');
+    
+    // For Agenda, maybe we still use the main grid but render list, or switch to Agenda view rendering.
+    renderCalendar();
+}
+
 const TYPE_CONFIG = {
-    itas_start:  { icon: 'bi-hourglass-split', label: 'ITAS Proses',   bg: '#b45309', headBg: '#fffbeb', headBorder: '#fde68a' },
-    itas_exp:    { icon: 'bi-exclamation-octagon', label: 'ITAS Exp',       bg: '#b91c1c', headBg: '#fef2f2', headBorder: '#fecaca' },
-    paspor_start:{ icon: 'bi-journal-text', label: 'Paspor Proses',  bg: '#1e40af', headBg: '#f5f3ff', headBorder: '#ddd6fe' },
-    paspor_exp:  { icon: 'bi-journal-x', label: 'Paspor Exp',     bg: '#7e22ce', headBg: '#fdf2f8', headBorder: '#fbcfe8' },
+    itas_timeline:   { 
+        icon: 'bi-hourglass-split', label: 'ITAS',   
+        h1: 33, s1: 90, l1: 37, 
+        h2: 0, s2: 74, l2: 42 
+    },
+    paspor_timeline: { 
+        icon: 'bi-journal-text', label: 'Paspor',  
+        h1: 226, s1: 71, l1: 40, 
+        h2: 272, s2: 72, l2: 47 
+    },
 };
 
-// â•â•â•â•â•â•â•â•â•â•â• FILTER â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════ FILTER ═══════════
 function getFilteredEvents() {
     return ALL_EVENTS.filter(e => {
-        if (filterType !== 'all' && !e.type.startsWith(filterType)) return false;
+        let eType = e.type;
+        if (e.type === 'itas_timeline') eType = 'itas';
+        if (e.type === 'paspor_start' || e.type === 'paspor_exp') eType = 'paspor';
+        if (filterType !== 'all' && !eType.startsWith(filterType)) return false;
         if (filterKep && e.kepengurusan !== filterKep) return false;
         return true;
     });
@@ -528,7 +610,7 @@ function setKepFilter(kep) {
     renderLate();
 }
 
-// â•â•â•â•â•â•â•â•â•â•â• TABS â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════ TABS ═══════════
 function switchTab(tab) {
     const btnUpcoming = document.getElementById('tabUpcoming');
     const btnLate = document.getElementById('tabLate');
@@ -541,7 +623,6 @@ function switchTab(tab) {
         btnUpcoming.style.borderBottomColor = '#3461ff';
         
         btnLate.classList.remove('active');
-        // Let renderLate handle the text color of the late tab, just remove active border
         btnLate.style.borderBottomColor = 'transparent';
         
         contentUpcoming.classList.remove('d-none');
@@ -559,12 +640,39 @@ function switchTab(tab) {
     }
 }
 
-// â•â•â•â•â•â•â•â•â•â•â• NAVIGATION â•â•â•â•â•â•â•â•â•â•â•
-function goToday() { curMonth = TODAY.getMonth(); curYear = TODAY.getFullYear(); renderCalendar(); }
-function goPrev() { curMonth--; if (curMonth < 0) { curMonth = 11; curYear--; } renderCalendar(); }
-function goNext() { curMonth++; if (curMonth > 11) { curMonth = 0; curYear++; } renderCalendar(); }
+// ═══════════ NAVIGATION ═══════════
+function goToday() { 
+    currentViewDate = new Date(TODAY.getTime()); 
+    curMonth = currentViewDate.getMonth(); 
+    curYear = currentViewDate.getFullYear(); 
+    renderCalendar(); 
+}
+function goPrev() { 
+    if (currentViewMode === 'month' || currentViewMode === 'agenda') {
+        currentViewDate.setMonth(currentViewDate.getMonth() - 1);
+    } else if (currentViewMode === 'week') {
+        currentViewDate.setDate(currentViewDate.getDate() - 7);
+    } else if (currentViewMode === 'day') {
+        currentViewDate.setDate(currentViewDate.getDate() - 1);
+    }
+    curMonth = currentViewDate.getMonth();
+    curYear = currentViewDate.getFullYear();
+    renderCalendar(); 
+}
+function goNext() { 
+    if (currentViewMode === 'month' || currentViewMode === 'agenda') {
+        currentViewDate.setMonth(currentViewDate.getMonth() + 1);
+    } else if (currentViewMode === 'week') {
+        currentViewDate.setDate(currentViewDate.getDate() + 7);
+    } else if (currentViewMode === 'day') {
+        currentViewDate.setDate(currentViewDate.getDate() + 1);
+    }
+    curMonth = currentViewDate.getMonth();
+    curYear = currentViewDate.getFullYear();
+    renderCalendar(); 
+}
 
-// â•â•â•â•â•â•â•â•â•â•â• HELPERS â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════ HELPERS ═══════════
 function pad(n) { return String(n).padStart(2, '0'); }
 function formatDateID(ds) {
     if (!ds) return '-';
@@ -576,98 +684,364 @@ function daysDiff(ds) {
     const t = new Date(ds); t.setHours(0,0,0,0);
     return Math.ceil((t - now) / 86400000);
 }
+function getMidnight(ds) {
+    if (!ds) return null;
+    const d = new Date(ds);
+    d.setHours(0,0,0,0);
+    return d;
+}
 
-// â•â•â•â•â•â•â•â•â•â•â• RENDER CALENDAR â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════ RENDER CALENDAR ═══════════
 function renderCalendar() {
     const grid = document.getElementById('calendarGrid');
-    document.getElementById('calMonthTitle').textContent = `${MONTHS[curMonth]} ${curYear}`;
+    grid.className = 'cal-grid'; // Reset class
+    grid.style.display = 'grid'; // Reset style
+    
+    // Set Header Title based on view
+    if (currentViewMode === 'month') {
+        document.getElementById('calMonthTitle').textContent = `${MONTHS[curMonth]} ${curYear}`;
+    } else if (currentViewMode === 'week') {
+        let sw = new Date(currentViewDate);
+        let startDow = sw.getDay() - 1;
+        if (startDow < 0) startDow = 6;
+        sw.setDate(sw.getDate() - startDow);
+        
+        let ew = new Date(sw);
+        ew.setDate(ew.getDate() + 6);
+        if (sw.getMonth() === ew.getMonth()) {
+            document.getElementById('calMonthTitle').textContent = `${sw.getDate()} - ${ew.getDate()} ${MONTHS[sw.getMonth()]} ${sw.getFullYear()}`;
+        } else {
+            document.getElementById('calMonthTitle').textContent = `${sw.getDate()} ${MONTHS[sw.getMonth()]} - ${ew.getDate()} ${MONTHS[ew.getMonth()]} ${ew.getFullYear()}`;
+        }
+    } else if (currentViewMode === 'day') {
+        document.getElementById('calMonthTitle').textContent = `${currentViewDate.getDate()} ${MONTHS[currentViewDate.getMonth()]} ${currentViewDate.getFullYear()}`;
+    } else if (currentViewMode === 'agenda') {
+        document.getElementById('calMonthTitle').textContent = `Jadwal ${MONTHS[curMonth]} ${curYear}`;
+    }
 
-    const events = getFilteredEvents();
-    const byDate = {};
-    events.forEach(e => { if (!byDate[e.date]) byDate[e.date] = []; byDate[e.date].push(e); });
+    let events = getFilteredEvents();
+    
+    events.forEach(e => {
+        if (e.type === 'paspor_start' || e.type === 'paspor_exp') {
+            e._startMs = getMidnight(e.date).getTime();
+            e._expMs = e._startMs;
+        } else {
+            if (!e.start_date) e.start_date = e.exp_date;
+            e._startMs = getMidnight(e.start_date).getTime();
+            e._expMs = getMidnight(e.exp_date).getTime();
+        }
+    });
 
-    const firstDay = new Date(curYear, curMonth, 1);
-    const lastDay = new Date(curYear, curMonth + 1, 0);
-    let startDow = firstDay.getDay() - 1;
-    if (startDow < 0) startDow = 6;
+    if (currentViewMode === 'agenda') {
+        return renderAgendaView(events);
+    }
+
+    let gridStart, totalGridCells;
+    
+    if (currentViewMode === 'month') {
+        const firstDay = new Date(curYear, curMonth, 1);
+        const lastDay = new Date(curYear, curMonth + 1, 0);
+        let startDow = firstDay.getDay() - 1;
+        if (startDow < 0) startDow = 6;
+
+        gridStart = new Date(firstDay);
+        gridStart.setDate(firstDay.getDate() - startDow);
+        gridStart.setHours(0,0,0,0);
+        
+        const totalDaysInMonth = lastDay.getDate();
+        const totalCellsBeforeNextMonthFill = startDow + totalDaysInMonth;
+        const remaining = (Math.ceil(totalCellsBeforeNextMonthFill / 7) * 7) - totalCellsBeforeNextMonthFill;
+        totalGridCells = totalCellsBeforeNextMonthFill + remaining;
+        
+        grid.style.gridTemplateColumns = 'repeat(7, 1fr)';
+    } else if (currentViewMode === 'week') {
+        gridStart = new Date(currentViewDate);
+        let startDow = gridStart.getDay() - 1;
+        if (startDow < 0) startDow = 6;
+        gridStart.setDate(gridStart.getDate() - startDow);
+        gridStart.setHours(0,0,0,0);
+        
+        totalGridCells = 7;
+        grid.style.gridTemplateColumns = 'repeat(7, 1fr)';
+    } else if (currentViewMode === 'day') {
+        gridStart = new Date(currentViewDate);
+        gridStart.setHours(0,0,0,0);
+        totalGridCells = 1;
+        grid.style.gridTemplateColumns = '1fr';
+    }
+
+    const gridEnd = new Date(gridStart);
+    gridEnd.setDate(gridStart.getDate() + totalGridCells - 1);
+    gridEnd.setHours(0,0,0,0);
+
+    let activeEvents = events.filter(e => e._expMs >= gridStart.getTime() && e._startMs <= gridEnd.getTime());
+    activeEvents.sort((a, b) => {
+        if (a._startMs !== b._startMs) return a._startMs - b._startMs;
+        return (b._expMs - b._startMs) - (a._expMs - a._startMs);
+    });
+
+    const slotUsage = {}; 
+    activeEvents.forEach(e => {
+        let slot = 0;
+        let isFree = false;
+        while (!isFree) {
+            isFree = true;
+            for (let d = new Date(e._startMs); d.getTime() <= e._expMs; d.setDate(d.getDate()+1)) {
+                let ts = d.getTime();
+                if (!slotUsage[ts]) slotUsage[ts] = [];
+                if (slotUsage[ts][slot]) {
+                    isFree = false;
+                    break;
+                }
+            }
+            if (!isFree) slot++;
+        }
+        e._slot = slot;
+        for (let d = new Date(e._startMs); d.getTime() <= e._expMs; d.setDate(d.getDate()+1)) {
+            let ts = d.getTime();
+            if (!slotUsage[ts]) slotUsage[ts] = [];
+            slotUsage[ts][slot] = e;
+        }
+    });
 
     const cells = [];
-    // Day headers
-    DAYS.forEach(d => cells.push(`<div class="cal-header-cell">${d}</div>`));
-
-    // Previous month fill
-    const prevLast = new Date(curYear, curMonth, 0).getDate();
-    for (let i = startDow - 1; i >= 0; i--) {
-        const day = prevLast - i;
-        const m = curMonth === 0 ? 12 : curMonth;
-        const y = curMonth === 0 ? curYear - 1 : curYear;
-        const ds = `${y}-${pad(m)}-${pad(day)}`;
-        cells.push(renderCell(ds, day, false, byDate[ds] || []));
+    if (currentViewMode !== 'day') {
+        DAYS.forEach(d => cells.push(`<div class="cal-header-cell">${d}</div>`));
+    } else {
+        cells.push(`<div class="cal-header-cell">${DAYS[gridStart.getDay() === 0 ? 6 : gridStart.getDay() - 1]}</div>`);
     }
 
-    // Current month
-    for (let d = 1; d <= lastDay.getDate(); d++) {
-        const ds = `${curYear}-${pad(curMonth + 1)}-${pad(d)}`;
-        cells.push(renderCell(ds, d, true, byDate[ds] || []));
-    }
-
-    // Next month fill
-    const total = cells.length - 7; // subtract headers
-    const remaining = (Math.ceil(total / 7) * 7) - total;
-    for (let d = 1; d <= remaining; d++) {
-        const nm = curMonth + 2 > 12 ? 1 : curMonth + 2;
-        const ny = curMonth + 2 > 12 ? curYear + 1 : curYear;
-        const ds = `${ny}-${pad(nm)}-${pad(d)}`;
-        cells.push(renderCell(ds, d, false, byDate[ds] || []));
+    for (let i = 0; i < totalGridCells; i++) {
+        let currentCellDate = new Date(gridStart);
+        currentCellDate.setDate(gridStart.getDate() + i);
+        let ds = `${currentCellDate.getFullYear()}-${pad(currentCellDate.getMonth() + 1)}-${pad(currentCellDate.getDate())}`;
+        let day = currentCellDate.getDate();
+        let isCurrentMonth = currentCellDate.getMonth() === curMonth;
+        
+        let ts = currentCellDate.getTime();
+        let dayEventsBySlot = slotUsage[ts] || [];
+        
+        cells.push(renderCell(ds, day, isCurrentMonth, dayEventsBySlot, currentCellDate.getDay() === 1));
     }
 
     grid.innerHTML = cells.join('');
     document.getElementById('totalEventsCount').textContent = events.length;
 }
 
-function renderCell(dateStr, day, isCurrent, events) {
-    const isToday = dateStr === TODAY_STR;
-    const maxShow = 3;
-    const visible = events.slice(0, maxShow);
-    const extra = events.length - maxShow;
+function renderAgendaView(events) {
+    const grid = document.getElementById('calendarGrid');
+    
+    let dStart = new Date(curYear, curMonth, 1);
+    dStart.setHours(0,0,0,0);
+    let dEnd = new Date(curYear, curMonth + 1, 0);
+    dEnd.setHours(23,59,59,999);
+    
+    let grouped = {};
+    events.forEach(e => {
+        let startInMonth = e._startMs >= dStart.getTime() && e._startMs <= dEnd.getTime();
+        let expInMonth = e._expMs >= dStart.getTime() && e._expMs <= dEnd.getTime();
+        
+        if (startInMonth) {
+            let d = new Date(e._startMs);
+            let ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            if (!grouped[ds]) grouped[ds] = [];
+            let startEv = Object.assign({}, e);
+            if (startEv.type === 'itas_timeline') {
+                startEv.label = 'Mulai Proses ITAS';
+                startEv._agendaColor = '#b45309';
+            }
+            grouped[ds].push(startEv);
+        }
+        
+        if (expInMonth && e._expMs !== e._startMs) {
+            let d = new Date(e._expMs);
+            let ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            if (!grouped[ds]) grouped[ds] = [];
+            let expEv = Object.assign({}, e);
+            if (expEv.type === 'itas_timeline') {
+                expEv.label = 'Expiry ITAS';
+                expEv._agendaColor = '#b91c1c';
+            }
+            grouped[ds].push(expEv);
+        }
+    });
 
+    let keys = Object.keys(grouped).sort();
+    
+    let html = `<div style="padding: 24px; background: white; min-height: 200px; display: flex; flex-direction: column; gap: 24px; overflow-y: auto;">`;
+    
+    if (keys.length === 0) {
+        html += `<div class="text-center text-muted mt-5"><i class="bi bi-calendar-x fs-1 d-block mb-3"></i>Tidak ada jadwal di bulan ini.</div>`;
+    }
+
+    keys.forEach(ds => {
+        let evs = grouped[ds];
+        let d = new Date(ds);
+        let dow = d.getDay() - 1; if (dow < 0) dow = 6;
+        let dayName = DAYS[dow];
+        
+        html += `
+        <div style="display: flex; gap: 24px;">
+            <div style="width: 70px; flex-shrink: 0; text-align: right; border-right: 2px solid #e2e8f0; padding-right: 16px;">
+                <div style="font-size: 1.6rem; font-weight: 800; color: #334155; line-height: 1;">${d.getDate()}</div>
+                <div style="font-size: .65rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-top: 4px;">${dayName}, ${MONTHS[d.getMonth()]}</div>
+            </div>
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 10px;">`;
+            
+        evs.forEach(ev => {
+            const cfg = TYPE_CONFIG[ev.type] || { hueStart: 0, hueEnd: 0 };
+            
+            let icon = ev.is_expired ? 'bi-x-circle' : (cfg.icon || 'bi-circle-fill');
+            if (ev.is_late) icon = 'bi-exclamation-triangle-fill text-warning';
+            if (ev.is_in_progress) icon = 'bi-check-circle-fill text-success';
+            
+            let badge = '';
+            if (ev.is_late) badge = '<span class="badge bg-danger-subtle text-danger ms-2" style="font-size:.6rem;">Terlewat</span>';
+            if (ev.is_in_progress) badge = '<span class="badge bg-success-subtle text-success ms-2" style="font-size:.6rem;">Diproses</span>';
+            if (ev.is_expired) badge = '<span class="badge bg-dark ms-2" style="font-size:.6rem;">Expired</span>';
+
+            let leftBorderColor = ev._agendaColor || (cfg.h1 ? `hsl(${cfg.h1}, ${cfg.s1}%, ${cfg.l1}%)` : (ev.type==='paspor_start'?'#1e40af':'#7e22ce'));
+
+            html += `
+                <div class="card border-0 shadow-sm rounded-3" style="cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;" onclick="showDetail(${escAttr(JSON.stringify(ev))})" onmouseover="this.style.transform='translateX(4px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08) !important';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 .125rem .25rem rgba(0,0,0,.075) !important';">
+                    <div class="card-body p-3 d-flex align-items-center" style="position: relative;">
+                        <div style="width: 4px; height: 100%; position: absolute; left: 0; top: 0; bottom: 0; background: ${leftBorderColor}; border-radius: 4px 0 0 4px;"></div>
+                        <div style="width: 36px; height: 36px; border-radius: 8px; background: #f8fafc; display: flex; align-items: center; justify-content: center; margin-right: 16px; margin-left: 8px;">
+                            <i class="bi ${icon} fs-5" style="color: ${leftBorderColor};"></i>
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div class="fw-bold text-dark text-truncate" style="font-size: .85rem;">${ev.nama} ${badge}</div>
+                            <div class="text-muted text-truncate" style="font-size: .7rem; margin-top: 2px;">${ev.label} &bull; ${ev.kepengurusan}</div>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted opacity-50"></i>
+                    </div>
+                </div>`;
+        });
+        
+        html += `
+            </div>
+        </div>`;
+    });
+    
+    html += `</div>`;
+    
+    grid.style.display = 'block'; 
+    grid.style.gridTemplateColumns = 'none';
+    grid.innerHTML = html;
+    document.getElementById('totalEventsCount').textContent = events.length;
+}
+
+function renderCell(dateStr, day, isCurrent, dayEventsBySlot, isStartOfWeek) {
+    const isToday = dateStr === TODAY_STR;
+    const maxShow = currentViewMode === 'month' ? 4 : 20; 
+    
     let cls = 'cal-cell';
-    if (!isCurrent) cls += ' other-month';
+    if (!isCurrent && currentViewMode === 'month') cls += ' other-month';
     if (isToday) cls += ' today';
 
-    let html = `<div class="${cls}" data-date="${dateStr}">`;
+    let html = `<div class="${cls}" data-date="${dateStr}" style="min-height:100px;">`;
     html += `<div class="cal-day">`;
     html += isToday
         ? `<span class="cal-day-num is-today">${day}</span>`
         : `<span class="cal-day-num">${day}</span>`;
-    if (events.length > 0) html += `<span class="cal-day-count">${events.length}</span>`;
     html += `</div>`;
 
-    visible.forEach(ev => {
-        const expCls = ev.is_expired ? ' expired' : (ev.is_late ? ' late' : '');
-        const nameParts = ev.nama.split(' ');
-        const name = nameParts.length > 1 ? nameParts[0] + ' ' + nameParts[1] : nameParts[0];
-        const cfg = TYPE_CONFIG[ev.type] || {};
-        let icon = ev.is_expired ? 'bi-x-circle' : cfg.icon;
-        if (ev.is_late) icon = 'bi-exclamation-triangle-fill text-warning';
-        if (ev.is_in_progress) icon = 'bi-check-circle-fill text-success';
-        
-        let titleSuffix = '';
-        if (ev.is_late) titleSuffix = ' (TERLEWAT)';
-        if (ev.is_in_progress) titleSuffix = ' (SEDANG DIPROSES)';
+    let extraCount = 0;
+    
+    for (let s = 0; s < maxShow; s++) {
+        let ev = dayEventsBySlot[s];
+        if (ev) {
+            html += renderEventBar(ev, dateStr, isStartOfWeek);
+        } else {
+            let hasEventBelow = false;
+            for(let j=s+1; j<dayEventsBySlot.length; j++) if (dayEventsBySlot[j]) hasEventBelow = true;
+            if (hasEventBelow && s < maxShow - 1) {
+                html += `<div class="cal-event-spacer" style="height:22px; margin-bottom:2px;"></div>`;
+            }
+        }
+    }
+    
+    for (let s = maxShow; s < dayEventsBySlot.length; s++) {
+        if (dayEventsBySlot[s]) extraCount++;
+    }
 
-        html += `<button class="cal-event ${ev.type}${expCls}" style="${ev.is_in_progress ? 'border-left:3px solid #10b981;' : ''}" onclick="showDetail(${escAttr(JSON.stringify(ev))})" title="${escHtml(ev.label)}${titleSuffix}">`;
-        html += `<i class="bi ${icon}"></i>`;
-        html += `${escHtml(name)}</button>`;
-    });
-
-    if (extra > 0) {
-        const evJson = encodeURIComponent(JSON.stringify(events.slice(maxShow)));
-        html += `<div class="cal-more" onclick="showMore(event, '${evJson}')">+${extra} lainnya</div>`;
+    if (extraCount > 0) {
+        const hiddenEvents = [];
+        for (let s = 0; s < dayEventsBySlot.length; s++) {
+            if (dayEventsBySlot[s]) hiddenEvents.push(dayEventsBySlot[s]);
+        }
+        // Store in global window object
+        window._hiddenEvents = window._hiddenEvents || {};
+        window._hiddenEvents[dateStr] = hiddenEvents;
+        html += `<div class="cal-more" onclick="showMore(event, '${dateStr}')">${extraCount} more</div>`;
     }
 
     html += `</div>`;
     return html;
+}
+
+function renderEventBar(ev, currentDateStr, isStartOfWeek) {
+    if (ev.type === 'paspor_start' || ev.type === 'paspor_exp') {
+        const title = ev.type === 'paspor_start' ? 'Mulai Proses Paspor' : 'Exp Paspor';
+        const cls = ev.type === 'paspor_start' ? 'paspor_start' : 'paspor_exp';
+        const icon = ev.type === 'paspor_start' ? 'bi-journal-text' : 'bi-journal-x';
+        const nameParts = ev.nama.split(' ');
+        const name = nameParts.length > 1 ? nameParts[0] + ' ' + nameParts[1] : nameParts[0];
+        return `<button class="cal-event ${cls}" onclick="showDetail(${escAttr(JSON.stringify(ev))})" title="${title}">
+            <i class="bi ${icon}"></i>${name}
+        </button>`;
+    }
+    const cfg = TYPE_CONFIG[ev.type] || { hueStart: 0, hueEnd: 0 };
+    
+    const totalDays = Math.max(1, (ev._expMs - ev._startMs) / 86400000);
+    const passedDays = Math.max(0, (new Date(currentDateStr).getTime() - ev._startMs) / 86400000);
+    const progress = Math.min(1, passedDays / totalDays);
+    
+    let h1 = cfg.h1, s1 = cfg.s1, l1 = cfg.l1;
+    if (ev.is_in_progress) {
+        h1 = 155; s1 = 83; l1 = 39; // Green
+    }
+    const h = h1 + (cfg.h2 - h1) * progress;
+    const s = s1 + (cfg.s2 - s1) * progress;
+    const l = l1 + (cfg.l2 - l1) * progress;
+    const bgColor = `hsl(${h}, ${s}%, ${l}%)`;
+    const textColor = `#fff`;
+
+    const isStart = ev.start_date === currentDateStr;
+    const isEnd = ev.exp_date === currentDateStr;
+    
+    let brClass = '';
+    if (isStart && isEnd) brClass = 'border-radius-full';
+    else if (isStart) brClass = 'border-radius-left';
+    else if (isEnd) brClass = 'border-radius-right';
+    else brClass = 'border-radius-none';
+
+    const showText = isStart || isStartOfWeek || currentDateStr.endsWith('-01') || currentViewMode === 'day';
+    const nameParts = ev.nama.split(' ');
+    const name = nameParts.length > 1 ? nameParts[0] + ' ' + nameParts[1] : nameParts[0];
+
+    let icon = ev.is_expired ? 'bi-x-circle' : cfg.icon;
+    if (ev.is_late) icon = 'bi-exclamation-triangle-fill';
+    if (ev.is_in_progress) icon = 'bi-check-circle-fill';
+    
+    let titleSuffix = '';
+    if (ev.is_late) titleSuffix = ' (TERLEWAT)';
+    if (ev.is_in_progress) titleSuffix = ' (SEDANG DIPROSES)';
+    if (ev.is_expired) titleSuffix = ' (EXPIRED)';
+
+    let innerHtml = '';
+    if (showText) {
+        innerHtml = `<i class="bi ${icon} me-1"></i>${escHtml(name)}`;
+    } else {
+        innerHtml = `&nbsp;`;
+    }
+
+    let marginStyle = 'margin-left: -6px; margin-right: -6px; width: calc(100% + 12px); padding-left: 12px;';
+    if (isStart) marginStyle = 'margin-left: 0; width: calc(100% + 6px);';
+    if (isEnd) marginStyle = 'margin-left: -6px; margin-right: 0; width: calc(100% + 6px); padding-left: 12px;';
+    if (isStart && isEnd) marginStyle = 'margin: 0; width: 100%;';
+
+    return `<button class="cal-event timeline-bar ${brClass}" style="${marginStyle} background-color: ${bgColor}; color: ${textColor};" onclick="showDetail(${escAttr(JSON.stringify(ev))})" title="${escHtml(ev.label)}${titleSuffix} | ${ev.start_date} s/d ${ev.exp_date}">${innerHtml}</button>`;
 }
 
 function escHtml(s) {
@@ -677,37 +1051,97 @@ function escHtml(s) {
 }
 function escAttr(s) { return s.replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
 
-// â•â•â•â•â•â•â•â•â•â•â• MORE POPOVER â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════ MORE POPOVER ═══════════
 let activePopover = null;
-function showMore(evt, evJsonEncoded) {
+function showMore(evt, dateStr) {
     evt.stopPropagation();
-    closePopovers();
-    const events = JSON.parse(decodeURIComponent(evJsonEncoded));
+    closePopovers(evt);
+    const events = window._hiddenEvents[dateStr] || [];
     const cell = evt.target.closest('.cal-cell');
     let pop = document.createElement('div');
     pop.className = 'cal-popover show';
+    
+    // Header
+    const d = new Date(dateStr);
+    let dow = d.getDay() - 1;
+    if (dow < 0) dow = 6;
+    const headerTitle = DAYS[dow].toUpperCase() + ' ' + d.getDate();
+    
+    let html = `<div class="cal-popover-header">
+        <div class="cal-popover-title">${headerTitle}</div>
+        <button class="cal-popover-close" onclick="closePopovers(event)"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="cal-popover-body">`;
+    
     events.forEach(ev => {
-        const expCls = ev.is_expired ? ' expired' : (ev.is_late ? ' late' : '');
-        const nameParts = ev.nama.split(' ');
-        const name = nameParts.length > 1 ? nameParts[0] + ' ' + nameParts[1] : nameParts[0];
-        const cfg = TYPE_CONFIG[ev.type] || {};
-        let icon = ev.is_expired ? 'bi-x-circle' : cfg.icon;
-        if (ev.is_late) icon = 'bi-exclamation-triangle-fill text-warning';
-        if (ev.is_in_progress) icon = 'bi-check-circle-fill text-success';
-        
-        let titleSuffix = '';
-        if (ev.is_late) titleSuffix = ' (TERLEWAT)';
-        if (ev.is_in_progress) titleSuffix = ' (SEDANG DIPROSES)';
+        let evHtml = '';
+        if (ev.type === 'paspor_start' || ev.type === 'paspor_exp') {
+            const cls = ev.type === 'paspor_start' ? 'paspor_start' : 'paspor_exp';
+            const icon = ev.type === 'paspor_start' ? 'bi-journal-text' : 'bi-journal-x';
+            const nameParts = ev.nama.split(' ');
+            const name = nameParts.length > 1 ? nameParts[0] + ' ' + nameParts[1] : nameParts[0];
+            evHtml = `<button class="cal-event ${cls}" style="flex-shrink: 0; width: 100%; margin: 0 0 2px 0;" onclick="showDetail(${escAttr(JSON.stringify(ev))})">
+                <i class="bi ${icon}"></i>${name}
+            </button>`;
+        } else {
+            const cfg = TYPE_CONFIG[ev.type] || { hueStart: 0, hueEnd: 0 };
+            const totalDays = Math.max(1, (ev._expMs - ev._startMs) / 86400000);
+            const passedDays = Math.max(0, (new Date(dateStr).getTime() - ev._startMs) / 86400000);
+            const progress = Math.min(1, passedDays / totalDays);
+            
+            let h1 = cfg.h1, s1 = cfg.s1, l1 = cfg.l1;
+            if (ev.is_in_progress) {
+                h1 = 155; s1 = 83; l1 = 39; // Green
+            }
+            const h = h1 + (cfg.h2 - h1) * progress;
+            const s = s1 + (cfg.s2 - s1) * progress;
+            const l = l1 + (cfg.l2 - l1) * progress;
+            const bgColor = `hsl(${h}, ${s}%, ${l}%)`;
+            const textColor = `#fff`;
 
-        pop.innerHTML += `<button class="cal-event ${ev.type}${expCls}" style="${ev.is_in_progress ? 'border-left:3px solid #10b981;' : ''}" onclick="showDetail(${escAttr(JSON.stringify(ev))})" title="${escHtml(ev.label)}${titleSuffix}">
-            <i class="bi ${icon}"></i>
-            ${escHtml(name)}</button>`;
+            const nameParts = ev.nama.split(' ');
+            const name = nameParts.length > 1 ? nameParts[0] + ' ' + nameParts[1] : nameParts[0];
+
+            let icon = ev.is_expired ? 'bi-x-circle' : (cfg.icon || 'bi-circle-fill');
+            if (ev.is_late) icon = 'bi-exclamation-triangle-fill';
+            if (ev.is_in_progress) icon = 'bi-check-circle-fill';
+            
+            let titleSuffix = '';
+            if (ev.is_late) titleSuffix = ' (TERLEWAT)';
+            if (ev.is_in_progress) titleSuffix = ' (SEDANG DIPROSES)';
+
+            let innerHtml = `<i class="bi ${icon} me-1"></i>${escHtml(name)}`;
+            
+            evHtml = `<button class="cal-event timeline-bar border-radius-full" style="flex-shrink: 0; width: 100%; margin: 0 0 2px 0 !important; background-color: ${bgColor}; color: ${textColor}; padding-left: 8px;" onclick="showDetail(${escAttr(JSON.stringify(ev))})" title="${escHtml(ev.label)}${titleSuffix}">${innerHtml}</button>`;
+        }
+        html += evHtml;
     });
-    cell.style.position = 'relative';
-    cell.appendChild(pop);
+    
+    html += `</div>`;
+    pop.innerHTML = html;
+    
+    document.body.appendChild(pop);
     activePopover = pop;
+
+    const rect = cell.getBoundingClientRect();
+    const scrollY = window.scrollY || document.documentElement.scrollTop;
+    const scrollX = window.scrollX || document.documentElement.scrollLeft;
+
+    pop.style.left = (rect.left + scrollX + rect.width / 2) + 'px';
+    let topPos = rect.top + scrollY - 10;
+    pop.style.top = topPos + 'px';
+
+    setTimeout(() => {
+        const popRect = pop.getBoundingClientRect();
+        if (popRect.bottom > window.innerHeight) {
+            pop.style.top = Math.max(scrollY, rect.bottom + scrollY - popRect.height + 10) + 'px';
+        }
+    }, 0);
 }
-function closePopovers() { if (activePopover) { activePopover.remove(); activePopover = null; } }
+function closePopovers(e) { 
+    if (e) e.stopPropagation();
+    if (activePopover) { activePopover.remove(); activePopover = null; } 
+}
 document.addEventListener('click', closePopovers);
 
 function togglePanel() {
@@ -749,8 +1183,18 @@ function renderLate() {
     const list = document.getElementById('lateList');
     const badge = document.getElementById('lateCountBadge');
     const statusText = document.getElementById('lateStatusText');
-    const events = getFilteredEvents();
-    const lates = events.filter(e => e.is_late).sort((a,b) => new Date(a.date) - new Date(b.date));
+    let lateArr = [];
+    getFilteredEvents().forEach(e => {
+        if (e.is_late) {
+            let d = getMidnight(e.start_date || e.date).getTime();
+            let evCopy = Object.assign({}, e);
+            evCopy._sortMs = d;
+            if (evCopy.type === 'itas_timeline') evCopy._upcLabel = 'Mulai Proses ITAS';
+            lateArr.push(evCopy);
+        }
+    });
+    lateArr.sort((a,b) => a._sortMs - b._sortMs);
+    const lates = lateArr;
     
     if (lates.length === 0) {
         badge.classList.add('d-none');
@@ -783,13 +1227,13 @@ function renderLate() {
     lates.forEach(ev => {
         const cfg = TYPE_CONFIG[ev.type] || {};
         list.innerHTML += `<div class="upcoming-item" onclick="showDetail(${escAttr(JSON.stringify(ev))})">
-            <div class="upcoming-dot" style="background:${cfg.bg}"></div>
+            <div class="upcoming-dot" style="background:${cfg.bg || (ev.type.includes('itas') ? '#b45309' : '#1e40af')}"></div>
             <div style="flex:1;min-width:0;">
                 <div class="upcoming-name">${escHtml(ev.nama)}</div>
-                <div class="upcoming-type" style="color:${cfg.bg}">${escHtml(cfg.label)}</div>
-                <div class="upcoming-date"><i class="bi bi-calendar me-1"></i>${formatDateID(ev.date)}</div>
+                <div class="upcoming-type" style="color:${cfg.bg || (ev.type.includes('itas') ? '#b45309' : '#1e40af')}">${escHtml(ev._upcLabel || cfg.label || ev.type)}</div>
+                <div class="upcoming-date"><i class="bi bi-calendar me-1"></i>${formatDateID(ev._sortMs)}</div>
             </div>
-            <div class="pt-1 upcoming-diff text-danger" style="font-size:.6rem;">${daysDiff(ev.date)*-1} hr lalu</div>
+            <div class="pt-1 upcoming-diff text-danger" style="font-size:.6rem;">${daysDiff(ev._sortMs)*-1} hr lalu</div>
         </div>`;
     });
 }
@@ -800,10 +1244,38 @@ function renderUpcoming() {
     const now = new Date(); now.setHours(0,0,0,0);
     const end = new Date(now); end.setDate(end.getDate() + 60);
 
-    const events = getFilteredEvents()
-        .filter(e => { const d = new Date(e.date); return d >= now && d <= end; })
-        .sort((a, b) => new Date(a.date) - new Date(b.date))
-        .slice(0, 25);
+    let upcomingArr = [];
+    getFilteredEvents().forEach(e => {
+        if (e.type === 'itas_timeline') {
+            let startD = getMidnight(e.start_date || e.date).getTime();
+            let expD = getMidnight(e.exp_date || e.date).getTime();
+            if (startD >= now.getTime() && startD <= end.getTime()) {
+                let evStart = Object.assign({}, e);
+                evStart._sortMs = startD;
+                evStart._upcLabel = 'Mulai Proses ITAS';
+                upcomingArr.push(evStart);
+            }
+            if (expD >= now.getTime() && expD <= end.getTime() && expD !== startD) {
+                let evExp = Object.assign({}, e);
+                evExp._sortMs = expD;
+                evExp._upcLabel = 'Expiry ITAS';
+                upcomingArr.push(evExp);
+            }
+        } else {
+            let dObj = getMidnight(e.date || e.start_date);
+            if (dObj) {
+                let d = dObj.getTime();
+                if (d >= now.getTime() && d <= end.getTime()) {
+                    let evCopy = Object.assign({}, e);
+                    evCopy._sortMs = d;
+                    upcomingArr.push(evCopy);
+                }
+            }
+        }
+    });
+
+    upcomingArr.sort((a, b) => a._sortMs - b._sortMs);
+    const events = upcomingArr.slice(0, 25);
 
     if (events.length === 0) {
         list.innerHTML = `<div class="text-center py-4 text-muted" style="font-size:.78rem;">
@@ -814,7 +1286,7 @@ function renderUpcoming() {
 
     list.innerHTML = events.map(ev => {
         const cfg = TYPE_CONFIG[ev.type];
-        const diff = daysDiff(ev.date);
+        const diff = daysDiff(ev._sortMs);
         let diffCls = 'color:#10b981;';
         if (diff <= 7) diffCls = 'color:#ef4444;';
         else if (diff <= 30) diffCls = 'color:#f59e0b;';
@@ -823,9 +1295,9 @@ function renderUpcoming() {
             <span class="upcoming-dot dot-${ev.type}"></span>
             <div style="flex:1;min-width:0;">
                 <div class="upcoming-name text-truncate">${escHtml(ev.nama)}</div>
-                <div class="upcoming-type type-${ev.type}">${cfg?.label || ev.type}</div>
+                <div class="upcoming-type type-${ev.type}">${ev._upcLabel || cfg?.label || ev.type}</div>
                 <div class="d-flex justify-content-between align-items-center mt-1">
-                    <span class="upcoming-date">${formatDateID(ev.date)}</span>
+                    <span class="upcoming-date">${formatDateID(ev._sortMs)}</span>
                     <span class="upcoming-diff" style="${diffCls}">${diff === 0 ? 'Hari ini' : diff + 'h'}</span>
                 </div>
             </div>
@@ -843,19 +1315,28 @@ function showDetail(ev) {
     const diffStart = daysDiff(ev.start_date);
 
     // Head
+    let headBg = '#f8fafc', headBorder = '#e8ecf0', bg = '#64748b', iconCls = 'bi-person', badgeText = ev.type;
+    
+    if (ev.type === 'itas_timeline') {
+        bg = '#b45309'; headBg = '#fffbeb'; headBorder = '#fde68a'; iconCls = 'bi-hourglass-split'; badgeText = 'ITAS';
+    } else if (ev.type === 'paspor_start') {
+        bg = '#1e40af'; headBg = '#f5f3ff'; headBorder = '#ddd6fe'; iconCls = 'bi-journal-text'; badgeText = 'Mulai Paspor';
+    } else if (ev.type === 'paspor_exp') {
+        bg = '#7e22ce'; headBg = '#fdf2f8'; headBorder = '#fbcfe8'; iconCls = 'bi-journal-x'; badgeText = 'Exp Paspor';
+    }
+
     const head = document.getElementById('modalHead');
-    head.style.background = cfg.headBg || '#f8fafc';
-    head.style.borderColor = cfg.headBorder || '#e8ecf0';
+    head.style.background = headBg;
+    head.style.borderColor = headBorder;
 
     const icon = document.getElementById('modalIcon');
-    icon.style.background = cfg.bg || '#64748b';
-    const iconMap = { itas_start: 'bi-clock-history', itas_exp: 'bi-exclamation-circle', paspor_start: 'bi-calendar2-check', paspor_exp: 'bi-file-earmark-x' };
-    icon.innerHTML = `<i class="bi ${iconMap[ev.type] || 'bi-person'}"></i>`;
+    icon.style.background = bg;
+    icon.innerHTML = `<i class="bi ${iconCls}"></i>`;
 
     document.getElementById('modalNama').textContent = ev.nama;
     const badge = document.getElementById('modalBadge');
-    badge.textContent = cfg.label || ev.type;
-    badge.style.background = cfg.bg || '#64748b';
+    badge.textContent = badgeText;
+    badge.style.background = bg;
     badge.style.color = 'white';
 
     // Status
@@ -940,3 +1421,4 @@ async function downloadPdf() {
 <!-- PDF Exports -->
 <script src="<?= ASSET_URL ?>/assets/offline/js/html2canvas.min.js"></script>
 <script src="<?= ASSET_URL ?>/assets/offline/js/jspdf.umd.min.js"></script>
+

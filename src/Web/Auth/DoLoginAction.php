@@ -148,6 +148,14 @@ final class DoLoginAction
             ], 404);
         }
 
+        // Cek apakah akun masih aktif
+        if (isset($user['is_active']) && (int)$user['is_active'] === 0) {
+            return JsonResponse::create([
+                'success' => false,
+                'message' => 'Akun Anda telah dinonaktifkan atau dihapus oleh administrator.'
+            ], 403);
+        }
+
         // Langkah 3: Sinkronisasi instansi dari Firestore (Cloud → Local)
         try {
             FirebaseSync::pullInstansiFromFirestore($db);
@@ -179,6 +187,14 @@ final class DoLoginAction
         ", [':username' => $username])->queryOne();
 
         if ($user && password_verify($password, $user['password_hash'])) {
+            // Cek apakah akun masih aktif
+            if (isset($user['is_active']) && (int)$user['is_active'] === 0) {
+                return JsonResponse::create([
+                    'success' => false,
+                    'message' => 'Akun Anda telah dinonaktifkan. Hubungi administrator.'
+                ], 403);
+            }
+
             $this->createSession($user);
 
             return JsonResponse::create([

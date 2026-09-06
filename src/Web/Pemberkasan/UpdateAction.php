@@ -6,6 +6,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\Db\Connection\ConnectionInterface;
 use Yiisoft\Router\CurrentRoute;
 use App\Shared\AuditLogger;
+use App\Shared\UploadPath;
 
 final class UpdateAction
 {
@@ -46,9 +47,12 @@ final class UpdateAction
         // Upload file baru jika ada
         if (isset($files['berkas_file']) && $files['berkas_file']->getError() === UPLOAD_ERR_OK) {
             $kodeInstansi = $updateData['kode'] ?? $berkas['kode'];
-            $instansi = $db->createCommand("SELECT path_folder FROM master_instansi WHERE kode = :kode", [':kode' => $kodeInstansi])->queryOne();
             
-            $baseDir = !empty($instansi['path_folder']) ? rtrim($instansi['path_folder'], '/\\') : dirname(__DIR__, 4) . '/public/uploads/berkas';
+            try {
+                $baseDir = UploadPath::requireBase($db, $kodeInstansi);
+            } catch (\RuntimeException $e) {
+                return JsonResponse::create(['success' => false, 'message' => $e->getMessage()], 400);
+            }
             $baseDir .= DIRECTORY_SEPARATOR . 'berkas penting';
             
             if (!is_dir($baseDir)) {

@@ -144,6 +144,7 @@ $this->setTitle('Menu Print Data Santri Luar Negeri');
                     <input type="hidden" name="_csrf" value="<?= $csrf ?? '' ?>">
                     <input type="hidden" name="reportType" id="reportTypeInput" value="umum">
                     <input type="hidden" name="outputType" id="outputTypeInput" value="excel">
+                    <input type="hidden" name="export_columns" id="exportColumnsInput">
                     
                     <!-- Hidden inputs for Absen Anggota -->
                     <input type="hidden" name="absen_judul" id="absenJudulInput">
@@ -506,6 +507,59 @@ $this->setTitle('Menu Print Data Santri Luar Negeri');
     </div>
 </div>
 
+<!-- Modal Export Excel -->
+<div class="modal fade" id="modalExportExcel" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Pilih Kolom Export Excel</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body bg-light">
+                <div class="alert alert-info py-2 mb-3" style="font-size: 0.85rem;">
+                    <i class="bi bi-info-circle me-1"></i> Pilih kolom data mana saja yang ingin disertakan dalam file Excel.
+                </div>
+                <div class="d-flex justify-content-end gap-2 mb-2">
+                    <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3" onclick="document.querySelectorAll('.excel-col-cb').forEach(c => c.checked=true)"><i class="bi bi-check-all"></i> Pilih Semua</button>
+                    <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="document.querySelectorAll('.excel-col-cb').forEach(c => c.checked=false)"><i class="bi bi-square"></i> Kosongkan</button>
+                </div>
+                <div class="row g-2">
+                    <?php 
+                    $excelCols = [
+                        'stambuk' => 'Stambuk / Regno', 'nama' => 'Nama Santri', 'kelas' => 'Kelas', 
+                        'status_santri' => 'Status Santri', 'rayon' => 'Rayon', 'negara' => 'Daerah / Negara',
+                        'kewarganegaraan' => 'Kewarganegaraan', 'jenis_kelamin' => 'Jenis Kelamin',
+                        'tempat_lahir' => 'Tempat Lahir', 'tanggal_lahir' => 'Tanggal Lahir', 'pondok' => 'Pondok',
+                        'kepengurusan' => 'Kepengurusan', 'nama_ayah' => 'Nama Ayah', 'nama_ibu' => 'Nama Ibu',
+                        'no_ayah' => 'No Telepon Ayah', 'no_ibu' => 'No Telepon Ibu', 'no_hp_alternatif' => 'No Alternatif / Wali',
+                        'alamat' => 'Alamat Lengkap', 'no_ic' => 'No IC Santri', 'no_sktt' => 'No SKTT',
+                        'ukuran_baju' => 'Ukuran Baju', 'keberadaan_paspor' => 'Keberadaan Paspor',
+                        'paspor_baru_no' => 'Paspor Baru (No)', 'paspor_baru_exp' => 'Paspor Baru (Exp)',
+                        'paspor_lama_no' => 'Paspor Lama (No)', 'itas_no' => 'ITAS (No)', 
+                        'itas_level' => 'ITAS (Level)', 'itas_exp' => 'ITAS (Exp)',
+                        'barang_atm' => 'ATM / Bank', 'barang_hp' => 'Handphone', 'barang_lain' => 'Barang Terlarang Lainnya'
+                    ];
+                    foreach ($excelCols as $key => $label): 
+                    ?>
+                    <div class="col-md-4 col-sm-6">
+                        <div class="form-check bg-white border rounded p-2 shadow-sm mb-1 d-flex align-items-center">
+                            <input class="form-check-input excel-col-cb ms-1 me-2" type="checkbox" value="<?= $key ?>" id="col_<?= $key ?>" checked>
+                            <label class="form-check-label flex-grow-1" for="col_<?= $key ?>" style="font-size:0.85rem; cursor:pointer;">
+                                <?= $label ?>
+                            </label>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-success" onclick="processExcelExport()"><i class="bi bi-file-excel"></i> Proses Export</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 function generateFoto(outType = 'html') {
     const checked = document.querySelectorAll('input[name="kds[]"]:checked').length;
@@ -773,9 +827,6 @@ function checkAll(check) {
 function submitExport(reportType, outputOverride = null) {
     const outputType = outputOverride || 'excel';
     
-    document.getElementById('reportTypeInput').value = reportType;
-    document.getElementById('outputTypeInput').value = outputType;
-    
     // Check if any checkbox is checked
     const checked = document.querySelectorAll('.kds-checkbox:checked').length;
     if (checked === 0 && reportType !== 'formulir_pendataan') {
@@ -788,6 +839,31 @@ function submitExport(reportType, outputOverride = null) {
         return;
     }
     
+    if (reportType === 'umum' && outputType === 'excel') {
+        const modal = new bootstrap.Modal(document.getElementById('modalExportExcel'));
+        modal.show();
+        return;
+    }
+
+    executeExport(reportType, outputType);
+}
+
+function processExcelExport() {
+    const checkboxes = document.querySelectorAll('.excel-col-cb:checked');
+    if (checkboxes.length === 0) {
+        Swal.fire({icon: 'warning', title: 'Oops...', text: 'Pilih minimal satu kolom untuk di-export.', confirmButtonColor: '#0d6efd'});
+        return;
+    }
+    const cols = Array.from(checkboxes).map(cb => cb.value).join(',');
+    document.getElementById('exportColumnsInput').value = cols;
+    
+    bootstrap.Modal.getInstance(document.getElementById('modalExportExcel')).hide();
+    executeExport('umum', 'excel');
+}
+
+function executeExport(reportType, outputType) {
+    document.getElementById('reportTypeInput').value = reportType;
+    document.getElementById('outputTypeInput').value = outputType;
     document.getElementById('exportForm').submit();
 }
 

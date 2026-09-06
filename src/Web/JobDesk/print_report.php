@@ -12,8 +12,20 @@
  */
 
 $kopSuratPath = '';
-if (!empty($instansi['kop_surat']) && file_exists(__DIR__ . '/../../../../public/uploads/instansi/' . $instansi['kop_surat'])) {
-    $kopSuratPath = '/uploads/instansi/' . $instansi['kop_surat'];
+if (!empty($instansi['kop_surat'])) {
+    $kopFile = $instansi['kop_surat'];
+    // Cek di path_folder instansi dulu (lokasi baru)
+    if (!empty($instansi['path_folder'])) {
+        $instansiDir = rtrim(str_replace('\\', '/', $instansi['path_folder']), '/');
+        if (file_exists($instansiDir . '/' . $kopFile)) {
+            // Serve via inline base64 karena path absolut tidak bisa diakses via URL
+            $kopSuratPath = 'data:image/' . pathinfo($kopFile, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($instansiDir . '/' . $kopFile));
+        }
+    }
+    // Fallback ke public/uploads/instansi/ (legacy)
+    if (empty($kopSuratPath) && file_exists(__DIR__ . '/../../../../public/uploads/instansi/' . $kopFile)) {
+        $kopSuratPath = '/uploads/instansi/' . $kopFile;
+    }
 }
 ?>
 <!DOCTYPE html>

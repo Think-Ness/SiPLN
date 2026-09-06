@@ -5,6 +5,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\Db\Connection\ConnectionInterface;
 use App\Shared\AuditLogger;
+use App\Shared\UploadPath;
 
 final class UpdateAction
 {
@@ -40,19 +41,30 @@ final class UpdateAction
                 $ext = pathinfo($file->getClientFilename(), PATHINFO_EXTENSION);
                 $filename = 'kop_surat_' . time() . '.' . $ext;
                 
-                $targetPath = '';
-                if (!empty($payload['path_folder'])) {
-                    $dir = rtrim(str_replace('\\', '/', $payload['path_folder']), '/');
+                // Prioritas: pakai path_folder dari payload (yang sedang disimpan), lalu dari DB
+                $pathFolder = !empty($payload['path_folder']) ? $payload['path_folder'] : null;
+                if (!$pathFolder && $existing) {
+                    $currentInstansi = $db->createCommand("SELECT path_folder FROM master_instansi WHERE kode = :kode", [':kode' => $existing])->queryOne();
+                    $pathFolder = $currentInstansi['path_folder'] ?? null;
+                }
+                
+                if (!empty($pathFolder)) {
+                    $dir = rtrim(str_replace('\\', '/', $pathFolder), '/');
                     if (!is_dir($dir)) {
                         @mkdir($dir, 0777, true);
                     }
                     $targetPath = $dir . '/' . $filename;
                 } else {
-                    $targetPath = dirname(__DIR__, 3) . '/public/uploads/instansi/' . $filename;
+                    // Fallback ke public/uploads/instansi/ (legacy)
+                    $fallbackDir = dirname(__DIR__, 3) . '/public/uploads/instansi';
+                    if (!is_dir($fallbackDir)) {
+                        @mkdir($fallbackDir, 0777, true);
+                    }
+                    $targetPath = $fallbackDir . '/' . $filename;
                 }
                 
                 $file->moveTo($targetPath);
-                $payload['kop_surat'] = $targetPath;
+                $payload['kop_surat'] = $filename;
             }
             $oldInstansi = null;
             if ($existing) {

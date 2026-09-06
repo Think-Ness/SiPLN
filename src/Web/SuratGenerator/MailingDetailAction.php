@@ -106,16 +106,15 @@ final class MailingDetailAction
             foreach ($surats as $s) {
                 $tipeLabel = ['SP' => 'Surat_Permohonan', 'SK' => 'Surat_Keterangan', 'SJ' => 'Surat_Jaminan', 'ST' => 'Surat_Tugas'];
                 $safeTipeSurat = $tipeLabel[$s['tipe_surat']] ?? preg_replace('/[^a-zA-Z0-9_\-]/', '_', $s['tipe_surat']);
-                
-                $baseUrl = '/webapp/public/uploads/Surat_Menyurat/Output/' . $safeJenis . '/' . $safeTipeSurat . '/' . $tahunItas . '/' . $bulanItas . '/';
-                
+                $baseUrl = (defined('API_URL') ? API_URL : '/webapp/public') . '/api/surat/view/' . $s['id'] . '?file=';
+
                 if ($mailing['mode'] === 'sekaligus') {
                     $fileNameBase = "{$safeTipeSurat}_Sekaligus_{$safeJenis}";
                     $generatedFiles[] = [
                         'tipe_surat' => $s['tipe_surat'],
                         'nomor_surat' => $s['nomor_surat'],
                         'name' => "Surat " . ($s['tipe_surat']) . " (Kolektif)",
-                        'url' => $baseUrl . $fileNameBase . '.pdf'
+                        'url' => $baseUrl . urlencode($fileNameBase . '.pdf')
                     ];
                 } else {
                     if (!empty($santris)) {
@@ -134,7 +133,7 @@ final class MailingDetailAction
                                 'tipe_surat' => $s['tipe_surat'],
                                 'nomor_surat' => $nomorSurat,
                                 'name' => "Surat " . ($s['tipe_surat']) . " - " . $santri['nama'],
-                                'url' => $baseUrl . $fileNameBase . '.pdf'
+                                'url' => $baseUrl . urlencode($fileNameBase . '.pdf')
                             ];
                         }
                     }

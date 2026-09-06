@@ -25,6 +25,8 @@ final class AuthMiddleware implements MiddlewareInterface
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
+        \App\Shared\AutoMigrate::checkAndMigrate($this->db);
+
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
@@ -53,13 +55,29 @@ final class AuthMiddleware implements MiddlewareInterface
         $permissions = $_SESSION['permissions'] ?? [];
         if (isset($_SESSION['user_id'])) {
             try {
-                $user = $this->db->createCommand("SELECT permissions FROM users WHERE id = :id", [':id' => $_SESSION['user_id']])->queryOne();
-                if ($user && !empty($user['permissions'])) {
+                $user = $this->db->createCommand("SELECT permissions, is_active FROM users WHERE id = :id", [':id' => $_SESSION['user_id']])->queryOne();
+                
+                // Cek jika user sudah dihapus atau dinonaktifkan
+                if (!$user || (int)$user['is_active'] === 0) {
+                    session_destroy();
+                    
+                    if (str_starts_with($request->getUri()->getPath(), '/api/')) {
+                        return JsonResponse::create([
+                            'success' => false,
+                            'message' => 'Akun Anda telah dinonaktifkan atau dihapus oleh Admin.'
+                        ], 401);
+                    }
+                    
+                    $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+                    return $this->responseFactory->createResponse('', 302)->withHeader('Location', $scriptName . '/login?msg=inactive');
+                }
+
+                if (!empty($user['permissions'])) {
                     $permissions = json_decode($user['permissions'], true) ?? [];
                     $_SESSION['permissions'] = $permissions; // Auto-refresh session
                 }
             } catch (\Throwable $e) {
-                // Abaikan error
+                // Abaikan error koneksi DB saat middleware
             }
         }
         

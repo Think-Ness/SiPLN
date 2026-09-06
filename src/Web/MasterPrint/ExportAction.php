@@ -617,43 +617,50 @@ final class ExportAction
             } else {
                 $sheet->setTitle('Data Santri');
             
-            // Set Headers
-            $headers = [
-                'A1' => 'No',
-                'B1' => 'Stambuk / Regno',
-                'C1' => 'Nama Santri',
-                'D1' => 'Kelas',
-                'E1' => 'Rayon',
-                'F1' => 'Konsulat',
-                'G1' => 'Daerah / Negara',
-                'H1' => 'Tempat Lahir',
-                'I1' => 'Tanggal Lahir',
-                'J1' => 'Pondok',
-                'K1' => 'Kepengurusan',
-                'L1' => 'Nama Ayah',
-                'M1' => 'Nama Ibu',
-                'N1' => 'No Telepon Ayah',
-                'O1' => 'No Telepon Ibu',
-                'P1' => 'No Alternatif / Wali',
-                'Q1' => 'Alamat Lengkap',
-                'R1' => 'No IC Santri',
-                'S1' => 'No SKTT',
-                'T1' => 'Paspor Baru (No)',
-                'U1' => 'Paspor Baru (Exp)',
-                'V1' => 'Paspor Lama (No)',
-                'W1' => 'ITAS (No)',
-                'X1' => 'ITAS (Level)',
-                'Y1' => 'ITAS (Exp)',
-                'Z1' => 'ATM / Bank',
-                'AA1'=> 'Handphone',
-                'AB1'=> 'Barang Terlarang Lainnya'
+            // Build dynamic headers based on export_columns
+            $exportColsStr = $body['export_columns'] ?? '';
+            $selectedColKeys = [];
+            if (!empty($exportColsStr)) {
+                $selectedColKeys = explode(',', $exportColsStr);
+            }
+
+            $allColsDef = [
+                'stambuk' => 'Stambuk / Regno', 'nama' => 'Nama Santri', 'kelas' => 'Kelas', 
+                'status_santri' => 'Status Santri', 'rayon' => 'Rayon', 'negara' => 'Daerah / Negara',
+                'kewarganegaraan' => 'Kewarganegaraan', 'jenis_kelamin' => 'Jenis Kelamin',
+                'tempat_lahir' => 'Tempat Lahir', 'tanggal_lahir' => 'Tanggal Lahir', 'pondok' => 'Pondok',
+                'kepengurusan' => 'Kepengurusan', 'nama_ayah' => 'Nama Ayah', 'nama_ibu' => 'Nama Ibu',
+                'no_ayah' => 'No Telepon Ayah', 'no_ibu' => 'No Telepon Ibu', 'no_hp_alternatif' => 'No Alternatif / Wali',
+                'alamat' => 'Alamat Lengkap', 'no_ic' => 'No IC Santri', 'no_sktt' => 'No SKTT',
+                'ukuran_baju' => 'Ukuran Baju', 'keberadaan_paspor' => 'Keberadaan Paspor',
+                'paspor_baru_no' => 'Paspor Baru (No)', 'paspor_baru_exp' => 'Paspor Baru (Exp)',
+                'paspor_lama_no' => 'Paspor Lama (No)', 'itas_no' => 'ITAS (No)', 
+                'itas_level' => 'ITAS (Level)', 'itas_exp' => 'ITAS (Exp)',
+                'barang_atm' => 'ATM / Bank', 'barang_hp' => 'Handphone', 'barang_lain' => 'Barang Terlarang Lainnya'
             ];
             
-            foreach ($headers as $cell => $val) {
-                $sheet->setCellValue($cell, $val);
+            $activeCols = [];
+            if (empty($selectedColKeys)) {
+                $activeCols = $allColsDef;
+            } else {
+                foreach ($selectedColKeys as $k) {
+                    if (isset($allColsDef[$k])) {
+                        $activeCols[$k] = $allColsDef[$k];
+                    }
+                }
+            }
+
+            // Set Headers
+            $colIndex = 1;
+            $coord = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex++) . '1';
+            $sheet->setCellValueExplicit($coord, 'No', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            foreach ($activeCols as $key => $label) {
+                $coord = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex++) . '1';
+                $sheet->setCellValueExplicit($coord, $label, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             }
             
             // Style Headers
+            $lastColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex - 1);
             $headerStyle = [
                 'font' => ['bold' => true, 'color' => ['argb' => 'FFFFFFFF']],
                 'fill' => [
@@ -668,7 +675,7 @@ final class ExportAction
                     'allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]
                 ]
             ];
-            $sheet->getStyle('A1:AB1')->applyFromArray($headerStyle);
+            $sheet->getStyle('A1:'.$lastColLetter.'1')->applyFromArray($headerStyle);
             $sheet->getRowDimension(1)->setRowHeight(25);
             
             // Fill Data
@@ -718,47 +725,60 @@ final class ExportAction
                 $no_sktt = isset($santri['no_sktt']) && strpos((string)$santri['no_sktt'], 'E') !== false ? number_format((float)$santri['no_sktt'], 0, '', '') : ($santri['no_sktt'] ?? '');
                 $no_ic = isset($santri['no_ic']) && strpos((string)$santri['no_ic'], 'E') !== false ? number_format((float)$santri['no_ic'], 0, '', '') : ($santri['no_ic'] ?? '');
                 
-                $sheet->setCellValue('A'.$row, $idx + 1);
-                $sheet->setCellValueExplicit('B'.$row, (string)($santri['stambuk'] ?? ''), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
-                $sheet->setCellValue('C'.$row, $santri['nama'] ?? '');
-                $sheet->setCellValue('D'.$row, $santri['kelas'] ?? '');
-                $sheet->setCellValue('E'.$row, $santri['rayon'] ?? '');
-                $sheet->setCellValue('F'.$row, $santri['konsulat'] ?? '');
-                $sheet->setCellValue('G'.$row, $santri['negara'] ?? '');
-                $sheet->setCellValue('H'.$row, $santri['tempat_lahir'] ?? '');
-                $sheet->setCellValue('I'.$row, $santri['tanggal_lahir'] ?? '');
-                $sheet->setCellValue('J'.$row, $santri['pondok'] ?? '');
-                $sheet->setCellValue('K'.$row, $santri['kepengurusan'] ?? '');
-                $sheet->setCellValue('L'.$row, $santri['nama_ayah'] ?? '');
-                $sheet->setCellValue('M'.$row, $santri['nama_ibu'] ?? '');
-                $sheet->setCellValueExplicit('N'.$row, (string)($santri['no_ayah'] ?? ''), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
-                $sheet->setCellValueExplicit('O'.$row, (string)($santri['no_ibu'] ?? ''), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
-                $sheet->setCellValueExplicit('P'.$row, (string)($santri['no_hp_alternatif'] ?? ''), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
-                $sheet->setCellValue('Q'.$row, $santri['alamat'] ?? '');
-                $sheet->setCellValueExplicit('R'.$row, (string)$no_ic, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
-                $sheet->setCellValueExplicit('S'.$row, (string)$no_sktt, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $c = 1;
+                $coord = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($c++) . $row;
+                $sheet->setCellValueExplicit($coord, (string)($idx + 1), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
                 
-                $sheet->setCellValueExplicit('T'.$row, (string)($pasporBaru['no_paspor'] ?? ''), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
-                $sheet->setCellValue('U'.$row, $pasporBaru['exp_paspor'] ?? '');
-                $sheet->setCellValueExplicit('V'.$row, (string)($pasporLama['no_paspor'] ?? ''), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
-                
-                $sheet->setCellValueExplicit('W'.$row, (string)($itasBaru['no_itas'] ?? ''), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
-                $sheet->setCellValue('X'.$row, $itasBaru['level_itas'] ?? '');
-                $sheet->setCellValue('Y'.$row, $itasBaru['exp_itas'] ?? '');
-                
-                $sheet->setCellValue('Z'.$row, implode(', ', $atmList));
-                $sheet->setCellValue('AA'.$row, implode(', ', $hpList));
-                $sheet->setCellValue('AB'.$row, implode(', ', $otherBarang));
+                foreach ($activeCols as $key => $label) {
+                    $val = '';
+                    $type = \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING;
+                    
+                    switch ($key) {
+                        case 'stambuk': $val = $santri['stambuk'] ?? ''; break;
+                        case 'nama': $val = $santri['nama'] ?? ''; break;
+                        case 'kelas': $val = $santri['kelas'] ?? ''; break;
+                        case 'status_santri': $val = $santri['status_santri'] ?? ''; break;
+                        case 'rayon': $val = $santri['rayon'] ?? ''; break;
+                        case 'negara': $val = $santri['negara'] ?? ''; break;
+                        case 'kewarganegaraan': $val = $santri['kewarganegaraan'] ?? ''; break;
+                        case 'jenis_kelamin': $val = (strtolower(substr($santri['jenis_kelamin'] ?? '', 0, 1)) === 'p' ? 'Perempuan' : 'Laki-Laki'); break;
+                        case 'tempat_lahir': $val = $santri['tempat_lahir'] ?? ''; break;
+                        case 'tanggal_lahir': $val = $santri['tanggal_lahir'] ?? ''; break;
+                        case 'pondok': $val = $santri['pondok'] ?? ''; break;
+                        case 'kepengurusan': $val = $santri['kepengurusan'] ?? ''; break;
+                        case 'nama_ayah': $val = $santri['nama_ayah'] ?? ''; break;
+                        case 'nama_ibu': $val = $santri['nama_ibu'] ?? ''; break;
+                        case 'no_ayah': $val = $santri['no_ayah'] ?? ''; break;
+                        case 'no_ibu': $val = $santri['no_ibu'] ?? ''; break;
+                        case 'no_hp_alternatif': $val = $santri['no_hp_alternatif'] ?? ''; break;
+                        case 'alamat': $val = $santri['alamat'] ?? ''; break;
+                        case 'no_ic': $val = $no_ic; break;
+                        case 'no_sktt': $val = $no_sktt; break;
+                        case 'ukuran_baju': $val = $santri['ukuran_baju'] ?? ''; break;
+                        case 'keberadaan_paspor': $val = $santri['keberadaan_paspor'] ?? ''; break;
+                        case 'paspor_baru_no': $val = $pasporBaru['no_paspor'] ?? ''; break;
+                        case 'paspor_baru_exp': $val = $pasporBaru['exp_paspor'] ?? ''; break;
+                        case 'paspor_lama_no': $val = $pasporLama['no_paspor'] ?? ''; break;
+                        case 'itas_no': $val = $itasBaru['no_itas'] ?? ''; break;
+                        case 'itas_level': $val = $itasBaru['level_itas'] ?? ''; break;
+                        case 'itas_exp': $val = $itasBaru['exp_itas'] ?? ''; break;
+                        case 'barang_atm': $val = implode(', ', $atmList); break;
+                        case 'barang_hp': $val = implode(', ', $hpList); break;
+                        case 'barang_lain': $val = implode(', ', $otherBarang); break;
+                    }
+                    
+                    $coord = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($c++) . $row;
+                    $sheet->setCellValueExplicit($coord, (string)$val, $type);
+                }
                 
                 $row++;
             }
             
             // Auto size columns
-            foreach (range('A', 'Z') as $col) {
-                $sheet->getColumnDimension($col)->setAutoSize(true);
+            for ($i = 1; $i <= count($activeCols) + 1; $i++) {
+                $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i);
+                $sheet->getColumnDimension($colLetter)->setAutoSize(true);
             }
-            $sheet->getColumnDimension('AA')->setAutoSize(true);
-            $sheet->getColumnDimension('AB')->setAutoSize(true);
             
             }
             

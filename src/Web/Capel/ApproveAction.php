@@ -10,6 +10,7 @@ use Yiisoft\Router\CurrentRoute;
 use App\Shared\JsonResponse;
 use App\Shared\IdGenerator;
 use App\Shared\FirebaseSync;
+use App\Shared\UploadPath;
 
 final class ApproveAction
 {
@@ -40,14 +41,19 @@ final class ApproveAction
 
             $rawProgram = $this->findValue($dataJson, ['calon pelajar', 'program capel', 'pilihan program']) ?: '';
             if (stripos($rawProgram, 'Persiapan') !== false || stripos($rawProgram, 'Penampungan') !== false) {
-                $tipeCapelToUse = 'Program Persiapan';
+                $tipeCapelToUse = 'Capel Penampungan';
             } elseif (stripos($rawProgram, 'Penerimaan') !== false || stripos($rawProgram, 'Syawwal') !== false) {
-                $tipeCapelToUse = 'Program Penerimaan';
+                $tipeCapelToUse = 'Capel Syawwal';
             } else {
-                $tipeCapelToUse = $tipeCapel; // Fallback to radio button selection
+                // Fallback to radio button selection mapped to enum
+                if (stripos($tipeCapel, 'Persiapan') !== false || stripos($tipeCapel, 'Penampungan') !== false) {
+                    $tipeCapelToUse = 'Capel Penampungan';
+                } else {
+                    $tipeCapelToUse = 'Capel Syawwal';
+                }
             }
 
-            $kelasBaru = (stripos($tipeCapelToUse, 'Persiapan') !== false) ? 'CAPEL PERSIAPAN' : 'CAPEL PENERIMAAN';
+            $kelasBaru = (stripos($tipeCapelToUse, 'Penampungan') !== false) ? 'CAPEL PERSIAPAN' : 'CAPEL PENERIMAAN';
             // Tambahkan KDS Prefixing
             $instansiId = IdGenerator::getSessionInstansiId();
             $kds = IdGenerator::generateKds($db, $instansiId);
@@ -57,7 +63,7 @@ final class ApproveAction
                 'kds' => $kds,
                 'nama' => $draft['nama_lengkap'],
                 'kelas' => $kelasBaru,
-                'status_santri' => $tipeCapelToUse, // 'Program Penerimaan' or 'Program Persiapan'
+                'status_santri' => 'Aktif',
                 'aktif' => '1',
                 // extract other basic fields from dataJson if possible
                 'tempat_lahir' => $this->findValue($dataJson, ['tempat_lahir', 'tempat lahir', 'place of birth']),
@@ -99,7 +105,13 @@ final class ApproveAction
                     $fileId = $matches[1];
                     $downloadUrl = "https://drive.google.com/uc?export=download&id=" . $fileId;
                     
-                    $uploadDir = dirname(__DIR__, 4) . '/uploads/';
+                    // Upload dir per instansi
+                    $instansiBase = UploadPath::getBase($db, $instansiId);
+                    if ($instansiBase !== null) {
+                        $uploadDir = $instansiBase . '/capel/';
+                    } else {
+                        $uploadDir = dirname(__DIR__, 4) . '/public/uploads/capel/';
+                    }
                     if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
                     
                     $filename = "CAPEL_" . $kds . "_" . $fileId . ".pdf"; // Assumption: pdf or jpg. We can guess by contents later.
@@ -114,7 +126,7 @@ final class ApproveAction
                         $db->createCommand()->insert('pemberkasan_santri', [
                             'kds' => $kds,
                             'jenis_dokumen' => 'Dokumen Pendaftaran',
-                            'path_file' => 'uploads/' . $filename,
+                            'path_file' => $filepath,
                             'keterangan' => 'Didownload otomatis dari Google Form'
                         ])->execute();
                     }

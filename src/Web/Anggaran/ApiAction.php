@@ -8,6 +8,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\Db\Connection\ConnectionInterface;
 use App\Shared\JsonResponse;
+use App\Shared\UploadPath;
 
 class ApiAction
 {
@@ -276,10 +277,16 @@ class ApiAction
             $file = $uploadedFiles['file_nota'];
             $ext = pathinfo($file->getClientFilename(), PATHINFO_EXTENSION);
             $filename = 'nota_' . time() . '_' . rand(100, 999) . '.' . $ext;
-            $dir = __DIR__ . '/../../../../public/uploads/nota';
+            
+            // Resolve upload path per instansi
+            $instansiBase = UploadPath::getBase($db);
+            if ($instansiBase === null) {
+                return JsonResponse::create(['success' => false, 'message' => UploadPath::notConfiguredMessage()], 400);
+            }
+            $dir = $instansiBase . '/nota';
             if (!is_dir($dir)) mkdir($dir, 0777, true);
             $file->moveTo($dir . '/' . $filename);
-            $filePath = '/uploads/nota/' . $filename;
+            $filePath = $dir . '/' . $filename;
         }
 
         $transaction = $db->beginTransaction();
@@ -328,7 +335,13 @@ class ApiAction
         try {
             $nota = $db->createCommand("SELECT file_path FROM anggaran_nota WHERE id = :id", [':id' => $id])->queryOne();
             if ($nota && !empty($nota['file_path'])) {
-                $path = __DIR__ . '/../../../../public' . $nota['file_path'];
+                // Support absolute (new) dan relative (legacy) paths
+                $p = $nota['file_path'];
+                if (UploadPath::isAbsolutePath($p)) {
+                    $path = $p;
+                } else {
+                    $path = __DIR__ . '/../../../../public' . $p;
+                }
                 if (file_exists($path)) {
                     unlink($path);
                 }

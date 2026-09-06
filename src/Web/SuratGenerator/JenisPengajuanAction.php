@@ -9,6 +9,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\Db\Connection\ConnectionInterface;
 use Yiisoft\Router\CurrentRoute;
+use App\Shared\UploadPath;
 
 final class JenisPengajuanAction
 {
@@ -54,7 +55,12 @@ final class JenisPengajuanAction
                 return JsonResponse::create(['success' => false, 'message' => 'File template harus berupa .docx'], 400);
             }
             
-            $uploadDir = dirname(__DIR__, 4) . '/public/uploads/templates';
+            // Resolve upload path per instansi
+            $instansiBase = UploadPath::getBase($db);
+            if ($instansiBase === null) {
+                return JsonResponse::create(['success' => false, 'message' => UploadPath::notConfiguredMessage()], 400);
+            }
+            $uploadDir = $instansiBase . '/templates';
             if (!is_dir($uploadDir)) {
                 mkdir($uploadDir, 0777, true);
             }
@@ -62,7 +68,7 @@ final class JenisPengajuanAction
             $newFilename = 'template_' . time() . '_' . rand(1000, 9999) . '.docx';
             $destPath = $uploadDir . '/' . $newFilename;
             $file->moveTo($destPath);
-            $templatePath = 'public/uploads/templates/' . $newFilename;
+            $templatePath = $destPath;
         }
 
         $db->createCommand(
@@ -117,7 +123,12 @@ final class JenisPengajuanAction
                 return JsonResponse::create(['success' => false, 'message' => 'File template harus berupa .docx'], 400);
             }
             
-            $uploadDir = dirname(__DIR__, 4) . '/public/uploads/templates';
+            // Resolve upload path per instansi
+            $instansiBase = UploadPath::getBase($db);
+            if ($instansiBase === null) {
+                return JsonResponse::create(['success' => false, 'message' => UploadPath::notConfiguredMessage()], 400);
+            }
+            $uploadDir = $instansiBase . '/templates';
             if (!is_dir($uploadDir)) {
                 mkdir($uploadDir, 0777, true);
             }
@@ -128,13 +139,17 @@ final class JenisPengajuanAction
             
             // Delete old template if exists
             if (!empty($templatePath)) {
-                $oldFile = dirname(__DIR__, 4) . '/' . $templatePath;
+                $oldFile = $templatePath;
+                // Legacy relative path support
+                if (!UploadPath::isAbsolutePath($oldFile)) {
+                    $oldFile = dirname(__DIR__, 4) . '/' . $oldFile;
+                }
                 if (file_exists($oldFile)) {
                     @unlink($oldFile);
                 }
             }
             
-            $templatePath = 'public/uploads/templates/' . $newFilename;
+            $templatePath = $destPath;
         }
 
         $db->createCommand(

@@ -111,6 +111,9 @@ return [
             Route::post('/api/manajemen-user/{id:\d+}/delete')
                 ->action(Web\ManajemenUser\DeleteAction::class)
                 ->name('manajemen-user.delete'),
+            Route::post('/api/manajemen-user/{id:\d+}/toggle-active')
+                ->action(Web\ManajemenUser\ToggleActiveAction::class)
+                ->name('manajemen-user.toggle-active'),
 
             // Dashboard
             Route::get('/')
@@ -270,6 +273,9 @@ return [
             Route::post('/api/job-desk/payment/{id:\d+}/upload')
                 ->action([Web\JobDesk\PaymentAction::class, 'upload'])
                 ->name('job-desk.payment.upload'),
+            Route::get('/api/job-desk/payment/view-bukti/{id:\d+}')
+                ->action([Web\JobDesk\PaymentAction::class, 'viewBukti'])
+                ->name('job-desk.payment.view-bukti'),
             Route::get('/api/job-desk/payment/history/{kds}')
                 ->action([Web\JobDesk\PaymentAction::class, 'history'])
                 ->name('job-desk.payment.history'),
@@ -401,11 +407,14 @@ return [
             Route::get('/api/surat/jenis-pengajuan')
                 ->action([Web\SuratGenerator\JenisPengajuanAction::class, 'list'])
                 ->name('surat.jenis-pengajuan.list'),
+            Route::get('/api/surat/view/{id:\d+}')
+                ->action(App\Web\SuratGenerator\ViewSuratAction::class)
+                ->name('surat.view'),
             Route::get('/api/surat/download/{id:\d+}')
-                ->action(\App\Web\SuratGenerator\DownloadSuratAction::class)
+                ->action(App\Web\SuratGenerator\DownloadSuratAction::class)
                 ->name('surat.download'),
             Route::get('/api/surat/download-template')
-                ->action(\App\Web\SuratGenerator\DownloadTemplateAction::class)
+                ->action(App\Web\SuratGenerator\DownloadTemplateAction::class)
                 ->name('surat.download-template'),
             Route::post('/api/surat/jenis-pengajuan/store')
                 ->action([Web\SuratGenerator\JenisPengajuanAction::class, 'store'])

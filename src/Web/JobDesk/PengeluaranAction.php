@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\Db\Connection\ConnectionInterface;
 use App\Shared\JsonResponse;
 use Yiisoft\Router\CurrentRoute;
+use App\Shared\UploadPath;
 
 class PengeluaranAction
 {
@@ -19,7 +20,7 @@ class PengeluaranAction
         ServerRequestInterface $request,
         ConnectionInterface $db
     ): ResponseInterface {
-        $instansiId = $_SESSION['instansi_id'] ?? null;
+        $instansiId = isset($_SESSION['instansi_id']) ? (int)$_SESSION['instansi_id'] : null;
         $role = $_SESSION['role'] ?? '';
 
         $where = "WHERE 1=1";
@@ -47,7 +48,7 @@ class PengeluaranAction
         ServerRequestInterface $request,
         ConnectionInterface $db
     ): ResponseInterface {
-        $instansiId = $_SESSION['instansi_id'] ?? null;
+        $instansiId = isset($_SESSION['instansi_id']) ? (int)$_SESSION['instansi_id'] : null;
         $username   = $_SESSION['username'] ?? 'system';
 
         // Parse multipart form data
@@ -76,15 +77,7 @@ class PengeluaranAction
                 return JsonResponse::create(['success' => false, 'message' => 'Format file tidak didukung. Gunakan: ' . implode(', ', $allowed)], 400);
             }
 
-            $instansiInfo = $instansiId ? $db->createCommand("SELECT path_folder FROM master_instansi WHERE kode = :kode", [':kode' => $instansiId])->queryOne() : null;
-            $folderInstansi = $instansiInfo && !empty($instansiInfo['path_folder']) ? $instansiInfo['path_folder'] : ($instansiId ? $instansiId : 'global');
-            
-            $isAbsolute = str_starts_with(str_replace('\\', '/', $folderInstansi), 'D:/') || str_starts_with(str_replace('\\', '/', $folderInstansi), 'C:/') || str_starts_with($folderInstansi, '/');
-            if ($isAbsolute) {
-                $dir = rtrim($folderInstansi, '\\/') . '/nota/operasional birokrasi';
-            } else {
-                $dir = dirname(__DIR__, 3) . '/public/uploads/instansi/' . $folderInstansi . '/nota/operasional birokrasi';
-            }
+            $dir = UploadPath::getBase($db, $instansiId) . '/nota/operasional birokrasi';
             if (!is_dir($dir)) mkdir($dir, 0777, true);
 
             $filename = 'nota_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
@@ -140,7 +133,7 @@ class PengeluaranAction
         }
 
         $existing = $db->createCommand("SELECT instansi_id FROM jobdesk_pengeluaran_birokrasi WHERE id = :id", [':id' => $id])->queryOne();
-        $recordInstansiId = $existing ? $existing['instansi_id'] : null;
+        $recordInstansiId = $existing && isset($existing['instansi_id']) ? (int)$existing['instansi_id'] : null;
 
         // Handle foto update
         if (isset($files['foto_nota']) && $files['foto_nota']->getError() === UPLOAD_ERR_OK) {
@@ -151,15 +144,7 @@ class PengeluaranAction
                 return JsonResponse::create(['success' => false, 'message' => 'Format file tidak didukung.'], 400);
             }
 
-            $instansiInfo = $recordInstansiId ? $db->createCommand("SELECT path_folder FROM master_instansi WHERE kode = :kode", [':kode' => $recordInstansiId])->queryOne() : null;
-            $folderInstansi = $instansiInfo && !empty($instansiInfo['path_folder']) ? $instansiInfo['path_folder'] : ($recordInstansiId ? $recordInstansiId : 'global');
-
-            $isAbsolute = str_starts_with(str_replace('\\', '/', $folderInstansi), 'D:/') || str_starts_with(str_replace('\\', '/', $folderInstansi), 'C:/') || str_starts_with($folderInstansi, '/');
-            if ($isAbsolute) {
-                $dir = rtrim($folderInstansi, '\\/') . '/nota/operasional birokrasi';
-            } else {
-                $dir = dirname(__DIR__, 3) . '/public/uploads/instansi/' . $folderInstansi . '/nota/operasional birokrasi';
-            }
+            $dir = UploadPath::getBase($db, $recordInstansiId) . '/nota/operasional birokrasi';
             if (!is_dir($dir)) mkdir($dir, 0777, true);
 
             $filename = 'nota_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
@@ -191,18 +176,7 @@ class PengeluaranAction
         }
 
         $filename = basename($pg['foto_nota']);
-        $instansiId = $pg['instansi_id'];
-
-        $instansiInfo = $instansiId ? $db->createCommand("SELECT path_folder FROM master_instansi WHERE kode = :kode", [':kode' => $instansiId])->queryOne() : null;
-        $folderInstansi = $instansiInfo && !empty($instansiInfo['path_folder']) ? $instansiInfo['path_folder'] : ($instansiId ? $instansiId : 'global');
-
-        $isAbsolute = str_starts_with(str_replace('\\', '/', $folderInstansi), 'D:/') || str_starts_with(str_replace('\\', '/', $folderInstansi), 'C:/') || str_starts_with($folderInstansi, '/');
-        if ($isAbsolute) {
-            $dir = rtrim($folderInstansi, '\\/') . '/nota/operasional birokrasi';
-        } else {
-            $dir = dirname(__DIR__, 3) . '/public/uploads/instansi/' . $folderInstansi . '/nota/operasional birokrasi';
-        }
-
+        $dir = UploadPath::getBase($db, isset($pg['instansi_id']) ? (int)$pg['instansi_id'] : null) . '/nota/operasional birokrasi';
         $path = $dir . '/' . $filename;
         
         // Backward compatibility for old paths stored in DB (starting with /uploads/...)
@@ -271,7 +245,7 @@ class PengeluaranAction
         ServerRequestInterface $request,
         ConnectionInterface $db
     ): ResponseInterface {
-        $instansiId = $_SESSION['instansi_id'] ?? null;
+        $instansiId = isset($_SESSION['instansi_id']) ? (int)$_SESSION['instansi_id'] : null;
         $data = $request->getParsedBody() ?? [];
         if (empty($data)) {
             $rawBody = $request->getBody()->getContents();

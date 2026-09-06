@@ -10,6 +10,7 @@ use Yiisoft\Db\Connection\ConnectionInterface;
 use App\Shared\JsonResponse;
 use Yiisoft\Router\CurrentRoute;
 use App\Shared\AuditLogger;
+use App\Shared\UploadPath;
 
 class PaymentAction
 {
@@ -184,10 +185,16 @@ class PaymentAction
         }
 
         $filename = 'bukti_' . $caseId . '_' . time() . '.' . $ext;
-        $dir = __DIR__ . '/../../../../public/uploads/bukti_bayar';
+        
+        // Resolve upload path per instansi
+        $instansiBase = UploadPath::getBase($db);
+        if ($instansiBase === null) {
+            return JsonResponse::create(['success' => false, 'message' => UploadPath::notConfiguredMessage()], 400);
+        }
+        $dir = $instansiBase . '/bukti_bayar';
         if (!is_dir($dir)) mkdir($dir, 0777, true);
         $file->moveTo($dir . '/' . $filename);
-        $filePath = '/uploads/bukti_bayar/' . $filename;
+        $filePath = $dir . '/' . $filename;
 
         $db->createCommand()->update('jobdesk_case_payment', [
             'bukti_bayar_path' => $filePath,
@@ -370,5 +377,56 @@ class PaymentAction
             'total_cicilan' => $totalCicilan,
             'sisa_tagihan' => max(0, (float)($payment['nominal_santri'] ?? 0) - $totalCicilan),
         ]);
+    }
+
+    /**
+     * GET /api/job-desk/payment/view-bukti/{id} — Serve bukti bayar file (supports absolute paths)
+     */
+    public function viewBukti(
+        CurrentRoute $currentRoute,
+        ConnectionInterface $db
+    ): ResponseInterface {
+        $caseId = (int)$currentRoute->getArgument('id');
+        $payment = $db->createCommand(
+            "SELECT bukti_bayar_path FROM jobdesk_case_payment WHERE case_id = :cid",
+            [':cid' => $caseId]
+        )->queryOne();
+
+        if (!$payment || empty($payment['bukti_bayar_path'])) {
+            return new \HttpSoft\Message\Response(404);
+        }
+
+        $filePath = $payment['bukti_bayar_path'];
+        
+        // Support absolute path (new) dan relative path (legacy)
+        if (UploadPath::isAbsolutePath($filePath)) {
+            $path = $filePath;
+        } else {
+            $path = __DIR__ . '/../../../../public' . $filePath;
+        }
+
+        if (!file_exists($path) || !is_file($path)) {
+            return new \HttpSoft\Message\Response(404);
+        }
+
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        $mime = match($ext) {
+            'pdf' => 'application/pdf',
+            'jpg', 'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'webp' => 'image/webp',
+            default => 'application/octet-stream'
+        };
+
+        $response = new \HttpSoft\Message\Response(200);
+        $response = $response->withHeader('Content-Type', $mime)
+                             ->withHeader('Content-Disposition', 'inline; filename="' . basename($path) . '"');
+        
+        $stream = fopen($path, 'rb');
+        if ($stream !== false) {
+            $response = $response->withBody(new \HttpSoft\Message\Stream($stream));
+        }
+
+        return $response;
     }
 }

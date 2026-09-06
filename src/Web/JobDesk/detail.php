@@ -436,7 +436,7 @@ $stepColors = ['#6f42c1', '#0d6efd', '#198754', '#fd7e14', '#20c997', '#0dcaf0',
 
             <?php if (!empty($payment['bukti_bayar_path'])): ?>
             <div class="d-flex align-items-center gap-2 mt-2">
-                <button onclick="viewDocument('<?= $payment['bukti_bayar_path'] ?>', 'Bukti Bayar', <?= strtolower(pathinfo($payment['bukti_bayar_path'], PATHINFO_EXTENSION)) === 'pdf' ? 'true' : 'false' ?>)" class="btn btn-sm btn-light border rounded-pill text-primary fw-medium" style="font-size: .7rem;">
+                <button onclick="viewDocument('<?= str_starts_with($payment['bukti_bayar_path'], '/uploads/') ? $payment['bukti_bayar_path'] : '/api/job-desk/payment/view-bukti/' . $payment['case_id'] ?>', 'Bukti Bayar', <?= strtolower(pathinfo($payment['bukti_bayar_path'], PATHINFO_EXTENSION)) === 'pdf' ? 'true' : 'false' ?>)" class="btn btn-sm btn-light border rounded-pill text-primary fw-medium" style="font-size: .7rem;">
                     <i class="bi bi-file-earmark-image me-1"></i>Lihat Bukti Bayar
                 </button>
             </div>

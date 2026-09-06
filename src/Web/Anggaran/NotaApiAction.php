@@ -8,6 +8,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Yiisoft\Db\Connection\ConnectionInterface;
 use App\Shared\JsonResponse;
+use App\Shared\UploadPath;
 
 class NotaApiAction
 {
@@ -55,21 +56,23 @@ class NotaApiAction
             
             $pengajuan = $db->createCommand("SELECT instansi FROM anggaran_pengajuan WHERE id = :id", [':id' => $pengajuanId])->queryOne();
             $instansiKode = $pengajuan ? $pengajuan['instansi'] : null;
-            $instansiInfo = $instansiKode ? $db->createCommand("SELECT path_folder FROM master_instansi WHERE kode = :kode OR nama_instansi = :kode", [':kode' => $instansiKode])->queryOne() : null;
-            $folderInstansi = $instansiInfo && !empty($instansiInfo['path_folder']) ? $instansiInfo['path_folder'] : ($instansiKode ? preg_replace('/[^a-zA-Z0-9]/', '_', $instansiKode) : 'global');
+            $instansiIdFromUser = $_SESSION['instansi_id'] ?? null;
+            
+            $instansiRow = $instansiKode ? $db->createCommand("SELECT kode FROM master_instansi WHERE kode = :kode OR nama_instansi = :kode", [':kode' => $instansiKode])->queryOne() : null;
+            $instansiIdToUse = $instansiRow ? (int)$instansiRow['kode'] : (int)$instansiIdFromUser;
 
-            $isAbsolute = str_starts_with(str_replace('\\', '/', $folderInstansi), 'D:/') || str_starts_with(str_replace('\\', '/', $folderInstansi), 'C:/') || str_starts_with($folderInstansi, '/');
-            if ($isAbsolute) {
-                $dir = rtrim($folderInstansi, '\\/') . '/nota/anggaran_operasional';
-            } else {
-                $dir = dirname(__DIR__, 3) . '/public/uploads/instansi/' . $folderInstansi . '/nota/anggaran_operasional';
+            $instansiBase = UploadPath::getBase($db, $instansiIdToUse);
+            if ($instansiBase === null) {
+                return JsonResponse::create(['success' => false, 'message' => UploadPath::notConfiguredMessage()], 400);
             }
+            $dir = $instansiBase . '/nota/anggaran_operasional';
+            
             if (!is_dir($dir)) {
                 mkdir($dir, 0777, true);
             }
             $fullPath = $dir . DIRECTORY_SEPARATOR . $safeName;
             $files['file_nota']->moveTo($fullPath);
-            $filePath = $safeName;
+            $filePath = $fullPath;
         }
 
         $transaction = $db->beginTransaction();
@@ -142,9 +145,20 @@ class NotaApiAction
         $db->createCommand()->delete('anggaran_nota', ['id' => $id])->execute();
         
         if ($nota && !empty($nota['file_path'])) {
-            $fullPath = dirname(__DIR__, 3) . '/public' . $nota['file_path'];
-            if (file_exists($fullPath)) {
-                @unlink($fullPath);
+            $filePath = $nota['file_path'];
+            // Support legacy relative paths
+            if (!UploadPath::isAbsolutePath($filePath)) {
+                $pengajuan = $db->createCommand("SELECT instansi FROM anggaran_pengajuan WHERE id = (SELECT pengajuan_id FROM anggaran_nota WHERE id = :id)", [':id' => $id])->queryOne();
+                $instansiKode = $pengajuan ? $pengajuan['instansi'] : null;
+                $instansiRow = $instansiKode ? $db->createCommand("SELECT kode FROM master_instansi WHERE kode = :kode OR nama_instansi = :kode", [':kode' => $instansiKode])->queryOne() : null;
+                $instansiIdToUse = $instansiRow ? (int)$instansiRow['kode'] : null;
+                
+                $instansiBase = UploadPath::getBase($db, $instansiIdToUse);
+                $dir = $instansiBase !== null ? $instansiBase . '/nota/anggaran_operasional' : dirname(__DIR__, 3) . '/public/uploads/instansi/global/nota/anggaran_operasional';
+                $filePath = $dir . '/' . $nota['file_path'];
+            }
+            if (file_exists($filePath)) {
+                @unlink($filePath);
             }
         }
 
@@ -170,21 +184,22 @@ class NotaApiAction
 
         $pengajuan = $db->createCommand("SELECT instansi FROM anggaran_pengajuan WHERE id = :id", [':id' => $pengajuanId])->queryOne();
         $instansiKode = $pengajuan ? $pengajuan['instansi'] : null;
-        $instansiInfo = $instansiKode ? $db->createCommand("SELECT path_folder FROM master_instansi WHERE kode = :kode OR nama_instansi = :kode", [':kode' => $instansiKode])->queryOne() : null;
-        $folderInstansi = $instansiInfo && !empty($instansiInfo['path_folder']) ? $instansiInfo['path_folder'] : ($instansiKode ? preg_replace('/[^a-zA-Z0-9]/', '_', $instansiKode) : 'global');
-
-        $isAbsolute = str_starts_with(str_replace('\\', '/', $folderInstansi), 'D:/') || str_starts_with(str_replace('\\', '/', $folderInstansi), 'C:/') || str_starts_with($folderInstansi, '/');
-        if ($isAbsolute) {
-            $dir = rtrim($folderInstansi, '\\/') . '/nota/anggaran_operasional';
+        $filePath = $nota['file_path'];
+        // Support legacy relative paths
+        if (!UploadPath::isAbsolutePath($filePath)) {
+            $instansiRow = $instansiKode ? $db->createCommand("SELECT kode FROM master_instansi WHERE kode = :kode OR nama_instansi = :kode", [':kode' => $instansiKode])->queryOne() : null;
+            $instansiIdToUse = $instansiRow ? (int)$instansiRow['kode'] : null;
+            
+            $instansiBase = UploadPath::getBase($db, $instansiIdToUse);
+            $dir = $instansiBase !== null ? $instansiBase . '/nota/anggaran_operasional' : dirname(__DIR__, 3) . '/public/uploads/instansi/global/nota/anggaran_operasional';
+            
+            $path = $dir . '/' . $filename;
+            // Check for /uploads/ prefix format (legacy 2)
+            if (str_starts_with($filePath, '/uploads/')) {
+                $path = dirname(__DIR__, 3) . '/public' . $filePath;
+            }
         } else {
-            $dir = dirname(__DIR__, 3) . '/public/uploads/instansi/' . $folderInstansi . '/nota/anggaran_operasional';
-        }
-
-        $path = $dir . '/' . $filename;
-        
-        // Backward compatibility
-        if (str_starts_with($nota['file_path'], '/uploads/')) {
-            $path = dirname(__DIR__, 3) . '/public' . $nota['file_path'];
+            $path = $filePath;
         }
 
         if (!file_exists($path) || !is_file($path)) {

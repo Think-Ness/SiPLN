@@ -35,12 +35,25 @@ final class ListAction
         }
 
         $users = $db->createCommand("
-            SELECT u.*, i.nama_instansi 
+            SELECT u.*, i.nama_instansi, i.path_folder 
             FROM users u
             LEFT JOIN master_instansi i ON u.instansi_id = i.kode
             $where
-            ORDER BY u.id DESC
+            ORDER BY u.is_active DESC, u.id DESC
         ", $params)->queryAll();
+
+        // Fallback path_folder for super_admin (Campus Pusat / Ponorogo)
+        $ponorogoPath = null;
+        foreach ($users as &$u) {
+            if ($u['role'] === 'super_admin' && empty($u['path_folder'])) {
+                if ($ponorogoPath === null) {
+                    $ponorogoPath = $db->createCommand("SELECT path_folder FROM master_instansi WHERE def_kepengurusan LIKE '%Ponorogo%' ORDER BY kode ASC LIMIT 1")->queryScalar();
+                }
+                if ($ponorogoPath) {
+                    $u['path_folder'] = (string)$ponorogoPath;
+                }
+            }
+        }
 
         // Pilihan daftar instansi (hanya jika Super Admin yang bisa mengedit)
         $instansis = [];
