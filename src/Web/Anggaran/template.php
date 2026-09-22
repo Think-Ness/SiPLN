@@ -576,21 +576,37 @@ use Yiisoft\View\WebView;
             flex-direction: column;
             min-height: 0;
         }
-        #colNotaList .card, #colNotaForm .card {
+        #colNotaList > .card, #colNotaForm > .card {
             height: 100%;
             display: flex;
             flex-direction: column;
             min-height: 0;
             overflow: hidden;
         }
-        #colNotaList .card-body-scrollable,
-        #colNotaForm .card-body-scrollable {
-            flex: 1;
+        #colNotaList > .card > .card-body-scrollable,
+        #colNotaForm > .card > .card-body-scrollable {
+            flex: 1 1 auto;
             min-height: 0;
             overflow-y: auto;
             padding-right: 6px;
         }
     }
+
+    /* Nota cards inside list container: natural compact height */
+    #notaListContainer .card,
+    .nota-item-card {
+        height: auto !important;
+        flex: 0 0 auto !important;
+        min-height: unset !important;
+        display: flex;
+        flex-direction: column;
+    }
+    #notaListContainer .card .card-body,
+    .nota-item-card .card-body {
+        flex: 0 0 auto !important;
+        height: auto !important;
+    }
+
     /* Custom subtle scrollbar */
     #colNotaList .card-body-scrollable::-webkit-scrollbar,
     #colNotaForm .card-body-scrollable::-webkit-scrollbar {
@@ -2995,7 +3011,7 @@ function loadNotaList() {
                 });
                 
                 htmlContent += `
-                <div class="card border border-success-subtle shadow-xs rounded-3 overflow-hidden mb-2.5">
+                <div class="card border border-success-subtle shadow-xs rounded-3 overflow-hidden mb-2.5 nota-item-card">
                     <div class="card-header bg-success bg-opacity-10 border-0 py-2.5 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <div class="d-flex align-items-center flex-wrap gap-1.5">
                             <i class="bi bi-receipt-cutoff text-success me-1"></i><strong class="text-dark">${escapeHtml(n.nomor_nota)}</strong>
