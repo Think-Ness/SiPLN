@@ -47,11 +47,12 @@ $formatRupiah = function($num) {
 .card-keuangan {
     transition: transform .2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow .2s ease;
     cursor: default;
-    border-radius: 14px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.15);
 }
 .card-keuangan:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 24px rgba(0,0,0,.1) !important;
+    box-shadow: 0 12px 28px rgba(0,0,0,.12) !important;
 }
 .card-keuangan.clickable {
     cursor: pointer;
@@ -62,19 +63,19 @@ $formatRupiah = function($num) {
 
 /* ===== FILTER & REKAP SECTION ===== */
 .filter-jobdesk-section {
-    background: white;
+    background: #ffffff;
     border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    padding: 18px 20px;
+    border-radius: 16px;
+    padding: 20px 22px;
     margin-bottom: 1.25rem;
     box-shadow: 0 2px 10px rgba(0,0,0,.03);
 }
 .filter-jobdesk-section .section-title {
-    font-size: .8rem;
+    font-size: .84rem;
     font-weight: 700;
-    letter-spacing: .04em;
+    letter-spacing: .03em;
     text-transform: uppercase;
-    color: #334155;
+    color: #1e293b;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -82,45 +83,80 @@ $formatRupiah = function($num) {
 
 /* ===== MICRO SUMMARY CARDS (NO OVERLAP) ===== */
 .micro-stat-card {
-    border-radius: 12px;
-    padding: 10px 12px;
+    border-radius: 14px;
+    padding: 12px 14px;
     height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     text-align: left;
-    transition: transform .15s ease, box-shadow .15s ease;
-    min-height: 80px;
+    transition: transform .18s ease, box-shadow .18s ease;
+    min-height: 86px;
     position: relative;
     overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.2);
 }
 .micro-stat-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0,0,0,.12);
+    box-shadow: 0 8px 20px rgba(0,0,0,.15);
 }
 .micro-stat-card .card-top-label {
-    font-size: .65rem;
+    font-size: .67rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: .4px;
-    opacity: .88;
+    letter-spacing: .5px;
+    opacity: .9;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 .micro-stat-card .card-main-val {
-    font-size: .95rem;
+    font-size: 1.05rem;
     font-weight: 800;
     line-height: 1.2;
-    margin: 4px 0 2px 0;
+    margin: 5px 0 3px 0;
     word-break: break-word;
 }
 .micro-stat-card .card-sub-note {
-    font-size: .63rem;
-    opacity: .82;
+    font-size: .65rem;
+    opacity: .85;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    font-weight: 500;
+}
+
+/* ===== QUICK FILTER PILLS ===== */
+.quick-filter-pills {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+}
+.quick-filter-pills::-webkit-scrollbar { display: none; }
+.btn-quick-filter {
+    font-size: 0.74rem;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 20px;
+    white-space: nowrap;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #475569;
+    transition: all 0.15s ease;
+    cursor: pointer;
+}
+.btn-quick-filter:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+    border-color: #94a3b8;
+}
+.btn-quick-filter.active {
+    background: #0d6efd !important;
+    color: #ffffff !important;
+    border-color: #0d6efd !important;
+    box-shadow: 0 2px 6px rgba(13,110,253,0.3);
 }
 
 /* ===== CHART CONTAINER ===== */
@@ -139,7 +175,8 @@ $formatRupiah = function($num) {
     -webkit-overflow-scrolling: touch;
     width: 100%;
     position: relative;
-    border-radius: 12px;
+    border-radius: 14px;
+    background: #ffffff;
 }
 .keuangan-table-wrapper::-webkit-scrollbar {
     width: 6px;
@@ -152,19 +189,19 @@ $formatRupiah = function($num) {
 .keuangan-table-wrapper table {
     border-collapse: separate;
     border-spacing: 0;
-    min-width: 820px;
+    min-width: 900px;
     width: 100%;
     margin-bottom: 0;
 }
 .keuangan-table-wrapper thead th {
     background: #f8fafc !important;
-    border-bottom: 1px solid #e2e8f0;
-    color: #475569;
+    border-bottom: 2px solid #e2e8f0;
+    color: #334155;
     font-size: 0.74rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.4px;
-    padding: 10px 12px;
+    padding: 12px 14px;
     position: sticky;
     top: 0;
     z-index: 10;
@@ -176,18 +213,20 @@ $formatRupiah = function($num) {
     right: 0;
     z-index: 8;
     background-color: #ffffff !important;
-    box-shadow: -4px 0 8px -2px rgba(0,0,0,0.06);
+    box-shadow: -4px 0 10px -2px rgba(0,0,0,0.06);
+    min-width: 155px;
+    width: 155px;
 }
 .keuangan-table-wrapper thead th.keuangan-sticky-action {
     position: sticky;
     top: 0;
     right: 0;
-    z-index: 12;
+    z-index: 15;
     background-color: #f8fafc !important;
-    box-shadow: -4px 0 8px -2px rgba(0,0,0,0.06);
+    box-shadow: -4px 0 10px -2px rgba(0,0,0,0.06);
 }
 .keuangan-table-wrapper tbody td {
-    padding: 10px 12px;
+    padding: 11px 14px;
     font-size: 0.82rem;
     border-bottom: 1px solid #f1f5f9;
     vertical-align: middle;
@@ -204,16 +243,16 @@ $formatRupiah = function($num) {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
 }
 .page-header-controls .btn {
-    font-size: 0.78rem;
-    padding: 6px 12px;
+    font-size: 0.8rem;
+    padding: 7px 14px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     white-space: nowrap;
-    border-radius: 20px;
+    border-radius: 24px;
 }
 
 /* ===== CICILAN PROGRESS ===== */
@@ -221,49 +260,49 @@ $formatRupiah = function($num) {
 .badge-cicil { font-size: .63rem; }
 
 /* ===== DRAG SELECT HINT ===== */
-.drag-select-hint { font-size: .68rem; color: #9fa8b3; font-style: italic; }
+.drag-select-hint { font-size: .7rem; color: #64748b; font-style: italic; }
 
 /* ===== RESPONSIVE OVERRIDES ===== */
 @media (max-width: 991.98px) {
     .page-header-responsive {
         flex-direction: column !important;
         align-items: stretch !important;
-        gap: 10px;
+        gap: 12px;
     }
     .page-header-controls {
         width: 100%;
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 6px;
+        gap: 8px;
     }
     .page-header-controls .btn {
         width: 100%;
-        padding: 6px 10px;
-        font-size: 0.75rem;
+        padding: 8px 12px;
+        font-size: 0.78rem;
     }
     .card-keuangan {
-        border-radius: 12px;
+        border-radius: 14px;
     }
     .filter-jobdesk-section {
-        padding: 14px 16px;
+        padding: 16px;
     }
     .chart-container-responsive {
         height: 220px;
     }
     .keuangan-table-wrapper {
-        max-height: 52vh;
+        max-height: 55vh;
     }
 }
 @media (max-width: 575.98px) {
     .filter-jobdesk-section {
-        padding: 12px;
+        padding: 14px 12px;
     }
     .micro-stat-card {
-        min-height: 74px;
-        padding: 8px 10px;
+        min-height: 78px;
+        padding: 10px 12px;
     }
     .micro-stat-card .card-main-val {
-        font-size: .88rem;
+        font-size: .92rem;
     }
 }
 </style>
@@ -491,16 +530,27 @@ $formatRupiah = function($num) {
                 <canvas id="keuanganChart"></canvas>
             </div>
         </div>
-    </div>
-
-    <!-- === TRANSACTION TABLE (COMPACT WITH STICKY ACTION) === -->
-    <div class="card border-0 shadow-sm rounded-3 mb-4 overflow-hidden">
-        <div class="card-header bg-white border-bottom px-3 py-2.5 d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <span class="fw-bold text-dark small d-flex align-items-center gap-1.5" style="font-size:.82rem;">
-                <i class="bi bi-table text-primary"></i> Daftar Lengkap Transaksi Job Desk
-            </span>
-            <div class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1" id="filterActiveLabel" style="display:none; font-size:.7rem;">
-                <i class="bi bi-funnel-fill me-1"></i><span id="filterActiveName">Filter aktif</span>
+    </di    <!-- === TRANSACTION TABLE (COMPACT WITH STICKY ACTION) === -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+        <div class="card-header bg-white border-bottom px-3 px-md-4 py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <span class="fw-bold text-dark small d-flex align-items-center gap-2" style="font-size:.9rem;">
+                    <i class="bi bi-table text-primary fs-5"></i> Rekap Transaksi &amp; Laporan Finansial Job Desk
+                </span>
+                <span class="text-muted" style="font-size:.73rem;">Pantau status realisasi pembayaran santri dan setoran instansi secara terpadu</span>
+            </div>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <!-- Quick Filter Pills -->
+                <div class="quick-filter-pills">
+                    <button type="button" class="btn-quick-filter active" onclick="filterStatusTable('all', this)"><i class="bi bi-grid-fill me-1"></i>Semua</button>
+                    <button type="button" class="btn-quick-filter" onclick="filterStatusTable('santri_lunas', this)"><i class="bi bi-check-circle me-1 text-success"></i>Santri Lunas</button>
+                    <button type="button" class="btn-quick-filter" onclick="filterStatusTable('santri_belum', this)"><i class="bi bi-clock-history me-1 text-warning"></i>Piutang / Cicilan</button>
+                    <button type="button" class="btn-quick-filter" onclick="filterStatusTable('instansi_belum', this)"><i class="bi bi-exclamation-circle me-1 text-danger"></i>Hutang Instansi</button>
+                    <button type="button" class="btn-quick-filter" onclick="filterStatusTable('instansi_lunas', this)"><i class="bi bi-building-check me-1 text-info"></i>Instansi Lunas</button>
+                </div>
+                <div class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1" id="filterActiveLabel" style="display:none; font-size:.72rem;">
+                    <i class="bi bi-funnel-fill me-1"></i><span id="filterActiveName">Filter aktif</span>
+                </div>
             </div>
         </div>
         <div class="card-body p-2.5 p-md-3">
@@ -508,19 +558,19 @@ $formatRupiah = function($num) {
                 <table class="table table-hover align-middle mb-0" id="txTable" style="width:100%">
                     <thead>
                         <tr>
-                            <th class="ps-3" style="min-width: 170px;">Data Santri</th>
-                            <th style="min-width: 150px;">Proses Job Desk</th>
-                            <th style="min-width: 150px;">Pembayaran Santri</th>
-                            <th style="min-width: 150px;">Pembayaran Instansi</th>
-                            <th style="min-width: 130px;">Uang Operasional</th>
-                            <th style="min-width: 120px;">Tanggal Update</th>
-                            <th class="pe-3 text-center keuangan-sticky-action" style="width: 80px;">Aksi</th>
+                            <th class="ps-3" style="min-width: 170px;"><i class="bi bi-person me-1"></i>Data Santri</th>
+                            <th style="min-width: 150px;"><i class="bi bi-gear me-1"></i>Proses Job Desk</th>
+                            <th style="min-width: 160px;"><i class="bi bi-wallet2 me-1"></i>Pembayaran Santri</th>
+                            <th style="min-width: 160px;"><i class="bi bi-bank me-1"></i>Pembayaran Instansi</th>
+                            <th style="min-width: 140px;"><i class="bi bi-cash-stack me-1"></i>Uang Operasional</th>
+                            <th style="min-width: 120px;"><i class="bi bi-calendar3 me-1"></i>Tanggal Update</th>
+                            <th class="pe-3 text-center keuangan-sticky-action" style="min-width: 155px; width: 155px;"><i class="bi bi-tools me-1"></i>Aksi</th>
                         </tr>
                         <tr class="search-row bg-light border-bottom">
                             <th class="ps-3 py-1.5"><input type="text" class="form-control form-control-sm" placeholder="Cari santri..." style="font-size:.72rem;"></th>
                             <th class="py-1.5"><input type="text" class="form-control form-control-sm" placeholder="Cari proses..." id="txFilterProses" style="font-size:.72rem;"></th>
-                            <th class="py-1.5"><input type="text" class="form-control form-control-sm" placeholder="Cari (cth: lunas)..." style="font-size:.72rem;"></th>
-                            <th class="py-1.5"><input type="text" class="form-control form-control-sm" placeholder="Cari (cth: belum)..." style="font-size:.72rem;"></th>
+                            <th class="py-1.5"><input type="text" class="form-control form-control-sm" placeholder="Cari status santri..." id="txFilterSantri" style="font-size:.72rem;"></th>
+                            <th class="py-1.5"><input type="text" class="form-control form-control-sm" placeholder="Cari status instansi..." id="txFilterInstansi" style="font-size:.72rem;"></th>
                             <th class="py-1.5"></th>
                             <th class="py-1.5"><input type="text" class="form-control form-control-sm" placeholder="Cari tanggal..." style="font-size:.72rem;"></th>
                             <th class="pe-3 py-1.5 keuangan-sticky-action"></th>
@@ -530,32 +580,32 @@ $formatRupiah = function($num) {
                         <?php foreach ($transactions as $tx): ?>
                         <tr class="<?= ($tx['status_bayar_santri'] === 'belum') ? 'table-warning' : '' ?>">
                             <td class="ps-3">
-                                <div class="fw-bold text-dark" style="font-size:.82rem;"><?= htmlspecialchars($tx['nama']) ?></div>
-                                <div class="text-muted" style="font-size:.68rem;">KDS: <?= htmlspecialchars($tx['kds']) ?></div>
+                                <div class="fw-bold text-dark" style="font-size:.84rem;"><?= htmlspecialchars($tx['nama']) ?></div>
+                                <div class="text-muted" style="font-size:.7rem;"><span class="badge bg-secondary-subtle text-secondary border rounded-pill px-1.5">KDS: <?= htmlspecialchars($tx['kds']) ?></span></div>
                             </td>
                             <td>
-                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-0.5" style="font-size:.68rem;"><?= htmlspecialchars($tx['nama_proses']) ?></span>
-                                <div class="text-muted mt-0.5" style="font-size:.65rem;">Case #<?= $tx['case_id'] ?></div>
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1" style="font-size:.72rem;"><?= htmlspecialchars($tx['nama_proses']) ?></span>
+                                <div class="text-muted mt-0.5" style="font-size:.67rem;">Case #<?= $tx['case_id'] ?></div>
                             </td>
                             <td>
-                                <div class="fw-bold text-dark" style="font-size:.8rem;"><?= $formatRupiah((float)$tx['nominal_santri']) ?></div>
+                                <div class="fw-bold text-dark" style="font-size:.82rem;"><?= $formatRupiah((float)$tx['nominal_santri']) ?></div>
                                 <?php if ($tx['status_bayar_santri'] === 'lunas'): ?>
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill mt-0.5" style="font-size:.62rem;"><i class="bi bi-check2"></i> Lunas <?= $tx['tgl_bayar_santri'] ? '('.date('d/m/y', strtotime($tx['tgl_bayar_santri'])).')' : '' ?></span>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill mt-0.5 px-2 py-0.5" style="font-size:.65rem;"><i class="bi bi-check-circle-fill me-1"></i>Lunas <?= $tx['tgl_bayar_santri'] ? '('.date('d/m/y', strtotime($tx['tgl_bayar_santri'])).')' : '' ?></span>
                                 <?php else: ?>
                                     <?php $totC = (float)($tx['total_cicilan'] ?? 0); $jmlC = (int)($tx['jumlah_cicilan'] ?? 0); ?>
                                     <?php if ($jmlC > 0): ?>
-                                        <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill mt-0.5 badge-cicil"><i class="bi bi-arrow-repeat me-1"></i>Cicil <?= $jmlC ?>x (<?= $formatRupiah($totC) ?>)</span>
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill mt-0.5 px-2 py-0.5 badge-cicil"><i class="bi bi-arrow-repeat me-1"></i>Cicil <?= $jmlC ?>x (<?= $formatRupiah($totC) ?>)</span>
                                     <?php else: ?>
-                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill mt-0.5 fw-bold" style="font-size:.62rem;">Belum Bayar</span>
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill mt-0.5 px-2 py-0.5 fw-bold" style="font-size:.65rem;"><i class="bi bi-clock me-1"></i>Belum Bayar</span>
                                     <?php endif; ?>
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <div class="fw-bold text-dark" style="font-size:.8rem;"><?= $formatRupiah((float)$tx['nominal_instansi']) ?></div>
+                                <div class="fw-bold text-dark" style="font-size:.82rem;"><?= $formatRupiah((float)$tx['nominal_instansi']) ?></div>
                                 <?php if ($tx['status_bayar_instansi'] === 'lunas'): ?>
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill mt-0.5" style="font-size:.62rem;"><i class="bi bi-check2"></i> Lunas <?= $tx['tgl_bayar_instansi'] ? '('.date('d/m/y', strtotime($tx['tgl_bayar_instansi'])).')' : '' ?></span>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill mt-0.5 px-2 py-0.5" style="font-size:.65rem;"><i class="bi bi-building-check me-1"></i>Disetor <?= $tx['tgl_bayar_instansi'] ? '('.date('d/m/y', strtotime($tx['tgl_bayar_instansi'])).')' : '' ?></span>
                                 <?php else: ?>
-                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill mt-0.5" style="font-size:.62rem;">Belum Dibayar</span>
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill mt-0.5 px-2 py-0.5" style="font-size:.65rem;"><i class="bi bi-exclamation-circle me-1"></i>Belum Disetor</span>
                                 <?php endif; ?>
                             </td>
                             <td>
@@ -563,21 +613,31 @@ $formatRupiah = function($num) {
                                 $isLunasSantri = ($tx['status_bayar_santri']==='lunas');
                                 $surplus = (float)$tx['selisih_operasional'];
                                 ?>
-                                <div class="fw-bold <?= $isLunasSantri ? 'text-success' : 'text-muted' ?>" style="font-size:.82rem;">
+                                <div class="fw-bold <?= $isLunasSantri ? 'text-success' : 'text-muted' ?>" style="font-size:.84rem;">
                                     <?= $isLunasSantri ? '+' : '' ?><?= $formatRupiah($surplus) ?>
                                 </div>
-                                <?php if (!$isLunasSantri): ?><div class="text-muted" style="font-size:.62rem;">(Belum lunas)</div><?php endif; ?>
+                                <?php if ($isLunasSantri): ?>
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle rounded-pill px-1.5" style="font-size:.62rem;">Kas Masuk</span>
+                                <?php else: ?>
+                                    <div class="text-muted" style="font-size:.65rem;">(Menunggu Santri)</div>
+                                <?php endif; ?>
                             </td>
                             <td class="text-muted" style="font-size:.74rem;"><?= date('d M Y H:i', strtotime($tx['updated_at'])) ?></td>
                             <td class="pe-3 text-center keuangan-sticky-action">
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-light border rounded-pill shadow-sm dropdown-toggle py-0.5 px-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size:.75rem;">
-                                        <i class="bi bi-gear"></i> Aksi
+                                <div class="d-flex align-items-center justify-content-center gap-1.5">
+                                    <a href="<?= API_URL ?>/job-desk/<?= $tx['case_id'] ?>" 
+                                       class="btn btn-sm btn-outline-primary rounded-pill px-2.5 py-1 shadow-xs fw-semibold" 
+                                       title="Buka Detail Job Desk" 
+                                       style="font-size: 0.73rem; white-space: nowrap;">
+                                        <i class="bi bi-eye me-1"></i>Detail
+                                    </a>
+                                    <button type="button" 
+                                            class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-1 shadow-xs fw-semibold" 
+                                            title="Cetak Kwitansi Pembayaran" 
+                                            onclick="printKwitansiRow(<?= $tx['case_id'] ?>, '<?= htmlspecialchars(addslashes($tx['nama'])) ?>', '<?= htmlspecialchars(addslashes($tx['kds'])) ?>', '<?= htmlspecialchars(addslashes($tx['nama_proses'])) ?>', <?= (float)$tx['nominal_santri'] ?>, <?= (float)($tx['total_cicilan'] ?? 0) ?>)" 
+                                            style="font-size: 0.73rem; white-space: nowrap;">
+                                        <i class="bi bi-receipt me-1"></i>Kwitansi
                                     </button>
-                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="font-size: .82rem;">
-                                        <li><a class="dropdown-item py-1.5" href="<?= API_URL ?>/job-desk/<?= $tx['case_id'] ?>"><i class="bi bi-eye text-primary me-2"></i>Lihat Detail</a></li>
-                                        <li><button class="dropdown-item py-1.5" onclick="printKwitansiRow(<?= $tx['case_id'] ?>, '<?= htmlspecialchars(addslashes($tx['nama'])) ?>', '<?= htmlspecialchars(addslashes($tx['kds'])) ?>', '<?= htmlspecialchars(addslashes($tx['nama_proses'])) ?>', <?= (float)$tx['nominal_santri'] ?>, <?= (float)($tx['total_cicilan'] ?? 0) ?>)"><i class="bi bi-receipt text-secondary me-2"></i>Cetak Kwitansi</button></li>
-                                    </ul>
                                 </div>
                             </td>
                         </tr>
@@ -593,31 +653,39 @@ $formatRupiah = function($num) {
 <!-- ===== MODAL PIUTANG SANTRI ===== -->
 <div class="modal fade" id="piutangModal" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header bg-warning border-0 text-dark">
-                <h5 class="modal-title fw-bold"><i class="bi bi-person-down me-2"></i>Daftar Santri Belum / Cicil Bayar</h5>
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header bg-warning border-0 text-dark px-4 py-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle bg-dark bg-opacity-10 d-flex align-items-center justify-content-center" style="width:36px;height:36px;">
+                        <i class="bi bi-person-down fs-5"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0" style="font-size:1.05rem;">Daftar Santri Belum / Cicil Bayar</h5>
+                        <div class="small opacity-75" style="font-size:.73rem;">Kelola tagihan piutang, input cicilan bertahap, atau pelunasan massal</div>
+                    </div>
+                </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-4 bg-light">
+            <div class="modal-body p-3 p-md-4 bg-light">
                 <div class="mb-3 d-flex flex-wrap gap-2 align-items-center justify-content-between">
                     <div class="d-flex gap-2">
-                        <button class="btn btn-sm btn-success rounded-pill px-4 fw-bold shadow-sm" onclick="lunasiMasal()">
+                        <button class="btn btn-sm btn-success rounded-pill px-4 fw-bold shadow-xs" onclick="lunasiMasal()">
                             <i class="bi bi-check-all me-1"></i>Lunasi Terpilih
                         </button>
-                        <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="printRekapSantri()">
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-xs" onclick="printRekapSantri()">
                             <i class="bi bi-printer me-1"></i>Print Rekap
                         </button>
                     </div>
-                    <span class="drag-select-hint"><i class="bi bi-mouse2 me-1"></i>Drag untuk pilih banyak sekaligus</span>
+                    <span class="drag-select-hint"><i class="bi bi-mouse2 me-1"></i>Drag pada baris untuk pilih banyak sekaligus</span>
                 </div>
-                <div class="table-responsive bg-white rounded-3 p-3 shadow-sm">
+                <div class="table-responsive bg-white rounded-3 p-3 shadow-sm border">
                     <table class="table table-hover align-middle mb-0" id="piutangTable">
                         <thead class="table-light">
                             <tr>
                                 <th style="width:40px;" class="text-center"><input type="checkbox" class="form-check-input" id="checkAllPiutang"></th>
                                 <th>KDS</th><th>Nama Santri</th><th>Proses / Case ID</th>
                                 <th>Tagihan &amp; Cicilan</th>
-                                <th class="text-end">Aksi</th>
+                                <th class="text-end pe-3" style="min-width: 220px;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -630,14 +698,14 @@ $formatRupiah = function($num) {
                             ?>
                             <tr id="row-payment-<?= $p['case_id'] ?>">
                                 <td class="text-center"><input type="checkbox" class="form-check-input cb-piutang" value="<?= $p['case_id'] ?>"></td>
-                                <td><span class="badge bg-secondary-subtle text-secondary rounded-pill"><?= htmlspecialchars($p['kds']) ?></span></td>
+                                <td><span class="badge bg-secondary-subtle text-secondary rounded-pill px-2"><?= htmlspecialchars($p['kds']) ?></span></td>
                                 <td class="fw-bold text-dark"><?= htmlspecialchars($p['nama']) ?></td>
                                 <td>
-                                    <div style="font-size:.82rem;"><?= htmlspecialchars($p['nama_proses']) ?></div>
-                                    <div class="text-muted" style="font-size:.68rem;">#<?= $p['case_id'] ?></div>
+                                    <div style="font-size:.82rem;" class="fw-semibold text-primary"><?= htmlspecialchars($p['nama_proses']) ?></div>
+                                    <div class="text-muted" style="font-size:.68rem;">Case #<?= $p['case_id'] ?></div>
                                 </td>
                                 <td>
-                                    <div class="fw-bold text-danger mb-1"><?= $formatRupiah($nom) ?></div>
+                                    <div class="fw-bold text-danger mb-1" style="font-size:.84rem;"><?= $formatRupiah($nom) ?></div>
                                     <?php if ($jmlC > 0): ?>
                                     <div class="progress progress-cicilan mb-1">
                                         <div class="progress-bar bg-info" style="width:<?= $pct ?>%"></div>
@@ -647,21 +715,23 @@ $formatRupiah = function($num) {
                                         <span class="text-muted">Sisa: <?= $formatRupiah($sisa) ?></span>
                                     </div>
                                     <?php else: ?>
-                                    <span class="badge bg-secondary-subtle text-secondary rounded-pill" style="font-size:.6rem;">Belum ada cicilan</span>
+                                    <span class="badge bg-secondary-subtle text-secondary rounded-pill" style="font-size:.65rem;">Belum ada cicilan</span>
                                     <?php endif; ?>
                                 </td>
-                                <td class="text-end">
-                                    <div class="dropdown">
-                                        <button class="btn btn-sm btn-light border rounded-pill shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="bi bi-gear"></i> Aksi
+                                <td class="text-end pe-3">
+                                    <div class="d-flex align-items-center justify-content-end gap-1 flex-wrap">
+                                        <button type="button" class="btn btn-sm btn-info text-white rounded-pill px-2.5 py-1 fw-semibold shadow-xs" onclick="openCicilanModal(<?= $p['case_id'] ?>, '<?= htmlspecialchars(addslashes($p['nama'])) ?>', <?= $nom ?>, <?= $totC ?>, '<?= htmlspecialchars(addslashes($p['kds'])) ?>', '<?= htmlspecialchars(addslashes($p['nama_proses'])) ?>')" style="font-size:.73rem;" title="Input Cicilan">
+                                            <i class="bi bi-cash-coin me-1"></i>Cicil
                                         </button>
-                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="font-size: .85rem;">
-                                            <li><a class="dropdown-item py-2" href="<?= API_URL ?>/job-desk/<?= $p['case_id'] ?>"><i class="bi bi-eye text-primary me-2"></i>Lihat Detail</a></li>
-                                            <li><button class="dropdown-item py-2" onclick="openCicilanModal(<?= $p['case_id'] ?>, '<?= htmlspecialchars(addslashes($p['nama'])) ?>', <?= $nom ?>, <?= $totC ?>, '<?= htmlspecialchars(addslashes($p['kds'])) ?>', '<?= htmlspecialchars(addslashes($p['nama_proses'])) ?>')"><i class="bi bi-cash-coin text-info me-2"></i>Bayar Cicilan</button></li>
-                                            <li><button class="dropdown-item py-2" onclick="lunasiSantri(<?= $p['case_id'] ?>)"><i class="bi bi-check-circle text-success me-2"></i>Lunasi Sekaligus</button></li>
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li><button class="dropdown-item py-2" onclick="printKwitansiRow(<?= $p['case_id'] ?>, '<?= htmlspecialchars(addslashes($p['nama'])) ?>', '<?= htmlspecialchars(addslashes($p['kds'])) ?>', '<?= htmlspecialchars(addslashes($p['nama_proses'])) ?>', <?= $nom ?>, <?= $totC ?>)"><i class="bi bi-receipt text-secondary me-2"></i>Cetak Kwitansi</button></li>
-                                        </ul>
+                                        <button type="button" class="btn btn-sm btn-success rounded-pill px-2.5 py-1 fw-semibold shadow-xs" onclick="lunasiSantri(<?= $p['case_id'] ?>)" style="font-size:.73rem;" title="Tandai Lunas">
+                                            <i class="bi bi-check-circle me-1"></i>Lunas
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-1 shadow-xs" onclick="printKwitansiRow(<?= $p['case_id'] ?>, '<?= htmlspecialchars(addslashes($p['nama'])) ?>', '<?= htmlspecialchars(addslashes($p['kds'])) ?>', '<?= htmlspecialchars(addslashes($p['nama_proses'])) ?>', <?= $nom ?>, <?= $totC ?>)" title="Cetak Kwitansi" style="font-size:.73rem;">
+                                            <i class="bi bi-receipt"></i>
+                                        </button>
+                                        <a href="<?= API_URL ?>/job-desk/<?= $p['case_id'] ?>" class="btn btn-sm btn-outline-primary rounded-pill px-2 py-1 shadow-xs" title="Lihat Detail" style="font-size:.73rem;">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
                                     </div>
                                 </td>
                             </tr>
@@ -677,48 +747,55 @@ $formatRupiah = function($num) {
 <!-- ===== MODAL HUTANG INSTANSI ===== -->
 <div class="modal fade" id="hutangInstansiModal" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header border-0 text-white" style="background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%);">
-                <h5 class="modal-title fw-bold"><i class="bi bi-bank2 me-2"></i>Hutang ke Instansi (Belum Dibayar)</h5>
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header border-0 text-white px-4 py-3" style="background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%);">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle bg-white bg-opacity-20 d-flex align-items-center justify-content-center" style="width:36px;height:36px;">
+                        <i class="bi bi-bank2 fs-5 text-white"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold text-white mb-0" style="font-size:1.05rem;">Hutang ke Instansi (Belum Dibayar)</h5>
+                        <div class="text-white text-opacity-75 small" style="font-size:.73rem;">Daftar tagihan resmi instansi pemerintah yang belum disetorkan</div>
+                    </div>
+                </div>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-4 bg-light">
-                <div class="mb-3 d-flex gap-2 align-items-center justify-content-between">
-                    <button class="btn btn-sm btn-danger rounded-pill px-4 fw-bold shadow-sm" onclick="lunasiInstansiMasal()">
+            <div class="modal-body p-3 p-md-4 bg-light">
+                <div class="mb-3 d-flex gap-2 align-items-center justify-content-between flex-wrap">
+                    <button class="btn btn-sm btn-danger rounded-pill px-4 fw-bold shadow-xs" onclick="lunasiInstansiMasal()">
                         <i class="bi bi-check-all me-1"></i>Lunasi Terpilih ke Instansi
                     </button>
-                    <span class="drag-select-hint"><i class="bi bi-mouse2 me-1"></i>Drag untuk pilih banyak</span>
+                    <span class="drag-select-hint"><i class="bi bi-mouse2 me-1"></i>Drag pada baris untuk pilih banyak</span>
                 </div>
-                <div class="table-responsive bg-white rounded-3 p-3 shadow-sm">
+                <div class="table-responsive bg-white rounded-3 p-3 shadow-sm border">
                     <table class="table table-hover align-middle mb-0" id="hutangInstansiTable">
                         <thead class="table-light">
                             <tr>
                                 <th style="width:40px" class="text-center"><input type="checkbox" class="form-check-input" id="checkAllHutang"></th>
                                 <th>KDS</th><th>Nama Santri</th><th>Proses</th>
                                 <th>Nominal ke Instansi</th>
-                                <th class="text-end">Aksi</th>
+                                <th class="text-end pe-3" style="min-width: 160px;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($hutangInstansiDetails as $h): ?>
                             <tr id="row-instansi-<?= $h['case_id'] ?>">
                                 <td class="text-center"><input type="checkbox" class="form-check-input cb-hutang" value="<?= $h['case_id'] ?>"></td>
-                                <td><span class="badge bg-secondary-subtle text-secondary rounded-pill"><?= htmlspecialchars($h['kds']) ?></span></td>
+                                <td><span class="badge bg-secondary-subtle text-secondary rounded-pill px-2"><?= htmlspecialchars($h['kds']) ?></span></td>
                                 <td class="fw-bold text-dark"><?= htmlspecialchars($h['nama_santri']) ?></td>
                                 <td>
-                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2"><?= htmlspecialchars($h['nama_proses']) ?></span>
-                                    <div class="text-muted mt-1" style="font-size:.68rem;">#<?= $h['case_id'] ?></div>
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1" style="font-size:.72rem;"><?= htmlspecialchars($h['nama_proses']) ?></span>
+                                    <div class="text-muted mt-1" style="font-size:.68rem;">Case #<?= $h['case_id'] ?></div>
                                 </td>
-                                <td><div class="fw-bold text-danger"><?= $formatRupiah((float)$h['nominal_instansi']) ?></div></td>
-                                <td class="text-end">
-                                    <div class="dropdown">
-                                        <button class="btn btn-sm btn-light border rounded-pill shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="bi bi-gear"></i> Aksi
+                                <td><div class="fw-bold text-danger" style="font-size:.85rem;"><?= $formatRupiah((float)$h['nominal_instansi']) ?></div></td>
+                                <td class="text-end pe-3">
+                                    <div class="d-flex align-items-center justify-content-end gap-1.5">
+                                        <button type="button" class="btn btn-sm btn-danger rounded-pill px-3 py-1 fw-semibold shadow-xs" onclick="lunasiInstansi(<?= $h['case_id'] ?>)" style="font-size:.73rem;">
+                                            <i class="bi bi-check-circle me-1"></i>Lunasi
                                         </button>
-                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="font-size: .85rem;">
-                                            <li><a class="dropdown-item py-2" href="<?= API_URL ?>/job-desk/<?= $h['case_id'] ?>"><i class="bi bi-eye text-primary me-2"></i>Lihat Detail</a></li>
-                                            <li><button class="dropdown-item py-2" onclick="lunasiInstansi(<?= $h['case_id'] ?>)"><i class="bi bi-check-circle text-danger me-2"></i>Lunasi Instansi</button></li>
-                                        </ul>
+                                        <a href="<?= API_URL ?>/job-desk/<?= $h['case_id'] ?>" class="btn btn-sm btn-outline-primary rounded-pill px-2.5 py-1 shadow-xs fw-semibold" title="Lihat Detail" style="font-size:.73rem;">
+                                            <i class="bi bi-eye me-1"></i>Detail
+                                        </a>
                                     </div>
                                 </td>
                             </tr>
@@ -729,7 +806,7 @@ $formatRupiah = function($num) {
             </div>
         </div>
     </div>
-</div>
+</div></div>
 
 <!-- ===== MODAL CICILAN ===== -->
 <div class="modal fade" id="cicilanModal" tabindex="-1" data-bs-backdrop="static">
@@ -883,6 +960,25 @@ document.addEventListener('DOMContentLoaded', function() {
     initDragSelect('.cb-piutang');
     initDragSelect('.cb-hutang');
 });
+
+window.filterStatusTable = function(statusType, btnEl) {
+    $('.btn-quick-filter').removeClass('active');
+    if (btnEl) $(btnEl).addClass('active');
+    
+    if (window.txTableInstance) {
+        if (statusType === 'all') {
+            window.txTableInstance.column(2).search('').column(3).search('').draw();
+        } else if (statusType === 'santri_lunas') {
+            window.txTableInstance.column(2).search('Lunas').column(3).search('').draw();
+        } else if (statusType === 'santri_belum') {
+            window.txTableInstance.column(2).search('Belum|Cicil', true, false).column(3).search('').draw();
+        } else if (statusType === 'instansi_belum') {
+            window.txTableInstance.column(2).search('').column(3).search('Belum').draw();
+        } else if (statusType === 'instansi_lunas') {
+            window.txTableInstance.column(2).search('').column(3).search('Disetor').draw();
+        }
+    }
+};
 
 function buildChart(type) {
     _chartType = type;
