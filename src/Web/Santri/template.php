@@ -594,7 +594,13 @@ $this->setTitle('Master Data Santri | Sistem Informasi');
                             </div>
                         </div>
                         <div class="tab-pane fade" id="t_ritas">
-                            <div class="table-responsive" style="max-height: 130px;">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="small fw-bold text-muted">Riwayat ITAS:</span>
+                                <button type="button" id="btnReorderItas" class="btn btn-sm btn-outline-primary py-0 px-2 fw-medium shadow-xs" style="font-size:0.7rem; border-radius: 6px;" onclick="konfigurasiUlangLevelItas()" title="Perbaiki & susun ulang nomor level ITAS berurutan sesuai kronologi tanggal">
+                                    <i class="bi bi-arrow-repeat me-1"></i>Konfigurasi Ulang Level
+                                </button>
+                            </div>
+                            <div class="table-responsive" style="max-height: 120px;">
                                 <table class="table table-sm table-bordered m-0"><thead class="table-light"><tr><th>No ITAS</th><th>Lvl</th><th>Exp</th><th>Dok</th><th>Aksi</th></tr></thead><tbody id="listRITAS"></tbody></table>
                             </div>
                         </div>
@@ -1680,6 +1686,7 @@ function hapusFoto() {
 
 let origPaspor = { no: '', exp: '', tempat: '', tgl: '' };
 let origItas = { no: '', exp: '', level: '' };
+let currentSantriDetail = null;
 
 function editSantri(kds) {
     currentKds = kds;
@@ -1807,6 +1814,13 @@ function editSantri(kds) {
                 </tr>
             `).join('') || '<tr><td colspan="5" class="text-center text-muted">Kosong</td></tr>';
 
+            currentSantriDetail = data;
+
+            const btnReorderItas = document.getElementById('btnReorderItas');
+            if (btnReorderItas) {
+                btnReorderItas.style.display = canEditItas ? 'inline-block' : 'none';
+            }
+
             const canEditBerkas = !isPindahan || allowedFields.includes('edit_berkas_santri');
 
             document.getElementById('listBerkas').innerHTML = (data.berkas || []).map(b => `
@@ -1878,6 +1892,143 @@ function editSantri(kds) {
                 document.getElementById('modalTitle').innerHTML += `<span class="badge bg-warning text-dark ms-2 align-middle border border-warning" style="font-size: 0.65rem; padding: 4px 6px; border-radius: 6px; vertical-align: text-top;"><i class="bi bi-exclamation-circle me-1"></i>Pindahan (${s.kepengurusan || '-'})</span>`;
             }
         });
+}
+
+function konfigurasiUlangLevelItas() {
+    if (!currentKds || !currentSantriDetail || !currentSantriDetail.r_itas || currentSantriDetail.r_itas.length === 0) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Tidak Ada Riwayat',
+            text: 'Belum ada data riwayat ITAS untuk santri ini.',
+            confirmButtonColor: '#0d6efd'
+        });
+        return;
+    }
+
+    const itasList = currentSantriDetail.r_itas.slice().sort((a, b) => {
+        const dateA = a.exp_itas ? new Date(a.exp_itas).getTime() : 0;
+        const dateB = b.exp_itas ? new Date(b.exp_itas).getTime() : 0;
+        if (dateA !== dateB) return dateA - dateB;
+        return (a.id || 0) - (b.id || 0);
+    });
+
+    let previewRows = itasList.map((item, idx) => {
+        const nextLvl = idx + 1;
+        const curLvl = item.level_itas !== null && item.level_itas !== undefined && item.level_itas !== '' ? item.level_itas : '-';
+        const isDiff = String(curLvl) !== String(nextLvl);
+        return `
+            <tr>
+                <td class="text-start fw-medium">${item.no_itas || '-'}</td>
+                <td>${formatDate(item.exp_itas)}</td>
+                <td><span class="badge ${isDiff ? 'bg-danger-subtle text-danger border border-danger-subtle' : 'bg-secondary-subtle text-secondary'}">${curLvl}</span></td>
+                <td><i class="bi bi-arrow-right text-muted me-1"></i><span class="badge bg-success fw-bold">Tingkat ${nextLvl}</span></td>
+            </tr>
+        `;
+    }).join('');
+
+    Swal.fire({
+        title: '<i class="bi bi-arrow-repeat text-primary me-2"></i>Konfigurasi Ulang Level ITAS',
+        html: `
+            <div class="text-start small">
+                <p class="text-muted mb-2">
+                    Sistem akan menyusun dan memperbaiki urutan <strong>Tingkat Level ITAS</strong> secara berurutan (kronologis dari tanggal berlaku terlama ke yang terbaru).
+                </p>
+                <div class="mb-3 d-flex align-items-center gap-2">
+                    <label class="form-label mb-0 fw-bold text-dark">Mulai dari Tingkat:</label>
+                    <input type="number" id="swalStartLevel" class="form-control form-control-sm text-center fw-bold" style="width: 70px;" value="1" min="1" oninput="updateSwalItasPreview()">
+                </div>
+                <div class="table-responsive border rounded-3 mb-2" style="max-height: 180px;">
+                    <table class="table table-sm table-striped text-center mb-0" style="font-size: 0.78rem;">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th class="text-start">No ITAS</th>
+                                <th>Exp</th>
+                                <th>Lvl Saat Ini</th>
+                                <th>Lvl Baru</th>
+                            </tr>
+                        </thead>
+                        <tbody id="swalItasPreviewBody">
+                            ${previewRows}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-muted" style="font-size: 0.72rem;">
+                    <i class="bi bi-info-circle me-1"></i>Level ITAS aktif pada form utama juga akan disesuaikan otomatis setelah disimpan.
+                </div>
+            </div>
+        `,
+        width: '520px',
+        showCancelButton: true,
+        confirmButtonText: '<i class="bi bi-check-circle me-1"></i>Terapkan Perubahan',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#0d6efd',
+        cancelButtonColor: '#6c757d',
+        customClass: { popup: 'rounded-4 shadow-lg' },
+        didOpen: () => {
+            window.updateSwalItasPreview = () => {
+                const startLvl = parseInt(document.getElementById('swalStartLevel')?.value) || 1;
+                const tbody = document.getElementById('swalItasPreviewBody');
+                if (!tbody) return;
+                tbody.innerHTML = itasList.map((item, idx) => {
+                    const nextLvl = startLvl + idx;
+                    const curLvl = item.level_itas !== null && item.level_itas !== undefined && item.level_itas !== '' ? item.level_itas : '-';
+                    const isDiff = String(curLvl) !== String(nextLvl);
+                    return `
+                        <tr>
+                            <td class="text-start fw-medium">${item.no_itas || '-'}</td>
+                            <td>${formatDate(item.exp_itas)}</td>
+                            <td><span class="badge ${isDiff ? 'bg-danger-subtle text-danger border border-danger-subtle' : 'bg-secondary-subtle text-secondary'}">${curLvl}</span></td>
+                            <td><i class="bi bi-arrow-right text-muted me-1"></i><span class="badge bg-success fw-bold">Tingkat ${nextLvl}</span></td>
+                        </tr>
+                    `;
+                }).join('');
+            };
+        },
+        preConfirm: () => {
+            const startLvl = parseInt(document.getElementById('swalStartLevel')?.value) || 1;
+            return { start_level: startLvl };
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const startLevel = result.value.start_level;
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+            
+            Swal.fire({
+                title: 'Menyimpan Perubahan...',
+                text: 'Memperbarui urutan level ITAS',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            fetch(`<?= API_URL ?>/api/santri/${currentKds}/reorder-itas`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrf
+                },
+                body: JSON.stringify({ start_level: startLevel })
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil Disusun Ulang!',
+                        text: res.message,
+                        timer: 1800,
+                        showConfirmButton: false
+                    });
+                    editSantri(currentKds);
+                } else {
+                    Swal.fire('Gagal!', res.message || 'Terjadi kesalahan saat memproses data', 'error');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                Swal.fire('Gagal!', 'Terjadi kesalahan koneksi server.', 'error');
+            });
+        }
+    });
 }
 
 function collectForm() {

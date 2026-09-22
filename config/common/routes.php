@@ -187,6 +187,9 @@ return [
             Route::post('/api/santri/auto-upload-itas')
                 ->action(\App\Web\Santri\AutoUploadItasAction::class)
                 ->name('api.santri.auto-upload-itas'),
+            Route::post('/api/santri/{kds:\d+}/reorder-itas')
+                ->action(\App\Web\Santri\ReorderItasAction::class)
+                ->name('api.santri.reorder-itas'),
 
             // Import Excel
             Route::get('/import-excel')
