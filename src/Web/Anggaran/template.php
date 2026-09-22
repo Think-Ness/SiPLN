@@ -555,6 +555,61 @@ use Yiisoft\View\WebView;
         color: #fff;
         box-shadow: 0 3px 8px rgba(13,110,253,0.3);
     }
+
+    /* Modal Nota Split Pane Scrolling */
+    @media (min-width: 768px) {
+        #modalNota .modal-dialog {
+            max-width: 1140px;
+        }
+        #modalNota .modal-body {
+            max-height: 80vh;
+            overflow: hidden;
+            padding: 1rem 1.25rem !important;
+        }
+        #modalNota .modal-split-row {
+            height: calc(80vh - 2rem);
+            min-height: 480px;
+        }
+        #colNotaList, #colNotaForm {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        #colNotaList .card, #colNotaForm .card {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+        #colNotaList .card-body-scrollable,
+        #colNotaForm .card-body-scrollable {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+    }
+    /* Custom subtle scrollbar */
+    #colNotaList .card-body-scrollable::-webkit-scrollbar,
+    #colNotaForm .card-body-scrollable::-webkit-scrollbar {
+        width: 6px;
+    }
+    #colNotaList .card-body-scrollable::-webkit-scrollbar-track,
+    #colNotaForm .card-body-scrollable::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 4px;
+    }
+    #colNotaList .card-body-scrollable::-webkit-scrollbar-thumb,
+    #colNotaForm .card-body-scrollable::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+    }
+    #colNotaList .card-body-scrollable::-webkit-scrollbar-thumb:hover,
+    #colNotaForm .card-body-scrollable::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
 </style>
 
 <div id="printArea" style="display:none;"></div>
@@ -1200,16 +1255,16 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
 
 <!-- Modal Lapor Nota -->
 <div class="modal fade" id="modalNota" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
             <div class="modal-header bg-success text-white border-0 px-3 px-md-4 py-3">
-                <div class="d-flex align-items-center gap-2">
-                    <div class="rounded-circle bg-white bg-opacity-20 text-white d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
-                        <i class="bi bi-receipt fs-5"></i>
+                <div class="d-flex align-items-center gap-2.5">
+                    <div class="rounded-circle bg-white bg-opacity-20 text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px;">
+                        <i class="bi bi-receipt fs-5 text-white"></i>
                     </div>
                     <div>
-                        <h5 class="modal-title fw-bold mb-0" style="font-size: 1.05rem;">Laporan Nota Pembelanjaan</h5>
-                        <div class="text-white-50 small" style="font-size: 0.75rem;">Unggah bukti kuitansi & rincian belanja operasional</div>
+                        <h5 class="modal-title fw-bold text-white mb-0" style="font-size: 1.05rem;">Laporan Nota Pembelanjaan</h5>
+                        <div class="text-white text-opacity-75 small" style="font-size: 0.75rem;">Unggah bukti kuitansi & rincian belanja operasional</div>
                     </div>
                 </div>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -1230,11 +1285,11 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
                     </div>
                 </div>
 
-                <div class="row g-3">
-                    <!-- Sisi Kiri: Daftar Nota Masuk -->
+                <div class="row g-3 modal-split-row">
+                    <!-- Sisi Kiri: Daftar Nota Masuk (Scroll Sendiri) -->
                     <div class="col-12 col-md-7" id="colNotaList">
                         <div class="card border-0 shadow-xs rounded-3 p-3 bg-white h-100">
-                            <div class="d-flex justify-content-between align-items-center mb-2.5 pb-2 border-bottom">
+                            <div class="d-flex justify-content-between align-items-center mb-2.5 pb-2 border-bottom flex-shrink-0">
                                 <h6 class="fw-bold mb-0 text-dark" style="font-size: 0.9rem;">
                                     <i class="bi bi-receipt-cutoff text-success me-1"></i> Daftar Nota Masuk
                                 </h6>
@@ -1242,16 +1297,16 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
                                     <i class="bi bi-printer me-1"></i> Cetak Laporan
                                 </button>
                             </div>
-                            <div id="notaListContainer" class="d-flex flex-column gap-2" style="max-height: calc(100vh - 280px); overflow-y: auto; padding-right: 4px;">
+                            <div id="notaListContainer" class="card-body-scrollable d-flex flex-column gap-2">
                                 <div class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Memuat nota...</div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Sisi Kanan: Form Tambah/Edit Nota -->
+                    <!-- Sisi Kanan: Form Tambah/Edit Nota (Scroll Sendiri) -->
                     <div class="col-12 col-md-5" id="colNotaForm">
-                        <div class="card border-0 shadow-xs rounded-3 p-3 bg-white">
-                            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                        <div class="card border-0 shadow-xs rounded-3 p-3 bg-white h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom flex-shrink-0">
                                 <h6 class="fw-bold text-primary mb-0" style="font-size: 0.92rem;" id="lblNotaFormTitle">
                                     <i class="bi bi-plus-square me-1.5"></i> Tambah Nota Baru
                                 </h6>
@@ -1260,71 +1315,75 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
                                 </button>
                             </div>
                             
-                            <div class="row g-2.5 mb-3">
-                                <div class="col-12 col-sm-6">
-                                    <label class="text-muted small fw-bold text-uppercase mb-1" style="font-size: 0.7rem;">Nomor/Label Nota *</label>
-                                    <input type="text" id="n_nomor" class="form-control form-control-sm" placeholder="Misal: Nota 1" onkeydown="notaInputKeydown(event, 'n_tanggal', null)">
-                                </div>
-                                <div class="col-12 col-sm-6">
-                                    <label class="text-muted small fw-bold text-uppercase mb-1" style="font-size: 0.7rem;">Tanggal Belanja *</label>
-                                    <input type="date" id="n_tanggal" class="form-control form-control-sm" value="<?= date('Y-m-d') ?>" onkeydown="notaInputKeydown(event, 'n_bagian_nota', 'n_nomor')">
-                                </div>
-                                <div class="col-12">
-                                    <label class="text-muted small fw-bold text-uppercase mb-1" style="font-size: 0.7rem;">Bagian / Divisi (Opsional)</label>
-                                    <input type="text" id="n_bagian_nota" class="form-control form-control-sm" placeholder="Pilih dari daftar atau ketik baru" list="listBagianNota" onkeydown="notaInputKeydown(event, 'nb_nama', 'n_tanggal')">
-                                    <datalist id="listBagianNota"></datalist>
-                                </div>
-                                <div class="col-12">
-                                    <label class="text-muted small fw-bold text-uppercase mb-1" style="font-size: 0.7rem;">Foto Bukti Kuitansi (Opsional)</label>
-                                    <input type="file" id="n_file" class="form-control form-control-sm" accept="image/*">
-                                </div>
-                            </div>
-                            
-                            <!-- Rincian Barang Box -->
-                            <div class="bg-light p-3 rounded-3 border border-secondary-subtle mb-3">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <label class="text-dark small fw-bold text-uppercase mb-0" style="font-size: 0.75rem;"><i class="bi bi-box-seam me-1 text-primary"></i> Input Barang Nota</label>
-                                </div>
-                                <div class="row g-2 mb-2">
-                                    <div class="col-12">
-                                        <label class="small text-muted mb-0.5" style="font-size:0.68rem;">Nama Barang / Pembelian *</label>
-                                        <input type="text" id="nb_nama" class="form-control form-control-sm" placeholder="Misal: Konsumsi / ATK" onkeydown="notaInputKeydown(event, 'nb_qty', 'n_bagian_nota')">
+                            <div class="card-body-scrollable">
+                                <div class="row g-2.5 mb-3">
+                                    <div class="col-12 col-sm-6">
+                                        <label class="text-muted small fw-bold text-uppercase mb-1" style="font-size: 0.7rem;">Nomor/Label Nota *</label>
+                                        <input type="text" id="n_nomor" class="form-control form-control-sm" placeholder="Misal: Nota 1" onkeydown="notaInputKeydown(event, 'n_tanggal', null)">
                                     </div>
-                                    <div class="col-6">
-                                        <label class="small text-muted mb-0.5" style="font-size:0.68rem;">Jumlah (Qty)</label>
-                                        <input type="number" id="nb_qty" class="form-control form-control-sm text-center" placeholder="1" value="1" onkeydown="notaInputKeydown(event, 'nb_satuan', 'nb_nama')">
-                                    </div>
-                                    <div class="col-6">
-                                        <label class="small text-muted mb-0.5" style="font-size:0.68rem;">Satuan</label>
-                                        <input type="text" id="nb_satuan" class="form-control form-control-sm" placeholder="Pcs/Bln" onkeydown="notaInputKeydown(event, 'nb_harga', 'nb_qty')">
+                                    <div class="col-12 col-sm-6">
+                                        <label class="text-muted small fw-bold text-uppercase mb-1" style="font-size: 0.7rem;">Tanggal Belanja *</label>
+                                        <input type="date" id="n_tanggal" class="form-control form-control-sm" value="<?= date('Y-m-d') ?>" onkeydown="notaInputKeydown(event, 'n_bagian_nota', 'n_nomor')">
                                     </div>
                                     <div class="col-12">
-                                        <label class="small text-muted mb-0.5" style="font-size:0.68rem;">Harga Satuan (Rp) *</label>
-                                        <div class="input-group input-group-sm">
-                                            <span class="input-group-text bg-white text-muted">Rp</span>
-                                            <input type="number" id="nb_harga" class="form-control form-control-sm" placeholder="0" onkeydown="notaInputKeydown(event, 'nb_bagian', 'nb_satuan')">
-                                        </div>
+                                        <label class="text-muted small fw-bold text-uppercase mb-1" style="font-size: 0.7rem;">Bagian / Divisi (Opsional)</label>
+                                        <input type="text" id="n_bagian_nota" class="form-control form-control-sm" placeholder="Pilih dari daftar atau ketik baru" list="listBagianNota" onkeydown="notaInputKeydown(event, 'nb_nama', 'n_tanggal')">
+                                        <datalist id="listBagianNota"></datalist>
                                     </div>
                                     <div class="col-12">
-                                        <label class="small text-muted mb-0.5" style="font-size:0.68rem;">Bagian / Seksi (Opsional)</label>
-                                        <input type="text" id="nb_bagian" class="form-control form-control-sm" placeholder="Misal: Dapur / Kantor" onkeydown="notaInputKeydown(event, 'ADD_BARANG', 'nb_harga')">
-                                    </div>
-                                    <div class="col-12 mt-2">
-                                        <button class="btn btn-primary w-100 fw-bold py-1.5 shadow-xs rounded-pill" onclick="addBarangNota()">
-                                            <i class="bi bi-plus-circle me-1.5"></i> Tambah Barang Ke Nota
-                                        </button>
+                                        <label class="text-muted small fw-bold text-uppercase mb-1" style="font-size: 0.7rem;">Foto Bukti Kuitansi (Opsional)</label>
+                                        <input type="file" id="n_file" class="form-control form-control-sm" accept="image/*">
                                     </div>
                                 </div>
                                 
-                                <div class="d-flex flex-column gap-1 mt-2" id="tblBarangNota" style="max-height: 160px; overflow-y: auto;"></div>
-                                <div class="d-flex justify-content-between align-items-center pt-2 border-top mt-2">
-                                    <span class="small text-muted fw-bold">TOTAL NOTA:</span>
-                                    <span id="nb_total" class="text-success fw-bold fs-6">Rp 0</span>
+                                <!-- Rincian Barang Box -->
+                                <div class="bg-light p-3 rounded-3 border border-secondary-subtle mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <label class="text-dark small fw-bold text-uppercase mb-0" style="font-size: 0.75rem;"><i class="bi bi-box-seam me-1 text-primary"></i> Input Barang Nota</label>
+                                    </div>
+                                    <div class="row g-2 mb-2">
+                                        <div class="col-12">
+                                            <label class="small text-muted mb-0.5" style="font-size:0.68rem;">Nama Barang / Pembelian *</label>
+                                            <input type="text" id="nb_nama" class="form-control form-control-sm" placeholder="Misal: Konsumsi / ATK" onkeydown="notaInputKeydown(event, 'nb_qty', 'n_bagian_nota')">
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="small text-muted mb-0.5" style="font-size:0.68rem;">Jumlah (Qty)</label>
+                                            <input type="number" id="nb_qty" class="form-control form-control-sm text-center" placeholder="1" value="1" onkeydown="notaInputKeydown(event, 'nb_satuan', 'nb_nama')">
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="small text-muted mb-0.5" style="font-size:0.68rem;">Satuan</label>
+                                            <input type="text" id="nb_satuan" class="form-control form-control-sm" placeholder="Pcs/Bln" onkeydown="notaInputKeydown(event, 'nb_harga', 'nb_qty')">
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="small text-muted mb-0.5" style="font-size:0.68rem;">Harga Satuan (Rp) *</label>
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text bg-white text-muted">Rp</span>
+                                                <input type="number" id="nb_harga" class="form-control form-control-sm" placeholder="0" onkeydown="notaInputKeydown(event, 'nb_bagian', 'nb_satuan')">
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="small text-muted mb-0.5" style="font-size:0.68rem;">Bagian / Seksi (Opsional)</label>
+                                            <input type="text" id="nb_bagian" class="form-control form-control-sm" placeholder="Misal: Dapur / Kantor" onkeydown="notaInputKeydown(event, 'ADD_BARANG', 'nb_harga')">
+                                        </div>
+                                        <div class="col-12 mt-2">
+                                            <button class="btn btn-primary w-100 fw-bold py-1.5 shadow-xs rounded-pill" onclick="addBarangNota()">
+                                                <i class="bi bi-plus-circle me-1.5"></i> Tambah Barang Ke Nota
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-flex flex-column gap-1 mt-2" id="tblBarangNota" style="max-height: 160px; overflow-y: auto;"></div>
+                                    <div class="d-flex justify-content-between align-items-center pt-2 border-top mt-2">
+                                        <span class="small text-muted fw-bold">TOTAL NOTA:</span>
+                                        <span id="nb_total" class="text-success fw-bold fs-6">Rp 0</span>
+                                    </div>
                                 </div>
                             </div>
-                            <button id="btnSimpanNota" class="btn btn-success w-100 rounded-pill fw-bold shadow-xs py-2.5" onclick="simpanNota()">
-                                <i class="bi bi-cloud-upload me-1.5"></i> Simpan Nota (Ctrl+Enter)
-                            </button>
+                            <div class="pt-2 border-top mt-auto flex-shrink-0">
+                                <button id="btnSimpanNota" class="btn btn-success w-100 rounded-pill fw-bold shadow-xs py-2.5" onclick="simpanNota()">
+                                    <i class="bi bi-cloud-upload me-1.5"></i> Simpan Nota (Ctrl+Enter)
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
