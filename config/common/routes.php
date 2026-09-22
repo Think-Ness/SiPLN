@@ -190,6 +190,9 @@ return [
             Route::post('/api/santri/{kds:\d+}/reorder-itas')
                 ->action(\App\Web\Santri\ReorderItasAction::class)
                 ->name('api.santri.reorder-itas'),
+            Route::post('/api/santri/bulk-reorder-itas')
+                ->action(\App\Web\Santri\BulkReorderItasAction::class)
+                ->name('api.santri.bulk-reorder-itas'),
 
             // Import Excel
             Route::get('/import-excel')

@@ -200,7 +200,7 @@ $this->setTitle('Master Data Santri | Sistem Informasi');
 </div>
 
 <!-- Filter & Bulk Action Toolbar -->
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <div class="d-flex flex-wrap gap-2">
         <button class="btn btn-sm btn-primary d-none rounded-pill shadow-sm px-3" id="btnBulkBukaProses" onclick="bukaProsesBulkSantri()">
             <i class="bi bi-play-circle me-1"></i> Buka Proses Terpilih (<span id="countSelectedProses">0</span>)
@@ -210,6 +210,14 @@ $this->setTitle('Master Data Santri | Sistem Informasi');
         </button>
         <button class="btn btn-sm btn-info d-none rounded-pill shadow-sm px-3 text-white" id="btnBulkEdit" onclick="bukaEditMassal()">
             <i class="bi bi-pencil-square me-1"></i> Edit Massal (<span id="countSelectedEdit">0</span>)
+        </button>
+        <button class="btn btn-sm btn-warning d-none rounded-pill shadow-sm px-3 text-dark fw-medium" id="btnBulkReorderItas" onclick="bulkKonfigurasiLevelItas('selected')">
+            <i class="bi bi-arrow-repeat me-1"></i> Susun Level ITAS Terpilih (<span id="countSelectedItas">0</span>)
+        </button>
+    </div>
+    <div>
+        <button class="btn btn-sm btn-outline-warning rounded-pill shadow-sm px-3 fw-medium text-dark" onclick="bulkKonfigurasiLevelItas('all')" title="Susun ulang level ITAS secara otomatis untuk seluruh santri aktif">
+            <i class="bi bi-arrow-repeat me-1"></i> Susun Level ITAS Semua Santri
         </button>
     </div>
 </div>
@@ -2031,6 +2039,111 @@ function konfigurasiUlangLevelItas() {
     });
 }
 
+function bulkKonfigurasiLevelItas(scope = 'selected') {
+    let selectedKds = [];
+    if (scope === 'selected') {
+        $('.row-cb:checked:not(:disabled)', table.rows({search:'applied'}).nodes()).each(function() {
+            selectedKds.push(parseInt($(this).val()));
+        });
+        if (selectedKds.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Pilih Santri',
+                text: 'Centang setidaknya 1 santri pada tabel terlebih dahulu.',
+                confirmButtonColor: '#0d6efd'
+            });
+            return;
+        }
+    }
+
+    const titleText = scope === 'selected' 
+        ? `<i class="bi bi-arrow-repeat text-warning me-2"></i>Susun Level ITAS (${selectedKds.length} Santri)`
+        : `<i class="bi bi-arrow-repeat text-warning me-2"></i>Susun Level ITAS Massal (Semua Santri)`;
+
+    const descText = scope === 'selected'
+        ? `Sistem akan menyusun dan memperbaiki nomor urutan Level ITAS secara kronologis (dari tanggal berlaku terlama ke yang terbaru) untuk <strong>${selectedKds.length} santri yang dipilih</strong>.`
+        : `Sistem akan memproses seluruh santri aktif dalam sistem untuk memastikan seluruh riwayat level ITAS terurut secara rapi dan berurutan dari dokumen paling lampau.`;
+
+    Swal.fire({
+        title: titleText,
+        html: `
+            <div class="text-start small">
+                <p class="text-muted mb-3">${descText}</p>
+                <div class="p-3 bg-light rounded-3 border mb-3">
+                    <label class="form-label mb-1 fw-bold text-dark">Mulai dari Tingkat (Default Level Awal):</label>
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="number" id="swalBulkStartLevel" class="form-control form-control-sm fw-bold" style="width: 80px;" value="1" min="1">
+                        <span class="text-muted" style="font-size: 0.75rem;">(Dokumen ITAS paling lampau akan diberi tingkat ini)</span>
+                    </div>
+                </div>
+                <div class="alert alert-warning py-2 px-3 border-0 rounded-3 mb-0" style="font-size: 0.75rem;">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                    Proses ini akan mengurutkan ulang nilai <code>level_itas</code> di database sesuai tanggal berlaku dokumen. Tindakan ini aman dan tercatat di Audit Log.
+                </div>
+            </div>
+        `,
+        width: '500px',
+        showCancelButton: true,
+        confirmButtonText: '<i class="bi bi-play-fill me-1"></i>Mulai Proses Massal',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#ffc107',
+        cancelButtonColor: '#6c757d',
+        customClass: {
+            popup: 'rounded-4 shadow-lg',
+            confirmButton: 'text-dark fw-bold'
+        },
+        preConfirm: () => {
+            const startLevel = parseInt(document.getElementById('swalBulkStartLevel')?.value) || 1;
+            return { start_level: startLevel };
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const startLevel = result.value.start_level;
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+
+            Swal.fire({
+                title: 'Sedang Memproses...',
+                text: 'Menyusun ulang urutan level ITAS santri...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            fetch('<?= API_URL ?>/api/santri/bulk-reorder-itas', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrf
+                },
+                body: JSON.stringify({
+                    scope: scope,
+                    kds: selectedKds,
+                    start_level: startLevel
+                })
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Selesai!',
+                        text: res.message,
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#0d6efd'
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire('Gagal!', res.message || 'Terjadi kesalahan saat memproses data.', 'error');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                Swal.fire('Gagal!', 'Terjadi kesalahan pada jaringan/server.', 'error');
+            });
+        }
+    });
+}
+
 function collectForm() {
     const get = id => document.getElementById('f_' + id)?.value ?? '';
     const form = new FormData();
@@ -2639,15 +2752,18 @@ function resetFilters() {
         $('#countSelected').text(count);
         $('#countSelectedProses').text(count);
         $('#countSelectedEdit').text(count);
+        $('#countSelectedItas').text(count);
         
         if (count > 0) {
             $('#btnBulkNonaktif').removeClass('d-none');
             $('#btnBulkBukaProses').removeClass('d-none');
             $('#btnBulkEdit').removeClass('d-none');
+            $('#btnBulkReorderItas').removeClass('d-none');
         } else {
             $('#btnBulkNonaktif').addClass('d-none');
             $('#btnBulkBukaProses').addClass('d-none');
             $('#btnBulkEdit').addClass('d-none');
+            $('#btnBulkReorderItas').addClass('d-none');
         }
     }
 
