@@ -127,7 +127,7 @@ class Action
                 p.nama_proses
             FROM jobdesk_cases j
             JOIN master_santri s ON j.kds = s.kds
-            LEFT JOIN (SELECT kds, exp_paspor, no_paspor FROM mtb_paspor WHERE id IN (SELECT MAX(id) FROM mtb_paspor GROUP BY kds)) pas ON s.kds = pas.kds
+            LEFT JOIN (SELECT kds, exp_paspor, no_paspor FROM mtb_paspor WHERE aktif = 1) pas ON s.kds = pas.kds
             LEFT JOIN (SELECT kds, exp_itas FROM mtb_itas WHERE aktif = 1) its ON s.kds = its.kds
             LEFT JOIN jobdesk_master_process p ON j.process_id = p.id
             WHERE 1=1 $whereExt

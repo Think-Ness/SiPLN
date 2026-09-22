@@ -48,7 +48,7 @@ class DetailAction
                 pr.nama_proses
             FROM jobdesk_cases j
             JOIN master_santri s ON j.kds = s.kds
-            LEFT JOIN (SELECT kds, no_paspor, exp_paspor FROM mtb_paspor WHERE id IN (SELECT MAX(id) FROM mtb_paspor GROUP BY kds)) p ON s.kds = p.kds
+            LEFT JOIN (SELECT kds, no_paspor, exp_paspor FROM mtb_paspor WHERE aktif = 1) p ON s.kds = p.kds
             LEFT JOIN (SELECT kds, exp_itas FROM mtb_itas WHERE aktif = 1) its ON s.kds = its.kds
             LEFT JOIN jobdesk_master_process pr ON j.process_id = pr.id
             WHERE j.id = :id $whereExt
@@ -71,12 +71,12 @@ class DetailAction
         ";
         $notes = $db->createCommand($sqlNotes, [':id' => $id])->queryAll();
 
-        // Fetch full passport info
-        $sqlPaspor = "SELECT * FROM mtb_paspor WHERE kds = :kds ORDER BY id DESC LIMIT 1";
+        // Fetch full passport info (prioritaskan dokumen aktif)
+        $sqlPaspor = "SELECT * FROM mtb_paspor WHERE kds = :kds ORDER BY aktif DESC, (exp_paspor IS NULL OR exp_paspor = '' OR exp_paspor = '0000-00-00') ASC, exp_paspor DESC, id DESC LIMIT 1";
         $paspor = $db->createCommand($sqlPaspor, [':kds' => $case['kds']])->queryOne();
 
-        // Fetch full ITAS info
-        $sqlItas = "SELECT * FROM mtb_itas WHERE kds = :kds ORDER BY id DESC LIMIT 1";
+        // Fetch full ITAS info (prioritaskan dokumen aktif)
+        $sqlItas = "SELECT * FROM mtb_itas WHERE kds = :kds ORDER BY aktif DESC, (exp_itas IS NULL OR exp_itas = '' OR exp_itas = '0000-00-00') ASC, exp_itas DESC, id DESC LIMIT 1";
         $itas = $db->createCommand($sqlItas, [':kds' => $case['kds']])->queryOne();
 
         // Fetch payment data for this case (with cicilan info)
