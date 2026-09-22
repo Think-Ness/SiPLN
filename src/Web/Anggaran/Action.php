@@ -61,10 +61,19 @@ class Action
         // Fetch Instansi Map for Kop Surat and Real Name
         $instansiMap = [];
         try {
-            $instansis = $db->createCommand("SELECT kode, nama_instansi, pondok FROM master_instansi")->queryAll();
+            $instansis = $db->createCommand("SELECT kode, nama_instansi, pondok, kepengurusan, def_kepengurusan, email, kop_surat, kode_instansi FROM master_instansi")->queryAll();
             foreach ($instansis as $ins) {
                 if (!empty($ins['pondok'])) {
                     $instansiMap[$ins['pondok']] = $ins;
+                }
+                if (!empty($ins['kode'])) {
+                    $instansiMap[(string)$ins['kode']] = $ins;
+                }
+                if (!empty($ins['kode_instansi'])) {
+                    $instansiMap[$ins['kode_instansi']] = $ins;
+                }
+                if (!empty($ins['nama_instansi'])) {
+                    $instansiMap[$ins['nama_instansi']] = $ins;
                 }
             }
         } catch (\Exception $e) {
@@ -85,15 +94,21 @@ class Action
             $p['total_digunakan'] = $totalUsed ?: 0;
             $p['sisa_anggaran'] = $p['total_disetujui'] - $p['total_digunakan'];
             
-            // Calculate durations
+            // Calculate durations & days elapsed for reminders
             $p['durasi_cair'] = '-';
+            $p['hari_sejak_ajuan'] = 0;
+            if (!empty($p['tanggal_pengajuan'])) {
+                $p['hari_sejak_ajuan'] = max(0, (int)floor((time() - strtotime($p['tanggal_pengajuan'])) / 86400));
+            }
             if (!empty($p['tanggal_pengajuan']) && !empty($p['tanggal_disetujui'])) {
                 $diff = strtotime($p['tanggal_disetujui']) - strtotime($p['tanggal_pengajuan']);
                 $p['durasi_cair'] = max(1, round($diff / 86400)) . ' Hari';
             }
             
             $p['durasi_lapor'] = '-';
+            $p['hari_sejak_cair'] = 0;
             if (!empty($p['tanggal_disetujui'])) {
+                $p['hari_sejak_cair'] = max(0, (int)floor((time() - strtotime($p['tanggal_disetujui'])) / 86400));
                 $endTime = !empty($p['tanggal_selesai']) ? strtotime($p['tanggal_selesai']) : time();
                 $diff = $endTime - strtotime($p['tanggal_disetujui']);
                 $p['durasi_lapor'] = max(1, round($diff / 86400)) . ' Hari';

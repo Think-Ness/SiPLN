@@ -83,11 +83,15 @@ final class Action
             $firebaseConfig = require $firebaseConfigPath;
         }
 
+        // Load ITAS Parser Config
+        $itasConfig = \App\Shared\ItasParserEngine::getConfig($db);
+
         return $viewRenderer->render(__DIR__ . '/template', [
             'allowedFields' => $allowedFields,
             'availableFields' => $availableFields,
             'role' => $role,
             'firebaseConfig' => $firebaseConfig,
+            'itasConfig' => $itasConfig,
         ]);
     }
 }

@@ -79,8 +79,8 @@ final class MailingDetailAction
             $schemas = $db->createCommand(
                 "SELECT nama_template, json_data_collection, json_custom_inputs 
                  FROM surat_template_dinamis 
-                 WHERE instansi_tujuan = :kantor",
-                [':kantor' => $kantor]
+                 WHERE instansi_tujuan = :kantor AND (instansi_id = :inst_id OR instansi_id IS NULL)",
+                [':kantor' => $kantor, ':inst_id' => $mailing['instansi_id'] ?? ($_SESSION['instansi_id'] ?? null)]
             )->queryAll();
             
             foreach ($schemas as $row) {
@@ -141,6 +141,68 @@ final class MailingDetailAction
             }
         }
 
+        // Hitung counter nomor surat terkini
+        $year = date('Y');
+        $suratCounters = [];
+
+        $typeConfigs = [
+            'SP' => ['aliases' => ['SP', 'Surat_Permohonan', 'Surat Permohonan'], 'abbrevs' => ['SP']],
+            'SK' => ['aliases' => ['SK', 'Surat_Keterangan', 'Surat Keterangan'], 'abbrevs' => ['SK']],
+            'SJ' => ['aliases' => ['SJ', 'Surat_Jaminan', 'Surat Jaminan'], 'abbrevs' => ['SJ']],
+            'ST' => ['aliases' => ['ST', 'Surat_Tugas', 'Surat Tugas'], 'abbrevs' => ['ST']],
+        ];
+
+        try {
+            $existingTypes = $db->createCommand("SELECT DISTINCT tipe_surat FROM surat_generated")->queryColumn();
+            foreach ($existingTypes as $et) {
+                if (empty($et)) continue;
+                $matched = false;
+                foreach ($typeConfigs as $cfg) {
+                    if (in_array($et, $cfg['aliases'], true)) {
+                        $matched = true;
+                        break;
+                    }
+                }
+                if (!$matched) {
+                    $clean = str_replace(' ', '_', $et);
+                    $abbr = '';
+                    foreach (explode('_', $clean) as $w) { if (!empty($w)) $abbr .= strtoupper($w[0]); }
+                    $typeConfigs[$clean] = [
+                        'aliases' => array_unique([$et, $clean, str_replace('_', ' ', $et)]),
+                        'abbrevs' => !empty($abbr) ? [substr($abbr, 0, 4)] : []
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        foreach ($typeConfigs as $mainKey => $cfg) {
+            $whereTipeParts = [];
+            foreach ($cfg['aliases'] as $al) {
+                $whereTipeParts[] = "tipe_surat = '" . addslashes($al) . "'";
+            }
+            $whereSql = '(' . implode(' OR ', $whereTipeParts);
+            foreach ($cfg['abbrevs'] as $ab) {
+                $whereSql .= " OR nomor_surat LIKE '%/" . addslashes($ab) . "/%'";
+            }
+            $whereSql .= ')';
+
+            $maxNo = (int)$db->createCommand(
+                "SELECT COALESCE(MAX(CAST(SUBSTRING_INDEX(IFNULL(nomor_akhir, nomor_surat), '/', 1) AS UNSIGNED)), 0) 
+                 FROM surat_generated 
+                 WHERE $whereSql AND YEAR(tanggal_surat) = :year",
+                [':year' => $year]
+            )->queryScalar();
+
+            $nextNo = $maxNo + 1;
+            $suratCounters[$mainKey] = $nextNo;
+            foreach ($cfg['aliases'] as $al) {
+                $suratCounters[$al] = $nextNo;
+            }
+            foreach ($cfg['abbrevs'] as $ab) {
+                $suratCounters[$ab] = $nextNo;
+            }
+        }
+
         return JsonResponse::create([
             'success' => true,
             'mailing' => $mailing,
@@ -151,6 +213,7 @@ final class MailingDetailAction
             'currentUser' => $currentUser ?: [],
             'templateSchemas' => $templateSchemas,
             'templateCustomInputs' => $templateCustomInputs,
+            'suratCounters' => $suratCounters,
         ]);
     }
 }

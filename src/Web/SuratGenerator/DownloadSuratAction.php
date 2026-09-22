@@ -32,19 +32,12 @@ final class DownloadSuratAction
             'SP' => 'Surat_Permohonan' . $suffix . '.docx',
             'SK' => 'Surat_Keterangan' . $suffix . '.docx',
             'SJ' => 'Surat_Jaminan' . $suffix . '.docx',
-            'ST' => 'Surat_Tugas.docx'  // Surat Tugas always single
+            'ST' => 'Surat_Tugas.docx',  // Surat Tugas always single
+            'Surat_Tugas' => 'Surat_Tugas.docx',
+            'Surat_Permohonan' => 'Surat_Permohonan' . $suffix . '.docx',
+            'Surat_Keterangan' => 'Surat_Keterangan' . $suffix . '.docx',
+            'Surat_Jaminan' => 'Surat_Jaminan' . $suffix . '.docx',
         ];
-
-        if (isset($templateFiles[$tipeSurat])) {
-            $templateFileName = $templateFiles[$tipeSurat];
-        } else {
-            // Dynamic Template from Kelola Template
-            // $tipeSurat is the core_name, e.g. "Surat_Perizinan"
-            if (empty($tipeSurat)) {
-                return $this->errorResponse("Parameter tipe surat tidak valid atau tidak ada. Contoh: ?tipe=SP atau ?tipe=Surat_Perizinan", 400);
-            }
-            $templateFileName = $tipeSurat . $suffix . '.docx';
-        }
 
         // Load jenis pengajuan
         $jenisPengajuan = $db->createCommand(
@@ -62,7 +55,7 @@ final class DownloadSuratAction
             $instansiId = $_SESSION['instansi_id'] ?? null;
         }
         if (empty($instansiId)) {
-            return $this->errorResponse("Instansi tidak dapat ditentukan. Pastikan mailing memiliki instansi atau Anda sudah login dengan akun instansi.", 400);
+            $instansiId = (int) $db->createCommand("SELECT kode FROM master_instansi WHERE def_kepengurusan LIKE '%Ponorogo%' ORDER BY kode ASC LIMIT 1")->queryScalar();
         }
 
         // Load instansi
@@ -80,13 +73,66 @@ final class DownloadSuratAction
         // Resolve Surat_Menyurat base dari path_folder instansi
         $instansiBase = UploadPath::getBase($db, (int)$instansiId);
         $publicSuratDir = $instansiBase !== null ? $instansiBase . '/Surat_Menyurat' : dirname(__DIR__, 3) . '/public/uploads/Surat_Menyurat';
+        $kantorDir = $publicSuratDir . '/' . $kantor;
 
-        // Locate template file — use Windows-style backslash path for COM
-        $templatePathSlash = $publicSuratDir . '/' . $kantor . '/' . $templateFileName;
-        
-        if (!file_exists($templatePathSlash)) {
+        // Cari file template yang paling cocok
+        $candidateFiles = [];
+        if (isset($templateFiles[$tipeSurat])) {
+            $candidateFiles[] = $templateFiles[$tipeSurat];
+        }
+        if (!empty($tipeSurat)) {
+            $candidateFiles[] = $tipeSurat . $suffix . '.docx';
+            $candidateFiles[] = $tipeSurat . '.docx';
+            $candidateFiles[] = str_replace(' ', '_', $tipeSurat) . $suffix . '.docx';
+            $candidateFiles[] = str_replace(' ', '_', $tipeSurat) . '.docx';
+            // Cek jika ada suffix perseorangan/sekaligus yang terbalik
+            $candidateFiles[] = $tipeSurat . ($isSekaligus ? '_Satu_Orang.docx' : '_Banyak_Orang.docx');
+        }
+
+        // Cek juga dari database surat_template_dinamis
+        try {
+            $dbPath = $db->createCommand(
+                "SELECT file_path FROM surat_template_dinamis 
+                 WHERE instansi_tujuan = :kantor AND (instansi_id = :inst_id OR instansi_id IS NULL)
+                   AND (nama_template = :tipe OR REPLACE(nama_template, ' ', '_') = :tipe)
+                 LIMIT 1",
+                [':kantor' => $jenisPengajuan['kantor'], ':inst_id' => $instansiId, ':tipe' => $tipeSurat]
+            )->queryScalar();
+            if ($dbPath) {
+                $candidateFiles[] = basename($dbPath);
+            }
+        } catch (\Throwable $e) {}
+
+        $templatePathSlash = null;
+        $matchedFileName = '';
+        foreach (array_unique($candidateFiles) as $cFile) {
+            $testPath = $kantorDir . '/' . $cFile;
+            if (file_exists($testPath)) {
+                $templatePathSlash = $testPath;
+                $matchedFileName = $cFile;
+                break;
+            }
+        }
+
+        // Fallback jika belum ketemu: scan isi folder kantor
+        if (!$templatePathSlash && is_dir($kantorDir)) {
+            $dirFiles = scandir($kantorDir);
+            $cleanTipe = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $tipeSurat));
+            foreach ($dirFiles as $df) {
+                if (strtolower(pathinfo($df, PATHINFO_EXTENSION)) !== 'docx') continue;
+                $cleanDf = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $df));
+                if (str_contains($cleanDf, $cleanTipe)) {
+                    $templatePathSlash = $kantorDir . '/' . $df;
+                    $matchedFileName = $df;
+                    break;
+                }
+            }
+        }
+
+        if (!$templatePathSlash || !file_exists($templatePathSlash)) {
+            $expected = !empty($candidateFiles) ? implode("' atau '", array_slice($candidateFiles, 0, 3)) : $tipeSurat . '.docx';
             return $this->errorResponse(
-                "File template tidak ditemukan: {$templatePathSlash}\n\nPastikan file '{$templateFileName}' ada di folder:\n" . str_replace('/', '\\', $publicSuratDir) . "\\{$kantor}\\"
+                "File template tidak ditemukan untuk instansi tujuan '{$kantor}'.\n\nPastikan file template ('{$expected}') tersedia di folder:\n" . str_replace('/', '\\', $kantorDir)
             );
         }
 

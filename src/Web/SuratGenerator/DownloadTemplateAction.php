@@ -94,14 +94,52 @@ final class DownloadTemplateAction
             );
         }
 
-        // Buka file langsung menggunakan OS default app (Word)
+        if (isset($queryParams['download']) && $queryParams['download'] === '1') {
+            $filename = basename($templatePath);
+            $content = file_get_contents($templatePath);
+            $response = new Response(200);
+            $response->getBody()->write($content);
+            return $response
+                ->withHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+                ->withHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
+                ->withHeader('Cache-Control', 'no-cache');
+        }
+
+        // Windows path resolution (tanpa exec di server agar file tidak terkunci oleh user SYSTEM)
         $windowsPath = str_replace('/', '\\', $templatePath);
-        exec('start "" "' . $windowsPath . '"');
+
+        // Generate ms-word URI untuk client/laptop dengan hostname sipln
+        $host = $request->getUri()->getHost() ?: ($_SERVER['HTTP_HOST'] ?? 'sipln');
+        if (str_contains($host, ':')) {
+            $host = explode(':', $host)[0];
+        }
+
+        $docRoot = str_replace('\\', '/', dirname(__DIR__, 3) . '/public');
+        $normalizedTpl = str_replace('\\', '/', $templatePath);
+        if (str_starts_with($normalizedTpl, $docRoot)) {
+            $relPath = ltrim(substr($normalizedTpl, strlen($docRoot)), '/');
+        } else {
+            $relPath = 'uploads/' . basename($publicSuratDir) . '/' . $kantor . '/' . ($templateFiles[$tipeSurat] ?? '');
+        }
+        $relPathWin = str_replace('/', '\\', $relPath);
+
+        if ($host === 'localhost' || $host === '127.0.0.1') {
+            $msWordTarget = $windowsPath;
+        } else {
+            $uncHost = ($host === '192.168.1.10') ? '192.168.1.10' : ($host === '100.68.135.3' ? '100.68.135.3' : 'sipln');
+            $msWordTarget = '\\\\' . $uncHost . '\\foreign-pc1\\02. Aplikasi\\XAMPP\\htdocs\\webapp\\public\\' . $relPathWin;
+        }
+
+        $siplnUrl = 'sipln://' . rawurlencode($msWordTarget);
 
         $response = new Response(200);
         $response->getBody()->write(json_encode([
-            'success' => true,
-            'message' => 'Template berhasil dibuka di Word'
+            'success'     => true,
+            'message'     => 'Template berhasil dibuka di Microsoft Word',
+            'path'        => $windowsPath,
+            'unc_path'    => $msWordTarget,
+            'ms_word_url' => 'ms-word:ofe|u|' . $msWordTarget,
+            'sipln_url'   => $siplnUrl
         ]));
 
         return $response->withHeader('Content-Type', 'application/json');

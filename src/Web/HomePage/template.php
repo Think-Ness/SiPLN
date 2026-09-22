@@ -38,7 +38,7 @@ $viewFilter = $view ?? 'my'; // default from Action.php
             <div class="text-muted small fw-medium mt-1">Data diperbarui secara real-time. Klik pada grafik untuk rincian.</div>
         </div>
     </div>
-    <div class="d-flex align-items-center gap-2 flex-wrap">
+    <div class="d-flex align-items-center gap-2 flex-wrap dashboard-header-controls">
         <!-- View Filter (Cross-Tenant) -->
         <?php if ($role !== 'super_admin' && !empty($myKep)): ?>
         <div class="btn-group btn-group-sm shadow-sm rounded-pill p-1 bg-white border" role="group">
@@ -52,18 +52,18 @@ $viewFilter = $view ?? 'my'; // default from Action.php
         <?php endif; ?>
         
         <!-- Status Filter -->
-        <div class="btn-group btn-group-sm shadow-sm" role="group">
-            <a href="?view=<?= $viewFilter ?>&status=1" class="btn <?= $status === '1' ? 'btn-primary' : 'btn-outline-primary' ?>">Aktif</a>
-            <a href="?view=<?= $viewFilter ?>&status=0" class="btn <?= $status === '0' ? 'btn-primary' : 'btn-outline-primary' ?>">Non Aktif</a>
-            <a href="?view=<?= $viewFilter ?>&status=all" class="btn <?= $status === 'all' ? 'btn-primary' : 'btn-outline-primary' ?>">Semua</a>
+        <div class="btn-group btn-group-sm shadow-sm rounded-pill overflow-hidden border" role="group">
+            <a href="?view=<?= $viewFilter ?>&status=1" class="btn <?= $status === '1' ? 'btn-primary' : 'btn-light text-secondary' ?> px-3 fw-medium">Aktif</a>
+            <a href="?view=<?= $viewFilter ?>&status=0" class="btn <?= $status === '0' ? 'btn-primary' : 'btn-light text-secondary' ?> px-3 fw-medium">Non Aktif</a>
+            <a href="?view=<?= $viewFilter ?>&status=all" class="btn <?= $status === 'all' ? 'btn-primary' : 'btn-light text-secondary' ?> px-3 fw-medium">Semua</a>
         </div>
-        <div>
+        <div class="d-flex align-items-center gap-1 flex-wrap">
             <?php
             $isLocal = in_array($_SERVER['HTTP_HOST'], ['localhost', '127.0.0.1', '::1']) || strpos($_SERVER['HTTP_HOST'], 'localhost:') === 0;
             if ($isLocal): ?>
-                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle me-2" id="networkStatusBadge"><i class="bi bi-hdd-network-fill me-1" style="font-size:.5rem"></i> Server Lokal (Offline)</span>
+                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle me-1" id="networkStatusBadge"><i class="bi bi-hdd-network-fill me-1" style="font-size:.5rem"></i> Server Lokal</span>
             <?php else: ?>
-                <span class="badge bg-success-subtle text-success border border-success-subtle me-2" id="networkStatusBadge"><i class="bi bi-cloud-check-fill me-1" style="font-size:.5rem"></i> Server Online</span>
+                <span class="badge bg-success-subtle text-success border border-success-subtle me-1" id="networkStatusBadge"><i class="bi bi-cloud-check-fill me-1" style="font-size:.5rem"></i> Server Online</span>
             <?php endif; ?>
             <span class="text-muted small"><?= date('d M Y, H:i') ?></span>
         </div>
@@ -71,56 +71,59 @@ $viewFilter = $view ?? 'my'; // default from Action.php
 </div>
 
 <!-- Stat Cards -->
-<div class="row g-4 mb-4">
-    <!-- Row 1 -->
-    <div class="col-lg-3 col-md-6">
-        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left:4px solid #198754 !important;">
-            <div class="card-body p-4 d-flex align-items-center gap-3">
-                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:60px;height:60px;background:rgba(25,135,84,.12);">
+<div class="row g-2 g-md-3 g-xl-4 mb-4">
+    <!-- Row 1: Kategori Santri & Total -->
+    <div class="col-6 col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden stat-card dashboard-stat-card" style="border-left:4px solid #0d6efd !important;">
+            <div class="card-body p-2.5 p-sm-3 p-md-4 d-flex align-items-center gap-2 gap-sm-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 stat-icon" style="width:48px;height:48px;background:rgba(13,110,253,.12);">
+                    <i class="bi bi-database-fill-check text-primary fs-4"></i>
+                </div>
+                <div class="overflow-hidden">
+                    <div class="fs-2 fw-bold text-primary lh-1 mb-1 stat-number"><?= $total ?></div>
+                    <div class="text-muted small fw-medium text-uppercase mb-1 stat-label text-truncate" style="letter-spacing: .5px; font-size: .75rem;">Total Santri</div>
+                    <span class="badge bg-light text-secondary border text-truncate d-inline-block" style="font-size: .65rem; max-width: 100%;">
+                        <?= $totalAktif ?? ($aktif + $pengabdian + $capel) ?> Aktif · <?= $inaktif ?> Inaktif
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden stat-card dashboard-stat-card" style="border-left:4px solid #198754 !important;">
+            <div class="card-body p-2.5 p-sm-3 p-md-4 d-flex align-items-center gap-2 gap-sm-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 stat-icon" style="width:48px;height:48px;background:rgba(25,135,84,.12);">
                     <i class="bi bi-people-fill text-success fs-4"></i>
                 </div>
-                <div>
-                    <div class="fs-2 fw-bold text-success lh-1 mb-1"><?= $aktif ?></div>
-                    <div class="text-muted small fw-medium text-uppercase" style="letter-spacing: .5px; font-size: .75rem;">Santri Aktif</div>
+                <div class="overflow-hidden">
+                    <div class="fs-2 fw-bold text-success lh-1 mb-1 stat-number"><?= $aktif ?></div>
+                    <div class="text-muted small fw-medium text-uppercase mb-1 stat-label text-truncate" style="letter-spacing: .5px; font-size: .75rem;">Santri KMI (Aktif)</div>
+                    <?php if (!empty($aktifBreakdown)): ?>
+                        <div class="d-flex flex-wrap gap-1">
+                            <?php foreach ($aktifBreakdown as $b): ?>
+                                <span class="badge" style="background: rgba(25,135,84,.1); color: #198754; border: 1px solid rgba(25,135,84,.2); font-size: .65rem;">
+                                    <?= htmlspecialchars($b['pondok'] ?: 'Unknown') ?>: <?= $b['count'] ?>
+                                </span>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php else: ?>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: .65rem;">
+                            Kelas 1 - 6 Reguler
+                        </span>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-lg-3 col-md-6">
-        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left:4px solid #dc3545 !important;">
-            <div class="card-body p-4 d-flex align-items-center gap-3">
-                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:60px;height:60px;background:rgba(220,53,69,.12);">
-                    <i class="bi bi-person-x-fill text-danger fs-4"></i>
-                </div>
-                <div>
-                    <div class="fs-2 fw-bold text-danger lh-1 mb-1"><?= $inaktif ?></div>
-                    <div class="text-muted small fw-medium text-uppercase" style="letter-spacing: .5px; font-size: .75rem;">Santri Inaktif</div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-3 col-md-6">
-        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left:4px solid #059669 !important;">
-            <div class="card-body p-4 d-flex align-items-center gap-3">
-                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:60px;height:60px;background:rgba(5,150,105,.12);">
-                    <i class="bi bi-award-fill fs-4" style="color: #059669;"></i>
-                </div>
-                <div>
-                    <div class="fs-2 fw-bold lh-1 mb-1" style="color: #059669;"><?= $alumni ?></div>
-                    <div class="text-muted small fw-medium text-uppercase" style="letter-spacing: .5px; font-size: .75rem;">Alumni</div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-3 col-md-6">
-        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left:4px solid #7c3aed !important;">
-            <div class="card-body p-4 d-flex align-items-center gap-3">
-                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:60px;height:60px;background:rgba(124,58,237,.12);">
+    <div class="col-6 col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden stat-card dashboard-stat-card" style="border-left:4px solid #7c3aed !important;">
+            <div class="card-body p-2.5 p-sm-3 p-md-4 d-flex align-items-center gap-2 gap-sm-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 stat-icon" style="width:48px;height:48px;background:rgba(124,58,237,.12);">
                     <i class="bi bi-building-fill text-purple fs-4" style="color: #7c3aed;"></i>
                 </div>
-                <div>
-                    <div class="fs-2 fw-bold lh-1 mb-1" style="color: #7c3aed;"><?= $pengabdian ?></div>
-                    <div class="text-muted small fw-medium text-uppercase mb-2" style="letter-spacing: .5px; font-size: .75rem;">Pengabdian</div>
+                <div class="overflow-hidden">
+                    <div class="fs-2 fw-bold lh-1 mb-1 stat-number" style="color: #7c3aed;"><?= $pengabdian ?></div>
+                    <div class="text-muted small fw-medium text-uppercase mb-1 stat-label text-truncate" style="letter-spacing: .5px; font-size: .75rem;">Pengabdian</div>
                     <?php if (!empty($pengabdianBreakdown)): ?>
                         <div class="d-flex flex-wrap gap-1">
                             <?php foreach ($pengabdianBreakdown as $b): ?>
@@ -134,21 +137,19 @@ $viewFilter = $view ?? 'my'; // default from Action.php
             </div>
         </div>
     </div>
-
-    <!-- Row 2 -->
-    <div class="col-lg-4 col-md-6">
-        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left:4px solid #0d6efd !important;">
-            <div class="card-body p-4 d-flex align-items-center gap-3">
-                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:60px;height:60px;background:rgba(13,110,253,.12);">
-                    <i class="bi bi-person-lines-fill text-primary fs-4"></i>
+    <div class="col-6 col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden stat-card dashboard-stat-card" style="border-left:4px solid #0284c7 !important;">
+            <div class="card-body p-2.5 p-sm-3 p-md-4 d-flex align-items-center gap-2 gap-sm-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 stat-icon" style="width:48px;height:48px;background:rgba(2,132,199,.12);">
+                    <i class="bi bi-person-lines-fill fs-4" style="color: #0284c7;"></i>
                 </div>
-                <div>
-                    <div class="fs-2 fw-bold text-primary lh-1 mb-1"><?= $capel ?></div>
-                    <div class="text-muted small fw-medium text-uppercase mb-2" style="letter-spacing: .5px; font-size: .75rem;">Calon Pelajar</div>
+                <div class="overflow-hidden">
+                    <div class="fs-2 fw-bold lh-1 mb-1 stat-number" style="color: #0284c7;"><?= $capel ?></div>
+                    <div class="text-muted small fw-medium text-uppercase mb-1 stat-label text-truncate" style="letter-spacing: .5px; font-size: .75rem;">Calon Pelajar</div>
                     <?php if (!empty($capelBreakdown)): ?>
                         <div class="d-flex flex-wrap gap-1">
                             <?php foreach ($capelBreakdown as $b): ?>
-                                <span class="badge" style="background: rgba(13,110,253,.1); color: #0d6efd; border: 1px solid rgba(13,110,253,.2); font-size: .65rem;">
+                                <span class="badge" style="background: rgba(2,132,199,.1); color: #0284c7; border: 1px solid rgba(2,132,199,.2); font-size: .65rem;">
                                     <?= htmlspecialchars($b['program'] ?: 'Unknown') ?>: <?= $b['count'] ?>
                                 </span>
                             <?php endforeach; ?>
@@ -158,28 +159,62 @@ $viewFilter = $view ?? 'my'; // default from Action.php
             </div>
         </div>
     </div>
-    <div class="col-lg-4 col-md-6">
-        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left:4px solid #fd7e14 !important;">
-            <div class="card-body p-4 d-flex align-items-center gap-3">
-                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:60px;height:60px;background:rgba(253,126,20,.12);">
-                    <i class="bi bi-passport-fill text-warning fs-4"></i>
+
+    <!-- Row 2: Inaktif, Alumni, Peringatan Dokumen -->
+    <div class="col-6 col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden stat-card dashboard-stat-card" style="border-left:4px solid #dc3545 !important;">
+            <div class="card-body p-2.5 p-sm-3 p-md-4 d-flex align-items-center gap-2 gap-sm-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 stat-icon" style="width:48px;height:48px;background:rgba(220,53,69,.12);">
+                    <i class="bi bi-person-x-fill text-danger fs-4"></i>
                 </div>
-                <div>
-                    <div class="fs-2 fw-bold text-warning lh-1 mb-1"><?= $expPasporSoon ?></div>
-                    <div class="text-muted small fw-medium text-uppercase" style="letter-spacing: .5px; font-size: .75rem;">Paspor Exp. ≤ 1 Bln</div>
+                <div class="overflow-hidden">
+                    <div class="fs-2 fw-bold text-danger lh-1 mb-1 stat-number"><?= $inaktif ?></div>
+                    <div class="text-muted small fw-medium text-uppercase mb-1 stat-label text-truncate" style="letter-spacing: .5px; font-size: .75rem;">Santri Inaktif</div>
+                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: .65rem;">
+                        Non-Aktif
+                    </span>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-lg-4 col-md-6">
-        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="border-left:4px solid #0dcaf0 !important;">
-            <div class="card-body p-4 d-flex align-items-center gap-3">
-                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:60px;height:60px;background:rgba(13,202,240,.12);">
+    <div class="col-6 col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden stat-card dashboard-stat-card" style="border-left:4px solid #059669 !important;">
+            <div class="card-body p-2.5 p-sm-3 p-md-4 d-flex align-items-center gap-2 gap-sm-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 stat-icon" style="width:48px;height:48px;background:rgba(5,150,105,.12);">
+                    <i class="bi bi-award-fill fs-4" style="color: #059669;"></i>
+                </div>
+                <div class="overflow-hidden">
+                    <div class="fs-2 fw-bold lh-1 mb-1 stat-number" style="color: #059669;"><?= $alumni ?></div>
+                    <div class="text-muted small fw-medium text-uppercase mb-1 stat-label text-truncate" style="letter-spacing: .5px; font-size: .75rem;">Alumni</div>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: .65rem;">
+                        Tamat KMI
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden stat-card dashboard-stat-card" style="border-left:4px solid #fd7e14 !important;">
+            <div class="card-body p-2.5 p-sm-3 p-md-4 d-flex align-items-center gap-2 gap-sm-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 stat-icon" style="width:48px;height:48px;background:rgba(253,126,20,.12);">
+                    <i class="bi bi-passport-fill text-warning fs-4"></i>
+                </div>
+                <div class="overflow-hidden">
+                    <div class="fs-2 fw-bold text-warning lh-1 mb-1 stat-number"><?= $expPasporSoon ?></div>
+                    <div class="text-muted small fw-medium text-uppercase stat-label text-truncate" style="letter-spacing: .5px; font-size: .75rem;">Paspor ≤ 1 Bln</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden stat-card dashboard-stat-card" style="border-left:4px solid #0dcaf0 !important;">
+            <div class="card-body p-2.5 p-sm-3 p-md-4 d-flex align-items-center gap-2 gap-sm-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 stat-icon" style="width:48px;height:48px;background:rgba(13,202,240,.12);">
                     <i class="bi bi-card-text text-info fs-4"></i>
                 </div>
-                <div>
-                    <div class="fs-2 fw-bold text-info lh-1 mb-1"><?= $expItasSoon ?></div>
-                    <div class="text-muted small fw-medium text-uppercase" style="letter-spacing: .5px; font-size: .75rem;">ITAS Exp. ≤ 3 Bln</div>
+                <div class="overflow-hidden">
+                    <div class="fs-2 fw-bold text-info lh-1 mb-1 stat-number"><?= $expItasSoon ?></div>
+                    <div class="text-muted small fw-medium text-uppercase stat-label text-truncate" style="letter-spacing: .5px; font-size: .75rem;">ITAS ≤ 3 Bln</div>
                 </div>
             </div>
         </div>
@@ -266,27 +301,27 @@ $colSize = $showAsliPindahan ? 3 : 4;
                         <small class="map-subtitle" style="font-size:.7rem;">Klik negara untuk melihat detail santri</small>
                     </div>
                 </div>
-                <div class="d-flex gap-2 align-items-center">
-                    <button id="mapStyleToggle" class="btn btn-sm rounded-pill px-3 map-btn d-none" onclick="toggleGlobeStyle()" title="Ganti Style Globe">
+                <div class="d-flex gap-1 gap-md-2 align-items-center flex-wrap map-controls-toolbar">
+                    <button id="mapStyleToggle" class="btn btn-sm rounded-pill px-2 px-md-3 map-btn d-none" onclick="toggleGlobeStyle()" title="Ganti Style Globe">
                         <i class="bi bi-image me-1" id="mapStyleIcon"></i><span id="mapStyleLabel">Satelit</span>
                     </button>
-                    <button id="map3DToggle" class="btn btn-sm rounded-pill px-3 map-btn" onclick="toggleMap3D()" title="Ganti Mode 3D/2D">
-                        <i class="bi bi-box me-1" id="map3DIcon"></i><span id="map3DLabel">3D Mode</span>
+                    <button id="map3DToggle" class="btn btn-sm rounded-pill px-2 px-md-3 map-btn" onclick="toggleMap3D()" title="Ganti Mode 3D/2D">
+                        <i class="bi bi-box me-1" id="map3DIcon"></i><span id="map3DLabel">3D</span>
                     </button>
-                    <button id="mapThemeToggle" class="btn btn-sm rounded-pill px-3 map-btn" onclick="toggleMapTheme()" title="Ganti Tema">
+                    <button id="mapThemeToggle" class="btn btn-sm rounded-pill px-2 px-md-3 map-btn" onclick="toggleMapTheme()" title="Ganti Tema">
                         <i class="bi bi-moon-stars-fill me-1" id="mapThemeIcon"></i><span id="mapThemeLabel">Dark</span>
                     </button>
-                    <button class="btn btn-sm rounded-pill px-3 map-btn" onclick="resetMapZoom()">
-                        <i class="bi bi-arrows-fullscreen me-1"></i>Reset
+                    <button class="btn btn-sm rounded-pill px-2 px-md-3 map-btn" onclick="resetMapZoom()">
+                        <i class="bi bi-arrows-fullscreen me-1"></i><span class="d-none d-sm-inline">Reset</span>
                     </button>
-                    <button id="mapFullscreenBtn" class="btn btn-sm rounded-pill px-3 map-btn" onclick="toggleMapFullscreen()" title="Full Screen">
+                    <button id="mapFullscreenBtn" class="btn btn-sm rounded-pill px-2 px-md-3 map-btn" onclick="toggleMapFullscreen()" title="Full Screen">
                         <i class="bi bi-arrows-angle-expand me-1" id="mapFsIcon"></i><span id="mapFsLabel" class="d-none d-md-inline">Full Screen</span>
                     </button>
                 </div>
             </div>
-            <div class="card-body p-0 position-relative" style="min-height:70vh;">
+            <div class="card-body p-0 position-relative map-card-body">
                 <!-- Fixed Height Wrapper for Map/Globe to overlap them without display:none -->
-                <div id="mapContainersWrapper" style="position:relative;width:100%;height:70vh;min-height:600px;">
+                <div id="mapContainersWrapper" class="map-containers-wrapper">
                     <div id="worldMapContainer" style="position:absolute;top:0;left:0;width:100%;height:100%;transition:opacity .3s ease;z-index:2;"></div>
                     <div id="globeVizContainer" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;pointer-events:none;transition:opacity .3s ease;border-radius:0 0 16px 16px;overflow:hidden;background:transparent;z-index:1;"></div>
                 </div>
@@ -302,12 +337,15 @@ $colSize = $showAsliPindahan ? 3 : 4;
                         <span class="map-summary-unit">santri</span>
                     </div>
                 </div>
-                <!-- Country Sidebar -->
-                <div id="countrySidebarToggle" class="country-sidebar-toggle" onclick="toggleCountrySidebar()">
-                    <i class="bi bi-chevron-right"></i>
+                <!-- Country Sidebar (Closed by Default) -->
+                <div id="countrySidebarToggle" class="country-sidebar-toggle closed" onclick="toggleCountrySidebar()" title="Buka Daftar Negara">
+                    <i class="bi bi-chevron-left"></i>
                 </div>
-                <div id="mapCountrySidebar" class="map-sidebar">
-                    <div class="map-sidebar-title"><i class="bi bi-bar-chart-fill me-1"></i>Per Negara</div>
+                <div id="mapCountrySidebar" class="map-sidebar closed">
+                    <div class="map-sidebar-title d-flex align-items-center justify-content-between">
+                        <span><i class="bi bi-bar-chart-fill me-1"></i>Per Negara</span>
+                        <button type="button" class="btn btn-sm btn-link text-muted p-0 text-decoration-none" onclick="toggleCountrySidebar()"><i class="bi bi-x-lg"></i></button>
+                    </div>
                     <div id="mapCountryList"></div>
                 </div>
             </div>
@@ -338,6 +376,129 @@ $colSize = $showAsliPindahan ? 3 : 4;
 <!-- Libraries untuk jVectorMap CSS -->
 <link rel="stylesheet" href="<?= ASSET_URL ?>/assets/offline/css/jquery-jvectormap.min.css">
 <style>
+/* ===== Mobile Dashboard Upgrades ===== */
+@media (max-width: 991.98px) {
+    .page-header-responsive {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 1rem;
+    }
+    .dashboard-header-controls {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .dashboard-header-controls {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 0.6rem;
+    }
+    .dashboard-header-controls .btn-group {
+        width: 100%;
+        display: flex;
+    }
+    .dashboard-header-controls .btn-group .btn {
+        flex: 1;
+        text-align: center;
+        padding: 0.4rem 0.5rem;
+        font-size: 0.78rem;
+    }
+    .dashboard-stat-card .card-body {
+        padding: 0.75rem !important;
+        gap: 0.5rem !important;
+    }
+    .dashboard-stat-card .stat-icon {
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 1.15rem !important;
+    }
+    .dashboard-stat-card .stat-number {
+        font-size: 1.45rem !important;
+    }
+    .dashboard-stat-card .stat-label {
+        font-size: 0.68rem !important;
+        line-height: 1.1;
+    }
+    .dashboard-stat-card .badge {
+        font-size: 0.6rem !important;
+        padding: 0.2rem 0.4rem !important;
+    }
+    .map-card-body {
+        height: 50vh !important;
+        min-height: 380px !important;
+    }
+    .map-containers-wrapper {
+        min-height: 380px !important;
+    }
+    #worldMapContainer, #globeVizContainer {
+        min-height: 380px !important;
+    }
+    .map-sidebar {
+        width: 190px !important;
+        padding: 10px !important;
+        border-radius: 12px !important;
+    }
+    .map-sidebar.closed {
+        right: -210px !important;
+    }
+    .country-sidebar-toggle {
+        right: 200px !important;
+        width: 26px !important;
+        height: 48px !important;
+    }
+    .country-sidebar-toggle.closed {
+        right: 0 !important;
+    }
+    .map-2d-marker-tag {
+        padding: 2px 6px !important;
+        font-size: 8px !important;
+    }
+    .map-2d-marker-flag {
+        font-size: 10px !important;
+    }
+    .map-2d-marker-count {
+        font-size: 9px !important;
+    }
+    .map-summary-badge {
+        bottom: 10px !important;
+        left: 10px !important;
+        padding: 8px 14px !important;
+        border-radius: 12px !important;
+    }
+    .map-summary-big {
+        font-size: 1.3rem !important;
+    }
+    .map-summary-accent {
+        font-size: 1rem !important;
+    }
+    .map-summary-label {
+        font-size: 0.55rem !important;
+        letter-spacing: 1px !important;
+    }
+    .map-card-header {
+        padding-top: 1rem !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.75rem;
+    }
+    .map-controls-toolbar {
+        width: 100%;
+        justify-content: flex-start;
+    }
+    .map-controls-toolbar .map-btn {
+        padding: 0.3rem 0.6rem !important;
+        font-size: 0.7rem !important;
+    }
+}
+
+.map-card-body { position: relative; width: 100%; height: 65vh; min-height: 520px; }
+.map-containers-wrapper { position: relative; width: 100%; height: 100%; min-height: 520px; }
+#worldMapContainer, #globeVizContainer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; min-height: 520px; }
+
 /* ===== LIGHT THEME (Default) ===== */
 .map-card-light { background: linear-gradient(135deg,#e0f2fe 0%,#dbeafe 25%,#ede9fe 50%,#fce7f3 75%,#e0f2fe 100%) !important; transition: background .5s ease; position: relative; overflow: hidden; }
 .map-card-light::before { content:''; position:absolute; top:-50%; left:-50%; width:200%; height:200%; background:radial-gradient(ellipse at 30% 50%,rgba(59,130,246,.08) 0%,transparent 50%),radial-gradient(ellipse at 70% 30%,rgba(168,85,247,.06) 0%,transparent 50%),radial-gradient(ellipse at 50% 80%,rgba(14,165,233,.06) 0%,transparent 50%); animation:meshFloat 20s ease-in-out infinite; pointer-events:none; z-index:0; }
@@ -389,10 +550,11 @@ $colSize = $showAsliPindahan ? 3 : 4;
 .map-summary-big { font-size:1.8rem;font-weight:800;line-height:1; }
 .map-summary-accent { font-size:1.2rem;font-weight:700;line-height:1; }
 .map-summary-unit { font-size:.65rem; }
-.map-sidebar { position:absolute;top:10px;right:10px;bottom:10px;width:220px;backdrop-filter:blur(16px);border:1px solid;border-radius:16px;padding:14px;overflow-y:auto;z-index:10;transition:all .4s cubic-bezier(0.16,1,0.3,1); }
-.map-sidebar.closed { right: -240px !important; }
-.country-sidebar-toggle { position:absolute;top:50%;right:240px;transform:translateY(-50%);width:28px;height:60px;background:rgba(15,23,42,.6);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.1);border-right:none;border-radius:8px 0 0 8px;color:#38bdf8;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:9;transition:all .4s cubic-bezier(0.16,1,0.3,1); }
-.country-sidebar-toggle.closed { right:0; border-radius:8px 0 0 8px; }
+.map-sidebar { position:absolute;top:12px;right:12px;bottom:12px;width:230px;max-width:calc(100% - 60px);backdrop-filter:blur(16px);border:1px solid;border-radius:16px;padding:14px;overflow-y:auto;z-index:10;transition:right 0.35s cubic-bezier(0.16,1,0.3,1), opacity 0.25s ease; }
+.map-sidebar.closed { right: -260px !important; opacity: 0; pointer-events: none; }
+.country-sidebar-toggle { position:absolute;top:50%;right:245px;transform:translateY(-50%);width:28px;height:56px;background:rgba(15,23,42,.75);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.15);border-right:none;border-radius:8px 0 0 8px;color:#38bdf8;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:11;transition:right 0.35s cubic-bezier(0.16,1,0.3,1), background 0.2s ease; box-shadow: -4px 0 12px rgba(0,0,0,0.15); }
+.country-sidebar-toggle:hover { background: rgba(14, 165, 233, 0.9); color: #ffffff; }
+.country-sidebar-toggle.closed { right:0 !important; border-radius:8px 0 0 8px; }
 .country-sidebar-toggle.closed i { transform:rotate(180deg); }
 .map-sidebar-title { font-size:.6rem;text-transform:uppercase;letter-spacing:1.8px;font-weight:700;margin-bottom:10px; }
 .map-country-item { display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:10px;margin-bottom:3px;cursor:pointer;transition:all .3s cubic-bezier(.4,0,.2,1);border:1px solid transparent; }
@@ -1394,7 +1556,26 @@ document.addEventListener('DOMContentLoaded', function() {
     let sLat=0,sLng=0,tw=0;
     sc.forEach(c=>{if(c.code&&cen[c.code]){sLat+=cen[c.code][0]*c.count;sLng+=cen[c.code][1]*c.count;tw+=c.count;}});
     const fLat=tw>0?sLat/tw:5, fLng=tw>0?sLng/tw:100;
-    const df = { x:(fLng+180)/360, y:(90-fLat)/180, scale:3.2 };
+    const targetFocusX = (fLng + 180) / 360;
+    const targetFocusY = (90 - fLat) / 180;
+
+    function getFocusConfig(scale, animate) {
+        return {
+            x: targetFocusX,
+            y: targetFocusY,
+            scale: scale,
+            animate: !!animate
+        };
+    }
+
+    window.toggleCountrySidebar = function() {
+        const sb = document.getElementById('mapCountrySidebar');
+        const tog = document.getElementById('countrySidebarToggle');
+        if (sb && tog) {
+            sb.classList.toggle('closed');
+            tog.classList.toggle('closed');
+        }
+    };
 
     let ct='light', mo=null;
     const th={
@@ -1957,18 +2138,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     window.resetMapZoom=function(){
+        const isMob = window.innerWidth < 768;
+        const currentScale = isMob ? 1.35 : 2.8;
         if(is3DMode && mo3D) {
-            mo3D.pointOfView({ lat: fLat, lng: fLng, altitude: 2.2 }, 1000);
-        } else if(mo) {
-            mo.setFocus({x:df.x,y:df.y,scale:df.scale,animate:true});
+            mo3D.pointOfView({ lat: fLat, lng: fLng, altitude: isMob ? 2.8 : 2.2 }, 1000);
+        } else if(mo && mo.baseScale > 0) {
+            mo.setFocus(getFocusConfig(currentScale, true));
         }
     };
 
     $(document).ready(function(){
         const $c=$('#worldMapContainer'), t=th[ct];
         $c.vectorMap({
-            map:'world_mill_en',backgroundColor:'transparent',zoomOnScroll:true,zoomMin:1,zoomMax:12,
-            focusOn:df,
+            map:'world_mill_en',backgroundColor:'transparent',zoomOnScroll:true,panOnDrag:true,zoomMin:1,zoomMax:15,zoomStep:1.4,zoomAnimate:true,
             regionStyle:{
                 initial:{fill:t.rf,'fill-opacity':t.ro,stroke:t.rs,'stroke-width':t.rw,'stroke-opacity':t.rso},
                 hover:{'fill-opacity':0.9,cursor:'pointer'}
@@ -1976,17 +2158,51 @@ document.addEventListener('DOMContentLoaded', function() {
             series:{regions:[{values:mv,scale:['#bfdbfe','#2563eb'],normalizeFunction:'polynomial',min:0,max:mx}]},
             onRegionTipShow:function(e){ e.preventDefault(); },
             onRegionOver:function(e,code){
-                const nd = mo.regions[code] && mo.regions[code].element.shape.node;
+                const nd = mo && mo.regions && mo.regions[code] && mo.regions[code].element.shape.node;
                 if(nd) nd.classList.add('map-2d-hovered');
             },
             onRegionOut:function(e,code){
-                const nd = mo.regions[code] && mo.regions[code].element.shape.node;
+                const nd = mo && mo.regions && mo.regions[code] && mo.regions[code].element.shape.node;
                 if(nd) nd.classList.remove('map-2d-hovered');
             },
             onRegionClick:function(e,code){const co=sc.find(c=>c.code===code);if(co&&window.showDetailFromMap)showDetailFromMap(co.name);}
         });
         mo=$c.vectorMap('get','mapObject');
         applyColors(ct);
+
+        // Native smooth wheel zoom support
+        const mapNativeEl = document.getElementById('worldMapContainer');
+        if (mapNativeEl) {
+            mapNativeEl.addEventListener('wheel', function(e) {
+                if (!mo || is3DMode) return;
+                e.preventDefault();
+                const rect = mapNativeEl.getBoundingClientRect();
+                const offsetX = e.clientX - rect.left;
+                const offsetY = e.clientY - rect.top;
+                const zoomFactor = e.deltaY < 0 ? 1.35 : 0.74;
+                mo.setScale(mo.scale * zoomFactor, offsetX, offsetY, false, true);
+            }, { passive: false });
+        }
+
+        // Safe initial focus & scale calculation once container has measured dimensions
+        function applySafeInitialFocus() {
+            if (!mo) return;
+            mo.updateSize();
+            if (mo.width > 20 && mo.height > 20 && mo.baseScale > 0 && !isNaN(mo.baseScale)) {
+                const isMob = window.innerWidth < 768;
+                const curScale = isMob ? 1.35 : 2.8;
+                mo.setFocus(getFocusConfig(curScale, false));
+                if (typeof window.update2DPositions === 'function') {
+                    window.update2DPositions();
+                }
+            }
+        }
+
+        // Run safe focus multiple times as CSS / layout settles
+        applySafeInitialFocus();
+        setTimeout(applySafeInitialFocus, 100);
+        setTimeout(applySafeInitialFocus, 350);
+        setTimeout(applySafeInitialFocus, 800);
 
         // =============================================
         // SMOOTH 2D OVERLAYS - Create once, update pos
@@ -1996,6 +2212,10 @@ document.addEventListener('DOMContentLoaded', function() {
         function create2DOverlays() {
             const container = document.getElementById('worldMapContainer');
             if(!container || !mo || _overlayEls.created) return;
+            if(container.offsetWidth <= 20 || container.offsetHeight <= 20 || !mo.baseScale || isNaN(mo.baseScale)) {
+                setTimeout(create2DOverlays, 250);
+                return;
+            }
             _overlayEls.created = true;
 
             // --- SVG container for connection lines ---
@@ -2080,8 +2300,11 @@ document.addEventListener('DOMContentLoaded', function() {
         window.update2DPositions = function() {
             if(!mo || !_overlayEls.created) return;
             const container = document.getElementById('worldMapContainer');
-            // Abort if container is hidden or hasn't calculated layout yet, to prevent jumping to 0,0
-            if(!container || container.offsetWidth === 0) return;
+            if(!container || container.offsetWidth <= 20 || container.offsetHeight <= 20) return;
+            if(!mo.scale || isNaN(mo.scale) || mo.scale <= 0) {
+                mo.updateSize();
+                if(!mo.scale || isNaN(mo.scale) || mo.scale <= 0) return;
+            }
             const w = container.offsetWidth, h = container.offsetHeight;
 
             // Update SVG viewBox
@@ -2093,37 +2316,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Indonesia destination point
             const idPt = mo.latLngToPoint(cen['ID'][0], cen['ID'][1]);
+            if (!idPt || isNaN(idPt.x) || isNaN(idPt.y)) return;
 
             // Update SVG paths
             _overlayEls.paths.forEach(p => {
                 const pt = mo.latLngToPoint(cen[p.code][0], cen[p.code][1]);
-                if(!pt || !idPt) { p.el.setAttribute('d',''); return; }
+                if(!pt || isNaN(pt.x) || isNaN(pt.y)) { p.el.setAttribute('d',''); return; }
                 const midX = (pt.x + idPt.x) / 2;
                 const midY = Math.min(pt.y, idPt.y) - 40 - p.countRatio * 30;
+                if(isNaN(midX) || isNaN(midY)) { p.el.setAttribute('d',''); return; }
                 p.el.setAttribute('d', `M${pt.x},${pt.y} Q${midX},${midY} ${idPt.x},${idPt.y}`);
             });
 
             // Update marker + pulse positions via CSS transform (GPU-accelerated)
             _overlayEls.markers.forEach(m => {
                 const pt = mo.latLngToPoint(cen[m.code][0], cen[m.code][1]);
-                if(!pt) { m.el.style.display='none'; return; }
+                if(!pt || isNaN(pt.x) || isNaN(pt.y)) { m.el.style.display='none'; return; }
                 m.el.style.display = '';
                 m.el.style.transform = `translate(${pt.x}px, ${pt.y - 18}px)`;
-                // Store for fadein animation
                 m.el.style.setProperty('--mx', pt.x + 'px');
                 m.el.style.setProperty('--my', (pt.y - 18) + 'px');
             });
 
             _overlayEls.pulses.forEach(p => {
                 const pt = mo.latLngToPoint(cen[p.code][0], cen[p.code][1]);
-                if(!pt) { p.el.style.display='none'; return; }
+                if(!pt || isNaN(pt.x) || isNaN(pt.y)) { p.el.style.display='none'; return; }
                 p.el.style.display = '';
                 p.el.style.transform = `translate(${pt.x}px, ${pt.y}px)`;
             });
-        }
+        };
 
         // Create overlays after map renders
-        setTimeout(create2DOverlays, 800);
+        setTimeout(create2DOverlays, 600);
 
         // Smooth real-time position sync on viewport change
         let _rafId = null;

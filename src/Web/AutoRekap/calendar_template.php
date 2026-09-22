@@ -111,21 +111,21 @@ $kepListJson = json_encode($kepList);
 ?>
 
 <style>
-/* â•â•â•â•â•â•â•â•â•â•â• CALENDAR STYLES â•â•â•â•â•â•â•â•â•â•â• */
+/* ═══════════ CALENDAR STYLES ═══════════ */
 .cal-wrapper { display: flex; gap: 20px; align-items: stretch; }
 .cal-main { flex: 1; min-width: 0; transition: all 0.3s ease; display: flex; flex-direction: column; }
 .cal-aside { width: 300px; flex-shrink: 0; transition: all 0.3s ease; transform-origin: right; position: relative; }
 .cal-aside.collapsed { width: 0; opacity: 0; margin-left: -20px; }
 
-.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #e2e8f0; border: 1px solid #e2e8f0; border-radius: 12px; }
-.cal-header-cell { background: white; text-align: center; padding: 10px 4px 6px; font-size: .7rem; font-weight: 600; color: #64748b; text-transform: uppercase; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #e2e8f0; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
+.cal-header-cell { background: white; text-align: center; padding: 10px 4px 6px; font-size: .7rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
 .cal-cell {
-    background: white; min-height: 100px; padding: 4px; position: relative;
+    background: white; min-height: 95px; padding: 4px; position: relative;
     transition: background .15s;
     cursor: default;
 }
 .cal-cell:hover { background: #f8fafc; }
-.cal-cell.other-month { opacity: .5; }
+.cal-cell.other-month { opacity: .45; background: #fafafa; }
 .cal-cell.today { box-shadow: inset 0 0 0 2px #3461ff; }
 .cal-day { font-size: .75rem; font-weight: 600; color: #475569; margin-bottom: 4px; margin-top: 2px; display: flex; justify-content: center; }
 .cal-day-num.is-today {
@@ -169,7 +169,7 @@ $kepListJson = json_encode($kepList);
 @keyframes pulse-late { 0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.7); } 70% { box-shadow: 0 0 0 5px rgba(239,68,68,0); } 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); } }
 .cal-event.late { animation: pulse-late 2s infinite; border: 1px solid #ef4444; position: relative; z-index: 10; font-weight: 800; }
 
-/* â• â• â•  Stat cards â• â• â•  */
+/* ═══════════ Stat cards ═══════════ */
 .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
 .stat-mini {
     border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; gap: 12px;
@@ -178,15 +178,15 @@ $kepListJson = json_encode($kepList);
 .stat-mini:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.08); }
 .stat-mini .stat-icon {
     width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
-    font-size: 1.1rem; background: white; box-shadow: 0 1px 3px rgba(0,0,0,.1);
+    font-size: 1.1rem; background: white; box-shadow: 0 1px 3px rgba(0,0,0,.1); flex-shrink: 0;
 }
-.stat-mini .stat-val { font-size: 1.5rem; font-weight: 800; line-height: 1.1; }
-.stat-mini .stat-label { font-size: .68rem; font-weight: 600; opacity: .75; }
-.stat-mini .stat-sub { font-size: .58rem; opacity: .55; margin-top: 1px; }
+.stat-mini .stat-val { font-size: 1.45rem; font-weight: 800; line-height: 1.1; }
+.stat-mini .stat-label { font-size: .7rem; font-weight: 600; opacity: .85; }
+.stat-mini .stat-sub { font-size: .6rem; opacity: .65; margin-top: 1px; }
 
-/* â• â• â•  Filter bar â• â• â•  */
+/* ═══════════ Filter bar ═══════════ */
 .filter-bar {
-    background: white; border-radius: 12px; border: 1px solid #e8ecf0; padding: 10px 16px;
+    background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 10px 16px;
     display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
 }
 .filter-group { display: flex; background: #f1f5f9; border-radius: 8px; padding: 2px; }
@@ -197,7 +197,7 @@ $kepListJson = json_encode($kepList);
 .filter-btn.active { background: white; color: #3461ff; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
 .filter-btn:hover:not(.active) { color: #334155; }
 
-/* â• â• â•  Upcoming panel â• â• â•  */
+/* ═══════════ Upcoming panel ═══════════ */
 .upcoming-panel {
     background: white; border-radius: 12px; border: 1px solid #e8ecf0; overflow: hidden;
     display: flex; flex-direction: column; 
@@ -229,15 +229,15 @@ $kepListJson = json_encode($kepList);
 .type-paspor_start { color: #1e40af; }
 .type-paspor_exp { color: #7e22ce; }
 
-/* â• â• â•  Legend â• â• â•  */
+/* ═══════════ Legend ═══════════ */
 .cal-legend { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; padding: 12px 16px; background: #f8fafc; border-top: 1px solid #f1f5f9; }
 .legend-item { display: flex; align-items: center; gap: 6px; font-size: .7rem; color: #475569; font-weight: 500; }
 .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
 
-/* â• â• â•  Detail Modal â• â• â•  */
+/* ═══════════ Detail Modal ═══════════ */
 .cal-modal-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 2000;
-    background: rgba(0,0,0,.4); backdrop-filter: blur(4px);
+    background: rgba(0,0,0,.45); backdrop-filter: blur(4px);
     display: flex; align-items: center; justify-content: center; padding: 16px;
     opacity: 0; visibility: hidden; transition: all .25s;
 }
@@ -299,53 +299,160 @@ $kepListJson = json_encode($kepList);
 .cal-main:-webkit-full-screen .cal-grid { flex: 1; grid-template-rows: 35px; grid-auto-rows: 1fr; border-radius: 0; overflow: hidden; }
 .cal-popover.show { display: block; }
 
-/* â• â• â•  Responsive â• â• â•  */
+/* ═══════════ Responsive Mobile ═══════════ */
 @media (max-width: 1100px) {
     .cal-wrapper { flex-direction: column; align-items: stretch; }
     .cal-aside { width: 100%; margin-top: 10px; }
     .cal-aside.collapsed { display: none; margin-left: 0; }
 }
-@media (max-width: 768px) {
+@media (max-width: 767.98px) {
     .cal-main:fullscreen .card { height: auto; min-height: 100vh; }
     
-    /* Stats horizontal scroll */
+    /* Stats 2x2 Grid on Mobile */
     .stat-row { 
-        display: flex; 
-        flex-wrap: nowrap; 
-        overflow-x: auto; 
-        scroll-snap-type: x mandatory; 
-        padding-bottom: 10px;
-        -webkit-overflow-scrolling: touch;
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+        margin-bottom: 12px !important;
     }
-    .stat-row::-webkit-scrollbar { display: none; }
     .stat-mini { 
-        flex: 0 0 85%; 
-        scroll-snap-align: center; 
+        padding: 10px 12px !important;
+        gap: 8px !important;
+        border-radius: 10px !important;
+    }
+    .stat-mini .stat-icon {
+        width: 34px !important;
+        height: 34px !important;
+        font-size: 0.95rem !important;
+        border-radius: 8px !important;
+    }
+    .stat-mini .stat-val {
+        font-size: 1.25rem !important;
+    }
+    .stat-mini .stat-label {
+        font-size: 0.65rem !important;
+        line-height: 1.2 !important;
+    }
+    .stat-mini .stat-sub {
+        display: none !important;
+    }
+    
+    /* Filter Bar */
+    .filter-bar {
+        padding: 8px 12px !important;
+        gap: 8px !important;
+    }
+    .filter-group {
+        flex: 1 1 auto !important;
+    }
+    .filter-btn {
+        flex: 1 1 auto !important;
+        padding: 5px 8px !important;
+        text-align: center !important;
+        font-size: 0.72rem !important;
+    }
+    .select-kep-mobile {
+        width: 100% !important;
+        margin-top: 4px !important;
+    }
+    
+    /* Calendar Card Header */
+    .cal-card-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+        padding: 10px 12px !important;
+    }
+    .cal-header-row1 {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        width: 100% !important;
+    }
+    .cal-header-row2 {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        width: 100% !important;
+        gap: 4px !important;
+    }
+    .cal-header-row2 .btn {
+        font-size: 0.7rem !important;
+        padding: 4px 8px !important;
     }
     
     /* Calendar Cells */
-    .cal-cell { min-height: 60px; padding: 4px; display: flex; flex-direction: column; align-items: center; }
-    .cal-day { width: 100%; font-size: .65rem; justify-content: center; }
-    /* Use horizontal scroll for calendar cells on very small screens instead of dots */
-    .cal-grid { overflow-x: auto; }
-    .cal-cell { min-width: 60px; }
+    .cal-header-cell {
+        padding: 6px 2px 4px !important;
+        font-size: 0.62rem !important;
+    }
+    .cal-cell { 
+        min-height: 64px !important; 
+        padding: 2px !important; 
+    }
+    .cal-day { 
+        font-size: .65rem !important; 
+        margin-bottom: 2px !important;
+        margin-top: 1px !important;
+    }
+    .cal-day-num.is-today {
+        width: 18px !important;
+        height: 18px !important;
+        font-size: 0.62rem !important;
+    }
+    .timeline-bar {
+        height: 17px !important;
+        font-size: 0.58rem !important;
+        padding: 1px 3px !important;
+        margin-bottom: 1px !important;
+    }
+    .cal-event {
+        font-size: 0.58rem !important;
+        padding: 1px 3px !important;
+    }
+    .cal-more {
+        font-size: 0.55rem !important;
+    }
     
     /* Mobile Modal Overlay fixes */
-    .cal-modal-overlay { align-items: flex-end; padding: 0; }
-    .cal-modal { border-radius: 20px 20px 0 0; transform: translateY(100%); max-width: 100%; margin: 0; padding-bottom: env(safe-area-inset-bottom); }
-    .cal-modal-overlay.show .cal-modal { transform: translateY(0); }
+    .cal-modal-overlay { 
+        align-items: flex-end !important; 
+        padding: 0 !important; 
+    }
+    .cal-modal { 
+        border-radius: 20px 20px 0 0 !important; 
+        transform: translateY(100%) !important; 
+        max-width: 100% !important; 
+        margin: 0 !important; 
+        padding-bottom: env(safe-area-inset-bottom) !important; 
+    }
+    .cal-modal-overlay.show .cal-modal { 
+        transform: translateY(0) !important; 
+    }
+    .cal-modal-body {
+        padding: 16px !important;
+    }
     
     /* Upcoming Panel */
-    .cal-wrapper { flex-direction: column; }
-    .cal-aside.collapsed { display: block; opacity: 1; margin-left: 0; width: 100%; margin-top: 15px; }
-    .upcoming-panel { position: relative; height: 500px; max-height: 60vh; }
+    .cal-wrapper { flex-direction: column !important; }
+    .cal-aside.collapsed { display: block !important; opacity: 1 !important; margin-left: 0 !important; width: 100% !important; margin-top: 15px !important; }
+    .upcoming-panel { position: relative !important; height: auto !important; max-height: 480px !important; }
+    
+    /* Legend compact */
+    .cal-legend {
+        padding: 8px 10px !important;
+        gap: 8px 12px !important;
+    }
+    .legend-item {
+        font-size: 0.65rem !important;
+    }
 }
 </style>
 
-<!-- â• â• â• â• â• â• â• â• â• â• â•  PAGE HEADER â• â• â• â• â• â• â• â• â• â• â•  -->
+<!-- ═══════════ PAGE HEADER ═══════════ -->
 <div class="d-flex align-items-center gap-3 mb-3">
-    <a href="<?= API_URL ?>/auto-rekap" class="btn btn-light btn-sm rounded-circle shadow-sm" title="Kembali ke Auto Rekap" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
-        <i class="bi bi-arrow-left"></i>
+    <a href="<?= API_URL ?>/auto-rekap" class="btn btn-light btn-sm rounded-circle shadow-sm flex-shrink-0" title="Kembali ke Auto Rekap" style="width:38px;height:38px;display:flex;align-items:center;justify-content:center;">
+        <i class="bi bi-arrow-left fs-5"></i>
     </a>
     <div>
         <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-calendar3 text-primary me-2"></i>Kalender Expiry</h5>
@@ -353,10 +460,10 @@ $kepListJson = json_encode($kepList);
     </div>
 </div>
 
-<!-- â• â• â• â• â• â• â• â• â• â• â•  STATS â• â• â• â• â• â• â• â• â• â• â•  -->
+<!-- ═══════════ STATS ═══════════ -->
 <div class="stat-row">
     <div class="stat-mini" style="background:#fffbeb;border-color:#fde68a;color:#92400e;">
-        <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
+        <div class="stat-icon"><i class="bi bi-clock-history text-warning"></i></div>
         <div>
             <div class="stat-val"><?= $itasProcessMonth ?></div>
             <div class="stat-label">Proses ITAS Bulan Ini</div>
@@ -364,7 +471,7 @@ $kepListJson = json_encode($kepList);
         </div>
     </div>
     <div class="stat-mini" style="background:#f5f3ff;border-color:#ddd6fe;color:#5b21b6;">
-        <div class="stat-icon"><i class="bi bi-calendar2-check"></i></div>
+        <div class="stat-icon"><i class="bi bi-calendar2-check text-primary"></i></div>
         <div>
             <div class="stat-val"><?= $pasporProcessMonth ?></div>
             <div class="stat-label">Proses Paspor Bulan Ini</div>
@@ -372,7 +479,7 @@ $kepListJson = json_encode($kepList);
         </div>
     </div>
     <div class="stat-mini" style="background:#fef2f2;border-color:#fecaca;color:#991b1b;">
-        <div class="stat-icon"><i class="bi bi-exclamation-triangle"></i></div>
+        <div class="stat-icon"><i class="bi bi-exclamation-triangle text-danger"></i></div>
         <div>
             <div class="stat-val"><?= $itasExpired ?></div>
             <div class="stat-label">ITAS Sudah Expired</div>
@@ -380,7 +487,7 @@ $kepListJson = json_encode($kepList);
         </div>
     </div>
     <div class="stat-mini" style="background:#fff1f2;border-color:#fecdd3;color:#9f1239;">
-        <div class="stat-icon"><i class="bi bi-file-earmark-x"></i></div>
+        <div class="stat-icon"><i class="bi bi-file-earmark-x text-danger"></i></div>
         <div>
             <div class="stat-val"><?= $pasporExpired ?></div>
             <div class="stat-label">Paspor Sudah Expired</div>
@@ -390,16 +497,18 @@ $kepListJson = json_encode($kepList);
 </div>
 
 <!-- ═══════════ FILTER BAR & TOOLBAR ═══════════ -->
-<div class="filter-bar d-flex justify-content-between">
-    <div class="d-flex align-items-center gap-2 text-muted">
-        <i class="bi bi-funnel"></i>
-        <div class="filter-group" id="typeFilter">
-            <button class="filter-btn active" data-type="all" onclick="setTypeFilter('all')">Semua</button>
-            <button class="filter-btn" data-type="itas" onclick="setTypeFilter('itas')">ITAS</button>
-            <button class="filter-btn" data-type="paspor" onclick="setTypeFilter('paspor')">Paspor</button>
+<div class="filter-bar d-flex justify-content-between align-items-center flex-wrap">
+    <div class="d-flex align-items-center gap-2 text-muted flex-wrap flex-grow-1">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-funnel text-secondary"></i>
+            <div class="filter-group" id="typeFilter">
+                <button class="filter-btn active" data-type="all" onclick="setTypeFilter('all')">Semua</button>
+                <button class="filter-btn" data-type="itas" onclick="setTypeFilter('itas')">ITAS</button>
+                <button class="filter-btn" data-type="paspor" onclick="setTypeFilter('paspor')">Paspor</button>
+            </div>
         </div>
-        <div class="vr mx-1"></div>
-        <select class="form-select form-select-sm border-0 bg-light text-secondary" style="width: 140px; font-size:.75rem;" onchange="setKepFilter(this.value)">
+        <div class="vr d-none d-md-block mx-1"></div>
+        <select class="form-select form-select-sm border rounded-pill bg-light text-secondary select-kep-mobile fw-semibold" style="width: auto; min-width: 150px; font-size:.78rem;" onchange="setKepFilter(this.value)">
             <option value="">Semua Kepengurusan</option>
             <?php foreach ($kepList as $k): ?>
                 <option value="<?= htmlspecialchars($k) ?>"><?= htmlspecialchars($k) ?></option>
@@ -407,9 +516,9 @@ $kepListJson = json_encode($kepList);
         </select>
     </div>
     
-    <div class="d-flex align-items-center gap-2">
+    <div class="d-flex align-items-center gap-2 mt-2 mt-md-0 ms-auto">
         <div class="dropdown">
-            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="viewModeDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="border-radius: 6px; font-weight: 600;">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle rounded-pill px-3 fw-semibold" type="button" id="viewModeDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: .8rem;">
                 Bulan
             </button>
             <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="viewModeDropdown" style="font-size: .8rem; border-radius: 10px;">
@@ -423,23 +532,30 @@ $kepListJson = json_encode($kepList);
     </div>
 </div>
 
-<!-- â• â• â• â• â• â• â• â• â• â• â•  CALENDAR + UPCOMING â• â• â• â• â• â• â• â• â• â• â•  -->
+<!-- ═══════════ CALENDAR + UPCOMING ═══════════ -->
 <div class="cal-wrapper">
     <!-- Main Calendar -->
     <div class="cal-main">
         <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
             <!-- Month nav -->
-            <div class="card-header bg-white border-bottom d-flex align-items-center justify-content-between py-2 px-3">
-                <h6 class="mb-0 fw-bold text-dark" id="calMonthTitle"></h6>
-                <div class="d-flex align-items-center gap-1">
-                    <button class="btn btn-sm btn-outline-success rounded-pill px-3 me-1" style="font-size:.72rem;" onclick="downloadImage()" title="Unduh Gambar"><i class="bi bi-image"></i> Gambar</button>
-                    <button class="btn btn-sm btn-outline-danger rounded-pill px-3 me-2" style="font-size:.72rem;" onclick="downloadPdf()" title="Unduh PDF"><i class="bi bi-file-earmark-pdf"></i> PDF</button>
-                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3 me-2" style="font-size:.72rem;" onclick="goToday()">Hari Ini</button>
-                    <button class="btn btn-sm btn-light rounded-circle me-1" style="width:30px;height:30px;" onclick="goPrev()" title="Bulan Sebelumnya"><i class="bi bi-chevron-left"></i></button>
-                    <button class="btn btn-sm btn-light rounded-circle me-3" style="width:30px;height:30px;" onclick="goNext()" title="Bulan Berikutnya"><i class="bi bi-chevron-right"></i></button>
-                    <div class="vr mx-1"></div>
-                    <button class="btn btn-sm btn-light rounded-circle ms-2" style="width:30px;height:30px;" onclick="togglePanel()" title="Toggle Panel Samping" id="btnTogglePanel"><i class="bi bi-layout-sidebar-reverse"></i></button>
-                    <button class="btn btn-sm btn-light rounded-circle" style="width:30px;height:30px;" onclick="toggleFullscreen()" title="Layar Penuh"><i class="bi bi-arrows-fullscreen"></i></button>
+            <div class="card-header bg-white border-bottom py-2 px-3 cal-card-header">
+                <div class="cal-header-row1">
+                    <h6 class="mb-0 fw-bold text-dark" id="calMonthTitle"></h6>
+                    <div class="d-flex align-items-center gap-1">
+                        <button class="btn btn-sm btn-outline-primary rounded-pill px-2 px-md-3" style="font-size:.72rem;" onclick="goToday()">Hari Ini</button>
+                        <button class="btn btn-sm btn-light rounded-circle" style="width:30px;height:30px;" onclick="goPrev()" title="Bulan Sebelumnya"><i class="bi bi-chevron-left"></i></button>
+                        <button class="btn btn-sm btn-light rounded-circle" style="width:30px;height:30px;" onclick="goNext()" title="Bulan Berikutnya"><i class="bi bi-chevron-right"></i></button>
+                    </div>
+                </div>
+                <div class="cal-header-row2">
+                    <div class="d-flex align-items-center gap-1">
+                        <button class="btn btn-sm btn-outline-success rounded-pill px-2 px-md-3" style="font-size:.72rem;" onclick="downloadImage()" title="Unduh Gambar"><i class="bi bi-image"></i> <span class="d-none d-sm-inline">Gambar</span></button>
+                        <button class="btn btn-sm btn-outline-danger rounded-pill px-2 px-md-3" style="font-size:.72rem;" onclick="downloadPdf()" title="Unduh PDF"><i class="bi bi-file-earmark-pdf"></i> <span class="d-none d-sm-inline">PDF</span></button>
+                    </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <button class="btn btn-sm btn-light rounded-circle" style="width:30px;height:30px;" onclick="togglePanel()" title="Toggle Panel Samping" id="btnTogglePanel"><i class="bi bi-layout-sidebar-reverse"></i></button>
+                        <button class="btn btn-sm btn-light rounded-circle" style="width:30px;height:30px;" onclick="toggleFullscreen()" title="Layar Penuh"><i class="bi bi-arrows-fullscreen"></i></button>
+                    </div>
                 </div>
             </div>
 
@@ -456,7 +572,7 @@ $kepListJson = json_encode($kepList);
                 <div class="legend-item"><span class="legend-dot" style="background:#fecaca; border:1px solid #f87171;"></span> <span style="text-decoration:line-through;">Sudah Expired</span></div>
             </div>
 
-            <!-- â• â• â• â• â• â• â• â• â• â• â•  DETAIL MODAL (Moved inside cal-main for fullscreen support) â• â• â• â• â• â• â• â• â• â• â•  -->
+            <!-- ═══════════ DETAIL MODAL (Moved inside cal-main for fullscreen support) ═══════════ -->
             <div class="cal-modal-overlay" id="detailOverlay" onclick="closeDetail()">
                 <div class="cal-modal" onclick="event.stopPropagation()">
                     <div class="cal-modal-head" id="modalHead">
@@ -868,10 +984,10 @@ function renderAgendaView(events) {
 
     let keys = Object.keys(grouped).sort();
     
-    let html = `<div style="padding: 24px; background: white; min-height: 200px; display: flex; flex-direction: column; gap: 24px; overflow-y: auto;">`;
+    let html = `<div class="p-3 p-md-4" style="background: white; min-height: 200px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto;">`;
     
     if (keys.length === 0) {
-        html += `<div class="text-center text-muted mt-5"><i class="bi bi-calendar-x fs-1 d-block mb-3"></i>Tidak ada jadwal di bulan ini.</div>`;
+        html += `<div class="text-center text-muted my-5 py-4"><i class="bi bi-calendar-x fs-1 d-block mb-2 opacity-50"></i>Tidak ada jadwal di bulan ini.</div>`;
     }
 
     keys.forEach(ds => {
@@ -881,12 +997,12 @@ function renderAgendaView(events) {
         let dayName = DAYS[dow];
         
         html += `
-        <div style="display: flex; gap: 24px;">
-            <div style="width: 70px; flex-shrink: 0; text-align: right; border-right: 2px solid #e2e8f0; padding-right: 16px;">
-                <div style="font-size: 1.6rem; font-weight: 800; color: #334155; line-height: 1;">${d.getDate()}</div>
-                <div style="font-size: .65rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-top: 4px;">${dayName}, ${MONTHS[d.getMonth()]}</div>
+        <div class="d-flex flex-column flex-md-row gap-2 gap-md-3 pb-3 border-bottom">
+            <div class="d-flex align-items-center justify-content-start justify-content-md-end gap-2 gap-md-1 flex-md-column" style="min-width: 65px; flex-shrink: 0; text-align: left; text-align-md: right;">
+                <div class="fw-bold text-dark" style="font-size: 1.4rem; line-height: 1;">${d.getDate()}</div>
+                <div class="fw-semibold text-secondary" style="font-size: .65rem; text-transform: uppercase;">${dayName}, ${MONTHS[d.getMonth()]}</div>
             </div>
-            <div style="flex: 1; display: flex; flex-direction: column; gap: 10px;">`;
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">`;
             
         evs.forEach(ev => {
             const cfg = TYPE_CONFIG[ev.type] || { hueStart: 0, hueEnd: 0 };
@@ -896,24 +1012,24 @@ function renderAgendaView(events) {
             if (ev.is_in_progress) icon = 'bi-check-circle-fill text-success';
             
             let badge = '';
-            if (ev.is_late) badge = '<span class="badge bg-danger-subtle text-danger ms-2" style="font-size:.6rem;">Terlewat</span>';
-            if (ev.is_in_progress) badge = '<span class="badge bg-success-subtle text-success ms-2" style="font-size:.6rem;">Diproses</span>';
-            if (ev.is_expired) badge = '<span class="badge bg-dark ms-2" style="font-size:.6rem;">Expired</span>';
+            if (ev.is_late) badge = '<span class="badge bg-danger-subtle text-danger ms-1" style="font-size:.6rem;">Terlewat</span>';
+            if (ev.is_in_progress) badge = '<span class="badge bg-success-subtle text-success ms-1" style="font-size:.6rem;">Diproses</span>';
+            if (ev.is_expired) badge = '<span class="badge bg-dark ms-1" style="font-size:.6rem;">Expired</span>';
 
             let leftBorderColor = ev._agendaColor || (cfg.h1 ? `hsl(${cfg.h1}, ${cfg.s1}%, ${cfg.l1}%)` : (ev.type==='paspor_start'?'#1e40af':'#7e22ce'));
 
             html += `
-                <div class="card border-0 shadow-sm rounded-3" style="cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;" onclick="showDetail(${escAttr(JSON.stringify(ev))})" onmouseover="this.style.transform='translateX(4px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08) !important';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 .125rem .25rem rgba(0,0,0,.075) !important';">
-                    <div class="card-body p-3 d-flex align-items-center" style="position: relative;">
+                <div class="card border shadow-xs rounded-3" style="cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;" onclick="showDetail(${escAttr(JSON.stringify(ev))})">
+                    <div class="card-body p-2 p-md-3 d-flex align-items-center" style="position: relative;">
                         <div style="width: 4px; height: 100%; position: absolute; left: 0; top: 0; bottom: 0; background: ${leftBorderColor}; border-radius: 4px 0 0 4px;"></div>
-                        <div style="width: 36px; height: 36px; border-radius: 8px; background: #f8fafc; display: flex; align-items: center; justify-content: center; margin-right: 16px; margin-left: 8px;">
-                            <i class="bi ${icon} fs-5" style="color: ${leftBorderColor};"></i>
+                        <div style="width: 32px; height: 32px; border-radius: 8px; background: #f8fafc; display: flex; align-items: center; justify-content: center; margin-right: 12px; margin-left: 6px;" class="flex-shrink-0">
+                            <i class="bi ${icon} fs-6" style="color: ${leftBorderColor};"></i>
                         </div>
                         <div style="flex: 1; min-width: 0;">
-                            <div class="fw-bold text-dark text-truncate" style="font-size: .85rem;">${ev.nama} ${badge}</div>
-                            <div class="text-muted text-truncate" style="font-size: .7rem; margin-top: 2px;">${ev.label} &bull; ${ev.kepengurusan}</div>
+                            <div class="fw-bold text-dark text-truncate" style="font-size: .82rem;">${ev.nama} ${badge}</div>
+                            <div class="text-muted text-truncate" style="font-size: .68rem; margin-top: 1px;">${ev.label} &bull; ${ev.kepengurusan}</div>
                         </div>
-                        <i class="bi bi-chevron-right text-muted opacity-50"></i>
+                        <i class="bi bi-chevron-right text-muted opacity-50 ms-2"></i>
                     </div>
                 </div>`;
         });
@@ -939,7 +1055,7 @@ function renderCell(dateStr, day, isCurrent, dayEventsBySlot, isStartOfWeek) {
     if (!isCurrent && currentViewMode === 'month') cls += ' other-month';
     if (isToday) cls += ' today';
 
-    let html = `<div class="${cls}" data-date="${dateStr}" style="min-height:100px;">`;
+    let html = `<div class="${cls}" data-date="${dateStr}">`;
     html += `<div class="cal-day">`;
     html += isToday
         ? `<span class="cal-day-num is-today">${day}</span>`
@@ -956,7 +1072,7 @@ function renderCell(dateStr, day, isCurrent, dayEventsBySlot, isStartOfWeek) {
             let hasEventBelow = false;
             for(let j=s+1; j<dayEventsBySlot.length; j++) if (dayEventsBySlot[j]) hasEventBelow = true;
             if (hasEventBelow && s < maxShow - 1) {
-                html += `<div class="cal-event-spacer" style="height:22px; margin-bottom:2px;"></div>`;
+                html += `<div class="cal-event-spacer" style="height:18px; margin-bottom:2px;"></div>`;
             }
         }
     }
@@ -973,7 +1089,7 @@ function renderCell(dateStr, day, isCurrent, dayEventsBySlot, isStartOfWeek) {
         // Store in global window object
         window._hiddenEvents = window._hiddenEvents || {};
         window._hiddenEvents[dateStr] = hiddenEvents;
-        html += `<div class="cal-more" onclick="showMore(event, '${dateStr}')">${extraCount} more</div>`;
+        html += `<div class="cal-more" onclick="showMore(event, '${dateStr}')">+${extraCount} lainnya</div>`;
     }
 
     html += `</div>`;
@@ -1206,8 +1322,8 @@ function renderLate() {
         statusText.style.borderColor = '#f1f5f9';
         statusText.innerHTML = '<i class="bi bi-check-circle-fill text-success me-1"></i> Status pengerjaan aman';
         
-        list.innerHTML = `<div class="p-4 text-center" style="font-size:.7rem; color:#94a3b8;">
-            <div class="fs-1 mb-2">ðŸŽ‰</div>
+        list.innerHTML = `<div class="p-4 text-center" style="font-size:.75rem; color:#94a3b8;">
+            <div class="fs-2 mb-2"><i class="bi bi-check2-circle text-success"></i></div>
             Tidak ada tugas proses yang terlewat.
         </div>`;
         return;
@@ -1238,7 +1354,7 @@ function renderLate() {
     });
 }
 
-// â•â•â•â•â•â•â•â•â•â•â• RENDER UPCOMING â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════ RENDER UPCOMING ═══════════
 function renderUpcoming() {
     const list = document.getElementById('upcomingList');
     const now = new Date(); now.setHours(0,0,0,0);
@@ -1305,7 +1421,7 @@ function renderUpcoming() {
     }).join('');
 }
 
-// â•â•â•â•â•â•â•â•â•â•â• DETAIL MODAL â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════ DETAIL MODAL ═══════════
 function showDetail(ev) {
     if (typeof ev === 'string') ev = JSON.parse(ev);
     closePopovers();
@@ -1343,10 +1459,10 @@ function showDetail(ev) {
     const status = document.getElementById('modalStatus');
     if (ev.is_expired) {
         status.style.background = '#fef2f2'; status.style.color = '#991b1b'; status.style.border = '1px solid #fecaca';
-        status.textContent = `âš ï¸ Sudah expired ${Math.abs(diff)} hari yang lalu`;
+        status.innerHTML = `<i class="bi bi-exclamation-octagon-fill me-1"></i> Sudah expired ${Math.abs(diff)} hari yang lalu`;
     } else if (diff <= 30) {
         status.style.background = '#fffbeb'; status.style.color = '#92400e'; status.style.border = '1px solid #fde68a';
-        status.textContent = `â³ ${diff} hari lagi menuju expiry`;
+        status.innerHTML = `<i class="bi bi-hourglass-bottom me-1"></i> ${diff} hari lagi menuju expiry`;
     } else {
         status.style.background = '#f0fdf4'; status.style.color = '#166534'; status.style.border = '1px solid #bbf7d0';
         status.textContent = `✅ Masih ${diff} hari menuju expiry`;

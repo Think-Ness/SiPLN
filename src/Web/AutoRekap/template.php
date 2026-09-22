@@ -34,39 +34,151 @@ foreach ($dataPaspor as $row) {
 $myKep = $_SESSION['def_kepengurusan'] ?? '';
 ?>
 
+<style>
+/* Modern Mobile & Touch Responsiveness for Auto Rekap */
+.stat-card-rekap {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 1rem !important;
+}
+.stat-card-rekap:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.08) !important;
+}
+
+.search-input-group {
+    border: 1.5px solid #cbd5e1;
+    border-radius: 50rem;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    background: #fff;
+}
+.search-input-group:focus-within {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+}
+
+.filter-select-rekap {
+    border: 1.5px solid #cbd5e1;
+    border-radius: 50rem;
+    padding: 0.375rem 1rem;
+    transition: all 0.2s ease;
+}
+.filter-select-rekap:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+}
+
+.column-filters input {
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    font-size: 0.78rem !important;
+    padding: 0.35rem 0.5rem !important;
+    background-color: #ffffff !important;
+    transition: all 0.2s ease !important;
+}
+.column-filters input:focus {
+    border-color: #0d6efd !important;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15) !important;
+    outline: none !important;
+}
+
+.rekap-action-btn-group {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+@media (max-width: 991.98px) {
+    .page-header-responsive {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 0.75rem;
+    }
+    .page-header-responsive .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    .rekap-action-btn-group {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+    }
+    .rekap-action-btn-group .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .stat-card-rekap .card-body {
+        padding: 0.75rem !important;
+    }
+    .stat-card-rekap .stat-icon {
+        width: 38px !important;
+        height: 38px !important;
+        font-size: 1.15rem !important;
+        margin-right: 0.5rem !important;
+    }
+    .stat-card-rekap .stat-title {
+        font-size: 0.65rem !important;
+        line-height: 1.1;
+    }
+    .stat-card-rekap h3 {
+        font-size: 1.35rem !important;
+    }
+    #rekap-tabs {
+        display: flex;
+        width: 100%;
+    }
+    #rekap-tabs .nav-item {
+        flex: 1;
+    }
+    #rekap-tabs .nav-link {
+        width: 100%;
+        text-align: center;
+        padding: 0.5rem 0.5rem !important;
+        font-size: 0.78rem !important;
+        justify-content: center;
+    }
+}
+</style>
+
 <div class="card border-0 shadow-sm mb-4 rounded-4">
-    <div class="card-body p-4 border-bottom">
+    <div class="card-body p-3 p-md-4 border-bottom">
         <div class="d-flex justify-content-between align-items-center mb-4 page-header-responsive">
             <h5 class="m-0 text-dark fw-bold"><i class="bi bi-file-earmark-spreadsheet text-primary me-2"></i>Rekapan Perpanjangan ITAS dan Paspor</h5>
-            <a href="<?= API_URL ?>/kalender-expiry" class="btn btn-primary btn-sm rounded-pill px-3 fw-medium shadow-sm">
+            <a href="<?= API_URL ?>/kalender-expiry" class="btn btn-primary btn-sm rounded-pill px-3 py-2 fw-medium shadow-sm d-inline-flex align-items-center">
                 <i class="bi bi-calendar3 me-1"></i> Lihat Kalender
             </a>
         </div>
         
         <form method="GET" action="" class="row g-3 align-items-end" id="filterForm">
-            <div class="col-md-4">
+            <div class="col-12 col-md-4">
                 <label class="form-label small mb-1 fw-medium text-muted">Cari (Nama, No Paspor, Stambuk)</label>
-                <div class="input-group input-group-sm">
-                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-                    <input type="text" name="q" class="form-control border-start-0 ps-0" value="<?= htmlspecialchars($q ?? '') ?>" placeholder="Ketik pencarian..." onchange="document.getElementById('filterForm').submit()">
+                <div class="input-group input-group-sm search-input-group shadow-sm">
+                    <span class="input-group-text bg-white border-0 ps-3"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" name="q" class="form-control border-0 bg-white py-2 ps-1" value="<?= htmlspecialchars($q ?? '') ?>" placeholder="Ketik pencarian..." onchange="document.getElementById('filterForm').submit()">
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-12 col-sm-6 col-md-3">
                 <label class="form-label small mb-1 fw-medium text-muted">Kepengurusan</label>
-                <select name="kep" class="form-select form-select-sm" onchange="document.getElementById('filterForm').submit()">
+                <select name="kep" class="form-select form-select-sm filter-select-rekap shadow-sm" onchange="document.getElementById('filterForm').submit()">
                     <option value="">-- Semua Kepengurusan --</option>
                     <?php foreach ($kepList ?? [] as $k): ?>
                         <option value="<?= htmlspecialchars($k) ?>" <?= ($kep === $k) ? 'selected' : '' ?>><?= htmlspecialchars($k) ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="col-md-5 text-md-end mt-3 mt-md-0">
-                <button type="button" class="btn btn-sm btn-outline-primary px-3 rounded-pill fw-medium" onclick="openPrintPopup('itas')">
-                    <i class="bi bi-printer me-1"></i> Print ITAS
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-primary px-3 rounded-pill fw-medium ms-1" onclick="openPrintPopup('paspor')">
-                    <i class="bi bi-printer me-1"></i> Print Paspor
-                </button>
+            <div class="col-12 col-sm-6 col-md-5 text-md-end mt-3 mt-md-0">
+                <div class="rekap-action-btn-group justify-content-md-end">
+                    <button type="button" class="btn btn-sm btn-outline-success px-3 py-2 rounded-pill fw-medium shadow-sm" onclick="openPrintPopup('itas')">
+                        <i class="bi bi-printer me-1"></i> Print ITAS
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-primary px-3 py-2 rounded-pill fw-medium shadow-sm" onclick="openPrintPopup('paspor')">
+                        <i class="bi bi-printer me-1"></i> Print Paspor
+                    </button>
+                </div>
             </div>
         </form>
     </div>
@@ -119,8 +231,8 @@ async function openPrintPopup(type) {
                         <span class="input-group-text bg-light border-0 px-3"><i class="bi bi-people text-secondary"></i></span>
                         <select id="swal-urgency" class="form-select border-0 shadow-none bg-white py-2" style="font-size: .85rem;">
                             <option value="period">✅ Yang Sudah Masuk Periode (Default)</option>
-                            <option value="urgent">âš ï¸ Urgent Saja (Habis ≤ 1 Bulan)</option>
-                            <option value="all">ðŸ‘¥ Semua Santri Aktif</option>
+                            <option value="urgent">⚠️ Urgent Saja (Habis ≤ 1 Bulan)</option>
+                            <option value="all">👥 Semua Santri Aktif</option>
                         </select>
                     </div>
                 </div>
@@ -154,55 +266,55 @@ async function openPrintPopup(type) {
 </script>
 
 <!-- KARTU ANALITIK -->
-<div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm rounded-4 bg-success bg-opacity-10 h-100">
+<div class="row g-2 g-md-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card stat-card-rekap border-0 shadow-sm rounded-4 bg-success bg-opacity-10 h-100">
             <div class="card-body p-3 d-flex align-items-center">
-                <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center me-3 flex-shrink-0 stat-icon" style="width: 46px; height: 46px;">
                     <i class="bi bi-card-checklist fs-4"></i>
                 </div>
-                <div>
-                    <div class="text-success small fw-bold mb-1">TOTAL ITAS KRITIS (≤ 3 Bln)</div>
-                    <h3 class="m-0 fw-bold text-dark"><?= $itasTotal ?> <span class="fs-6 text-muted fw-normal">Santri</span></h3>
+                <div class="overflow-hidden">
+                    <div class="text-success small fw-bold mb-1 stat-title text-truncate">ITAS KRITIS (≤ 3 Bln)</div>
+                    <h3 class="m-0 fw-bold text-dark d-flex align-items-baseline gap-1"><?= $itasTotal ?> <span class="fs-6 text-muted fw-normal">Santri</span></h3>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm rounded-4 bg-danger bg-opacity-10 h-100">
+    <div class="col-6 col-md-3">
+        <div class="card stat-card-rekap border-0 shadow-sm rounded-4 bg-danger bg-opacity-10 h-100">
             <div class="card-body p-3 d-flex align-items-center">
-                <div class="rounded-circle bg-danger text-white d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                <div class="rounded-circle bg-danger text-white d-flex align-items-center justify-content-center me-3 flex-shrink-0 stat-icon" style="width: 46px; height: 46px;">
                     <i class="bi bi-exclamation-triangle-fill fs-4"></i>
                 </div>
-                <div>
-                    <div class="text-danger small fw-bold mb-1">URGENT ITAS (≤ 1 Bln)</div>
-                    <h3 class="m-0 fw-bold text-dark"><?= $itasUrgent ?> <span class="fs-6 text-muted fw-normal">Santri</span></h3>
+                <div class="overflow-hidden">
+                    <div class="text-danger small fw-bold mb-1 stat-title text-truncate">URGENT ITAS (≤ 1 Bln)</div>
+                    <h3 class="m-0 fw-bold text-dark d-flex align-items-baseline gap-1"><?= $itasUrgent ?> <span class="fs-6 text-muted fw-normal">Santri</span></h3>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm rounded-4 bg-primary bg-opacity-10 h-100">
+    <div class="col-6 col-md-3">
+        <div class="card stat-card-rekap border-0 shadow-sm rounded-4 bg-primary bg-opacity-10 h-100">
             <div class="card-body p-3 d-flex align-items-center">
-                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3 flex-shrink-0 stat-icon" style="width: 46px; height: 46px;">
                     <i class="bi bi-journal-album fs-4"></i>
                 </div>
-                <div>
-                    <div class="text-primary small fw-bold mb-1">TOTAL PASPOR KRITIS (≤ 18 Bln)</div>
-                    <h3 class="m-0 fw-bold text-dark"><?= $pasporTotal ?> <span class="fs-6 text-muted fw-normal">Santri</span></h3>
+                <div class="overflow-hidden">
+                    <div class="text-primary small fw-bold mb-1 stat-title text-truncate">PASPOR KRITIS (≤ 18 Bln)</div>
+                    <h3 class="m-0 fw-bold text-dark d-flex align-items-baseline gap-1"><?= $pasporTotal ?> <span class="fs-6 text-muted fw-normal">Santri</span></h3>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm rounded-4 bg-warning bg-opacity-10 h-100">
+    <div class="col-6 col-md-3">
+        <div class="card stat-card-rekap border-0 shadow-sm rounded-4 bg-warning bg-opacity-10 h-100">
             <div class="card-body p-3 d-flex align-items-center">
-                <div class="rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                <div class="rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center me-3 flex-shrink-0 stat-icon" style="width: 46px; height: 46px;">
                     <i class="bi bi-hourglass-bottom fs-4"></i>
                 </div>
-                <div>
-                    <div class="text-warning-emphasis small fw-bold mb-1">URGENT PASPOR (≤ 6 Bln)</div>
-                    <h3 class="m-0 fw-bold text-dark"><?= $pasporUrgent ?> <span class="fs-6 text-muted fw-normal">Santri</span></h3>
+                <div class="overflow-hidden">
+                    <div class="text-warning-emphasis small fw-bold mb-1 stat-title text-truncate">URGENT PASPOR (≤ 6 Bln)</div>
+                    <h3 class="m-0 fw-bold text-dark d-flex align-items-baseline gap-1"><?= $pasporUrgent ?> <span class="fs-6 text-muted fw-normal">Santri</span></h3>
                 </div>
             </div>
         </div>
@@ -541,7 +653,7 @@ function bukaProsesBulk(type = 'itas') {
 
         Swal.fire({
             icon: 'warning',
-            title: '<span style="font-size: 1rem;">âš ï¸ Peringatan: Ada Proses Aktif!</span>',
+            title: '<span style="font-size: 1rem;">⚠️ Peringatan: Ada Proses Aktif!</span>',
             html: `
                 <div class="text-start small text-muted mb-3">
                     Santri berikut <strong>sudah dalam proses Job Desk aktif</strong>. 

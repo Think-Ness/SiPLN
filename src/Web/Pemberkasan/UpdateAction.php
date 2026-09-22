@@ -46,35 +46,38 @@ final class UpdateAction
 
         // Upload file baru jika ada
         if (isset($files['berkas_file']) && $files['berkas_file']->getError() === UPLOAD_ERR_OK) {
-            $kodeInstansi = $updateData['kode'] ?? $berkas['kode'];
+            $kodeInstansi = (int)($updateData['kode'] ?? $berkas['kode']);
             
             try {
-                $baseDir = UploadPath::requireBase($db, $kodeInstansi);
-            } catch (\RuntimeException $e) {
-                return JsonResponse::create(['success' => false, 'message' => $e->getMessage()], 400);
-            }
-            $baseDir .= DIRECTORY_SEPARATOR . 'berkas penting';
-            
-            if (!is_dir($baseDir)) {
-                if (!@mkdir($baseDir, 0777, true)) {
-                    return JsonResponse::create(['success' => false, 'message' => 'Gagal membuat folder tujuan untuk file baru'], 500);
-                }
+                $baseDir = UploadPath::getFolder($db, 'berkas penting', $kodeInstansi);
+            } catch (\Throwable $e) {
+                return JsonResponse::create(['success' => false, 'message' => 'Gagal menentukan folder penyimpanan: ' . $e->getMessage()], 500);
             }
 
-            $ext      = pathinfo($files['berkas_file']->getClientFilename(), PATHINFO_EXTENSION);
+            $uploadedFile = $files['berkas_file'];
+            $ext = strtolower(pathinfo($uploadedFile->getClientFilename() ?? '', PATHINFO_EXTENSION));
+            
+            $allowedExts = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'xls', 'xlsx'];
+            if (!in_array($ext, $allowedExts, true)) {
+                return JsonResponse::create(['success' => false, 'message' => 'Ekstensi file tidak diizinkan. Hanya menerima: ' . implode(', ', $allowedExts)], 400);
+            }
+
             $safeName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $data['nama_berkas']);
             $fileName = $safeName . '.' . $ext;
-            $fullPath = $baseDir . DIRECTORY_SEPARATOR . $fileName;
+            if (file_exists($baseDir . '/' . $fileName)) {
+                $fileName = $safeName . '_' . time() . '.' . $ext;
+            }
+            $fullPath = $baseDir . '/' . $fileName;
             
             try {
-                $files['berkas_file']->moveTo($fullPath);
+                $uploadedFile->moveTo($fullPath);
                 $updateData['path_file'] = $fullPath;
                 
                 // Hapus file lama jika ada dan berbeda path
                 if (!empty($berkas['path_file']) && file_exists($berkas['path_file']) && $berkas['path_file'] !== $fullPath) {
                     @unlink($berkas['path_file']);
                 }
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 return JsonResponse::create(['success' => false, 'message' => 'Gagal menyimpan file baru: ' . $e->getMessage()], 500);
             }
         }

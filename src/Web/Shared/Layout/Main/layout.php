@@ -114,6 +114,13 @@ $this->beginPage();
     <meta name="csrf-token" content="<?= $csrf ?? '' ?>">
     <title><?= Html::encode($this->getTitle() ?: 'Sistem Informasi') ?></title>
     <link rel="icon" href="<?= ASSET_URL ?>/assets/logopln.png" type="image/png">
+    <link rel="manifest" href="<?= ASSET_URL ?>/manifest.json">
+    <meta name="theme-color" content="#1a2035">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SiPLN">
+    <link rel="apple-touch-icon" href="<?= ASSET_URL ?>/assets/icons/icon-192x192.png">
     <link href="<?= ASSET_URL ?>/assets/offline/css/bootstrap.min.css" rel="stylesheet">
     <link href="<?= ASSET_URL ?>/assets/offline/css/bootstrap-icons.css" rel="stylesheet">
     <link href="<?= ASSET_URL ?>/assets/offline/css/inter.css" rel="stylesheet">
@@ -291,21 +298,196 @@ $this->beginPage();
             opacity: 1;
         }
 
+        /* ===== MODERN PROFESSIONAL DOWNLOAD DOCK ===== */
+        .download-dock-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1060;
+            font-family: inherit;
+        }
+
+        /* 1. Compact Pill */
+        .download-pill {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(203, 213, 225, 0.85);
+            border-radius: 9999px;
+            padding: 6px 14px;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.03);
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            user-select: none;
+            max-width: 380px;
+        }
+        .download-pill:hover {
+            background: #ffffff;
+            box-shadow: 0 14px 30px -5px rgba(15, 23, 42, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.05);
+            transform: translateY(-2px);
+        }
+        .pill-icon-wrapper {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #eff6ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .pill-info {
+            font-size: 0.8rem;
+            max-width: 150px;
+        }
+        .btn-dock-icon {
+            background: transparent;
+            border: none;
+            padding: 3px 6px;
+            border-radius: 50%;
+            color: #64748b;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            transition: all 0.15s;
+            cursor: pointer;
+        }
+        .btn-dock-icon:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+
+        /* 2. Expanded Card */
+        .download-card {
+            width: 370px;
+            background: #ffffff;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(226, 232, 240, 0.85);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .card-header-gradient {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            padding: 12px 16px;
+        }
+        .status-pulse-dot {
+            width: 9px;
+            height: 9px;
+            background-color: #38bdf8;
+            border-radius: 50%;
+            box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7);
+            animation: pulse-ring 1.8s infinite;
+            flex-shrink: 0;
+        }
+        .status-pulse-dot.paused {
+            background-color: #f59e0b;
+            box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+            animation: none;
+        }
+        .status-pulse-dot.success {
+            background-color: #10b981;
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            animation: none;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(56, 189, 248, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); }
+        }
+        .btn-dock-header {
+            background: rgba(255, 255, 255, 0.12);
+            border: none;
+            color: #e2e8f0;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            transition: all 0.15s;
+            cursor: pointer;
+        }
+        .btn-dock-header:hover {
+            background: rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+        }
+
+        /* Santri Download Items */
+        .santri-download-list {
+            max-height: 200px;
+            overflow-y: auto;
+            padding-right: 2px;
+        }
+        .santri-dl-item {
+            background: #f8fafc;
+            border: 1px solid #edf2f7;
+            border-radius: 10px;
+            padding: 8px 10px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.15s ease;
+        }
+        .santri-dl-item:hover {
+            background: #f1f5f9;
+            border-color: #e2e8f0;
+        }
+        .santri-avatar {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #e0e7ff;
+            color: #4338ca;
+            font-weight: 700;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        /* ===== HEADER ACTION BUTTONS & ICONS ===== */
+        .header-action-btn {
+            border-radius: 20px;
+            padding: 5px 12px;
+            font-size: 0.8rem;
+            transition: all 0.2s ease;
+        }
+        .header-action-btn:hover {
+            transform: translateY(-1px);
+        }
+        .header-icon-btn {
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .header-icon-btn:hover {
+            background-color: rgba(0,0,0,0.04) !important;
+        }
+
         /* ===== MOBILE RESPONSIVE ===== */
         @media (max-width: 768px) {
             /* Sidebar: offcanvas slide-in */
             .sidebar {
                 transform: translateX(-100%);
                 z-index: 1100;
-                width: 260px !important;
-                transition: transform .3s ease;
+                width: 270px !important;
+                transition: transform .3s cubic-bezier(0.16, 1, 0.3, 1);
             }
             .sidebar.open-mobile {
                 transform: translateX(0);
+                box-shadow: 0 0 50px rgba(0,0,0,0.5);
             }
             /* Hide collapsed state overrides on mobile */
             body.sidebar-collapsed .sidebar {
-                width: 260px !important;
+                width: 270px !important;
                 transform: translateX(-100%);
             }
             body.sidebar-collapsed .sidebar.open-mobile {
@@ -320,29 +502,46 @@ $this->beginPage();
             body.sidebar-collapsed .sidebar .nav-link { justify-content: flex-start; padding: 7px 14px; margin: 1px 8px; }
             body.sidebar-collapsed .sidebar .nav-link i.nav-icon { margin: 0 !important; font-size: 1rem; }
 
-            /* Header: full width */
+            /* Header: full width with smooth blur */
             .main-header {
                 left: 0 !important;
-                padding: 0 12px;
+                padding: 0 10px;
+                background: rgba(255, 255, 255, 0.96);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
             }
-            /* Content: full width, smaller padding */
+            /* Content: full width, smaller touch-friendly padding */
             .main-content {
                 margin-left: 0 !important;
-                padding: 14px 10px;
+                padding: 12px 8px;
             }
 
-            /* Hide non-essential header items */
-            .main-header .d-none.d-md-flex { display: none !important; }
-            .main-header .text-muted.small { display: none !important; }
+            /* Header Action Buttons on Mobile: Icon-Only Rounded Pills */
+            .header-action-btn {
+                width: 34px !important;
+                height: 34px !important;
+                padding: 0 !important;
+                border-radius: 50% !important;
+                display: inline-flex !important;
+                align-items: center;
+                justify-content: center;
+            }
+            .header-action-btn i {
+                font-size: 0.95rem;
+                margin: 0 !important;
+            }
 
             /* Download widget: fit mobile screen */
-            #bgDownloadWidget {
-                left: 8px;
-                right: 8px;
-                padding: 8px !important;
+            .download-dock-container {
+                left: 10px;
+                right: 10px;
+                bottom: 10px;
             }
-            #bgDownloadWidget .toast {
+            .download-card {
                 width: 100% !important;
+            }
+            .download-pill {
+                max-width: 100% !important;
             }
 
             /* Page header: stack vertically */
@@ -356,7 +555,6 @@ $this->beginPage();
                 width: 100%;
             }
             .page-header-responsive .btn {
-                flex: 1;
                 font-size: 0.8rem !important;
                 padding: 0.4rem 0.75rem !important;
             }
@@ -381,16 +579,20 @@ $this->beginPage();
             /* Filter accordion mobile */
             .accordion .col-md-3 { margin-bottom: 0.25rem; }
 
-            /* Table font smaller */
+            /* Table smooth touch momentum scrolling */
+            .table-responsive {
+                -webkit-overflow-scrolling: touch;
+                border-radius: 12px;
+            }
             table { font-size: 0.78rem !important; }
         }
 
         /* Small phone adjustments */
         @media (max-width: 480px) {
-            .main-content { padding: 10px 6px; }
-            h4 { font-size: 1.1rem !important; }
+            .main-content { padding: 10px 4px; }
+            h4 { font-size: 1.05rem !important; }
             .card-body { padding: 0.75rem !important; }
-            .stat-card .fs-2 { font-size: 1.5rem !important; }
+            .stat-card .fs-2 { font-size: 1.4rem !important; }
         }
     </style>
     <?php $this->head() ?>
@@ -513,35 +715,53 @@ $this->beginPage();
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 <!-- â•â•â•â•â•â•â•â•â•â•â• HEADER â•â•â•â•â•â•â•â•â•â•â• -->
+<!-- ===== HEADER ===== -->
 <div class="main-header">
-    <div class="d-flex align-items-center gap-3">
-        <button id="sidebarToggle" class="btn btn-sm text-secondary p-0 border-0 bg-transparent">
-            <i class="bi bi-list" style="font-size:1.5rem;"></i>
+    <div class="d-flex align-items-center gap-2 gap-md-3">
+        <button id="sidebarToggle" class="btn btn-sm text-secondary p-1 border-0 bg-transparent rounded-circle header-icon-btn" title="Buka/Tutup Menu">
+            <i class="bi bi-list" style="font-size:1.45rem;"></i>
         </button>
-        <span class="badge bg-success-subtle text-success border border-success-subtle">
-            <i class="bi bi-circle-fill me-1" style="font-size:.45rem;"></i> Online
+        <span class="badge bg-success-subtle text-success border border-success-subtle d-flex align-items-center px-2 py-1" style="font-size:0.72rem;">
+            <i class="bi bi-circle-fill text-success me-1" style="font-size:.42rem;"></i> <span class="d-none d-sm-inline">Online</span>
         </span>
-        <div class="d-none d-md-flex align-items-center ms-3 px-3 py-1 bg-light rounded-pill border">
-            <i class="bi bi-building text-primary me-2"></i>
-            <span class="small fw-bold text-dark"><?= htmlspecialchars($_SESSION['nama_instansi'] ?? 'Global System') ?></span>
+        <div class="d-none d-md-flex align-items-center ms-2 px-3 py-1 bg-light rounded-pill border shadow-xs" style="max-width: 260px;" title="<?= htmlspecialchars($_SESSION['nama_instansi'] ?? 'Global System') ?>">
+            <i class="bi bi-building text-primary me-2 flex-shrink-0" style="font-size:0.85rem;"></i>
+            <span class="small fw-bold text-dark text-truncate" style="font-size:0.8rem;"><?= htmlspecialchars($_SESSION['nama_instansi'] ?? 'Global System') ?></span>
         </div>
     </div>
-    <div class="d-flex align-items-center gap-3">
-        <button id="btnShowDownloadWidget" class="btn btn-sm text-primary p-0 border-0 bg-transparent position-relative" title="Status Unduhan Latar Belakang" style="display:none;">
-            <i class="bi bi-cloud-arrow-down-fill fs-5"></i>
-            <span id="badgeDownloadActive" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle d-none"></span>
+    <div class="d-flex align-items-center gap-1 gap-sm-2 gap-md-3">
+        <button id="btnShowDownloadWidget" class="btn btn-sm text-primary p-0 border-0 bg-transparent position-relative" title="Status Unduhan Latar Belakang" style="display:none;" onclick="toggleDownloadWidgetFromHeader()">
+            <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center shadow-xs" style="width:34px;height:34px;transition:all 0.2s;">
+                <i class="bi bi-cloud-arrow-down-fill text-primary" style="font-size:1rem;"></i>
+            </div>
+            <span id="badgeDownloadActive" class="position-absolute top-0 start-100 translate-middle p-1 bg-primary border border-light rounded-circle d-none"></span>
         </button>
-        <a href="https://pln-monitoring-murex.vercel.app/guidebook.html" target="_blank" class="btn btn-sm btn-outline-info fw-bold" style="border-radius: 20px;" title="Buka Guidebook">
-            <i class="bi bi-book me-1"></i> Guidebook
+
+        <!-- Guidebook / Ketentuan (Icon di Mobile, Lengkap di Desktop) -->
+        <a href="https://pln-monitoring-murex.vercel.app/guidebook.html" target="_blank" class="btn btn-sm btn-outline-info fw-bold header-action-btn shadow-xs" title="Buka Ketentuan / Guidebook">
+            <i class="bi bi-book"></i>
+            <span class="d-none d-md-inline ms-1.5">Ketentuan</span>
         </a>
-        <a href="https://pln-monitoring-murex.vercel.app/" target="_blank" class="btn btn-sm btn-outline-primary fw-bold" style="border-radius: 20px;">
-            <i class="bi bi-activity me-1"></i> Monitoring
+
+        <!-- Monitoring Live (Icon di Mobile, Lengkap di Desktop) -->
+        <a href="https://pln-monitoring-murex.vercel.app/" target="_blank" class="btn btn-sm btn-outline-primary fw-bold header-action-btn shadow-xs" title="Monitoring Cloud Live">
+            <i class="bi bi-activity"></i>
+            <span class="d-none d-md-inline ms-1.5">Monitoring</span>
         </a>
-        <a href="<?= API_URL ?>/logout" class="text-danger" title="Keluar Sistem"><i class="bi bi-power fs-5"></i></a>
+
+        <!-- Instansi Mobile Pill Icon (Tampil di Mobile) -->
+        <div class="d-flex d-md-none align-items-center justify-content-center bg-light border rounded-circle shadow-xs" style="width:34px;height:34px;" title="<?= htmlspecialchars($_SESSION['nama_instansi'] ?? 'Global System') ?>" data-bs-toggle="tooltip">
+            <i class="bi bi-building text-primary" style="font-size:0.85rem;"></i>
+        </div>
+
+        <!-- Tombol Logout -->
+        <a href="<?= API_URL ?>/logout" class="btn btn-sm btn-light border text-danger rounded-circle d-flex align-items-center justify-content-center shadow-xs" style="width:34px;height:34px;" title="Keluar Sistem">
+            <i class="bi bi-power" style="font-size:1rem;"></i>
+        </a>
     </div>
 </div>
 
-<!-- â•â•â•â•â•â•â•â•â•â•â• MAIN CONTENT â•â•â•â•â•â•â•â•â•â•â• -->
+<!-- â• â• â• â• â• â• â• â• â• â• â•  MAIN CONTENT â• â• â• â• â• â• â• â• â• â• â•  -->
 <div class="main-content">
     <?= $content ?>
 </div>
@@ -578,55 +798,120 @@ $this->beginPage();
     </div>
 </div>
 
-<!-- Widget Background Download Progress -->
-<div id="bgDownloadWidget" class="position-fixed bottom-0 end-0 p-3 d-none" style="z-index: 1050; transition: all 0.3s;">
-    <div class="toast show bg-white shadow border-0" role="alert" aria-live="assertive" aria-atomic="true" id="bgDownloadToast" style="width: 350px;">
-        <div class="toast-header bg-primary text-white border-0" style="cursor: pointer;" onclick="toggleMinimizeWidget(event)">
-            <i class="bi bi-cloud-arrow-down me-2" id="bgDownloadIcon"></i>
-            <strong class="me-auto text-truncate" id="bgDownloadTitle" style="max-width: 200px;">Mengunduh Berkas</strong>
-            <span id="bgDownloadMinPct" class="badge bg-light text-primary me-2 d-none">0%</span>
-            <button type="button" class="btn text-white p-0 me-2 border-0" id="btnMinimizeWidget" style="background:transparent;"><i class="bi bi-dash-lg"></i></button>
-            <button type="button" class="btn-close btn-close-white" onclick="event.stopPropagation(); document.getElementById('bgDownloadWidget').classList.add('d-none')"></button>
+<!-- Widget Background Download Progress (Professional Dual-Mode Dock) -->
+<div id="bgDownloadWidget" class="download-dock-container d-none">
+    <!-- 1. Compact Floating Capsule (Pill Mode - Minimal & Non-Intrusive) -->
+    <div id="bgDownloadPill" class="download-pill shadow-lg d-flex align-items-center gap-2" onclick="toggleExpandWidget(true)" title="Klik untuk melihat detail unduhan">
+        <div class="pill-icon-wrapper" id="pillIconWrapper">
+            <i class="bi bi-cloud-arrow-down-fill text-primary" id="pillDownloadIcon"></i>
         </div>
-        <div class="toast-body p-0" id="bgDownloadBody">
-            <div class="p-2 border-bottom">
-                <div class="d-flex justify-content-between mb-1" style="font-size: 0.85rem;">
-                    <span id="bgDownloadText" class="fw-bold">Selesai: 0/0</span>
-                    <span id="bgDownloadPct" class="fw-bold">0%</span>
-                </div>
-                <div class="progress mb-2" style="height: 6px;">
-                    <div id="bgDownloadBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 0%"></div>
-                </div>
-                <div id="bgDownloadGlobalActions" class="d-flex gap-2 justify-content-end mt-2">
-                    <button id="btnPauseResumeAll" class="btn btn-sm btn-outline-secondary py-0" style="font-size: 0.75rem;" onclick="doDownloadAction('pause', 'ALL')"><i class="bi bi-pause-fill"></i> Pause All</button>
-                    <button id="btnCancelDownload" class="btn btn-sm btn-outline-danger py-0" style="font-size: 0.75rem;" onclick="doDownloadAction('cancel', 'ALL')"><i class="bi bi-x"></i> Batalkan Sisa</button>
+        <div class="pill-info text-truncate">
+            <div class="pill-title fw-bold text-truncate" id="pillDownloadTitle">Mengunduh...</div>
+            <div class="pill-count text-muted" id="pillDownloadCount" style="font-size:0.7rem;">0/0 Berkas</div>
+        </div>
+        <div class="pill-progress-mini px-1">
+            <div class="progress" style="width: 44px; height: 5px; border-radius: 3px; background-color: #e2e8f0;">
+                <div id="pillProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" style="width: 0%; border-radius: 3px;"></div>
+            </div>
+        </div>
+        <span class="badge bg-primary-subtle text-primary fw-bold px-2 py-1" id="pillDownloadPct" style="font-size:0.75rem;">0%</span>
+        <div class="pill-actions ms-auto d-flex align-items-center gap-1" onclick="event.stopPropagation()">
+            <button type="button" class="btn-dock-icon" title="Lihat Detail" onclick="toggleExpandWidget(true)">
+                <i class="bi bi-chevron-up"></i>
+            </button>
+            <button type="button" class="btn-dock-icon text-muted" title="Sembunyikan ke Header" onclick="closeDockWidget()">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- 2. Expanded Detail Card -->
+    <div id="bgDownloadCard" class="download-card shadow-2xl d-none">
+        <!-- Card Header -->
+        <div class="card-header-gradient d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2 text-truncate" style="max-width: 250px;">
+                <div class="status-pulse-dot" id="headerPulseDot"></div>
+                <div class="text-truncate">
+                    <div class="fw-bold text-white fs-6 text-truncate" id="bgDownloadTitle">Mengunduh Berkas</div>
+                    <small class="text-white-50 text-truncate d-block" id="bgDownloadSubtitle" style="font-size:0.72rem;">Proses latar belakang server</small>
                 </div>
             </div>
-            <!-- Daftar Santri -->
-            <div id="bgDownloadSantriList" style="max-height: 200px; overflow-y: auto; background: #f8f9fa;">
-                <!-- items go here -->
+            <div class="d-flex align-items-center gap-1">
+                <button type="button" class="btn-dock-header" title="Minimize ke Kapsul" onclick="toggleExpandWidget(false)">
+                    <i class="bi bi-dash-lg"></i>
+                </button>
+                <button type="button" class="btn-dock-header" title="Tutup" onclick="closeDockWidget()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Card Body -->
+        <div class="download-card-body p-3">
+            <!-- Progress Section -->
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span id="bgDownloadText" class="fw-semibold text-secondary small">Selesai: 0/0</span>
+                    <span id="bgDownloadPct" class="badge bg-primary text-white fw-bold px-2 py-1">0%</span>
+                </div>
+                <div class="progress" style="height: 7px; border-radius: 6px; background-color: #e2e8f0;">
+                    <div id="bgDownloadBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 0%; border-radius: 6px;"></div>
+                </div>
+            </div>
+
+            <!-- Global Action Toolbar -->
+            <div id="bgDownloadGlobalActions" class="d-flex gap-2 justify-content-between mb-3">
+                <button id="btnPauseResumeAll" class="btn btn-sm btn-light border flex-fill text-secondary fw-semibold py-1" style="font-size: 0.78rem;" onclick="doDownloadAction('pause', 'ALL')">
+                    <i class="bi bi-pause-fill me-1"></i> Pause All
+                </button>
+                <button id="btnCancelDownload" class="btn btn-sm btn-light border text-danger flex-fill fw-semibold py-1" style="font-size: 0.78rem;" onclick="doDownloadAction('cancel', 'ALL')">
+                    <i class="bi bi-x-circle me-1"></i> Batalkan Sisa
+                </button>
+            </div>
+
+            <!-- Santri List Header -->
+            <div class="d-flex justify-content-between align-items-center px-1 mb-2">
+                <span class="text-uppercase fw-bold text-muted" style="font-size: 0.68rem; letter-spacing: 0.05em;">Antrean Santri</span>
+                <span class="badge bg-light text-secondary border" id="bgDownloadTotalItems" style="font-size: 0.68rem;">0 Santri</span>
+            </div>
+
+            <!-- Santri List Scroll Area -->
+            <div id="bgDownloadSantriList" class="santri-download-list custom-scroll">
+                <!-- Items populated via JS -->
             </div>
         </div>
     </div>
 </div>
 
 <script>
-let widgetMinimized = false;
-function toggleMinimizeWidget(e) {
-    if(e && e.target.classList.contains('btn-close')) return;
-    widgetMinimized = !widgetMinimized;
-    const body = document.getElementById('bgDownloadBody');
-    const minPct = document.getElementById('bgDownloadMinPct');
-    const title = document.getElementById('bgDownloadTitle');
-    
-    if (widgetMinimized) {
-        body.classList.add('d-none');
-        minPct.classList.remove('d-none');
-        title.classList.add('d-none');
+let isDockExpanded = false; // default to compact pill so it doesn't block screen
+let dockClosedByUser = false;
+
+function toggleExpandWidget(expand) {
+    isDockExpanded = expand;
+    const pill = document.getElementById('bgDownloadPill');
+    const card = document.getElementById('bgDownloadCard');
+    if (expand) {
+        if (pill) pill.classList.add('d-none');
+        if (card) card.classList.remove('d-none');
     } else {
-        body.classList.remove('d-none');
-        minPct.classList.add('d-none');
-        title.classList.remove('d-none');
+        if (card) card.classList.add('d-none');
+        if (pill) pill.classList.remove('d-none');
+    }
+}
+
+function closeDockWidget() {
+    dockClosedByUser = true;
+    const widget = document.getElementById('bgDownloadWidget');
+    if (widget) widget.classList.add('d-none');
+}
+
+function toggleDownloadWidgetFromHeader() {
+    dockClosedByUser = false;
+    const widget = document.getElementById('bgDownloadWidget');
+    if (widget) {
+        widget.classList.remove('d-none');
+        toggleExpandWidget(true); // Open full card when clicked from header
     }
 }
 </script>
@@ -838,6 +1123,8 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('mouseup', function() { isDragging = false; });
 
     let lastPercent = -1;
+    let autoHideTimer = null;
+
     function fetchDownloadStatus() {
         fetch('<?= API_URL ?>/api/capel/download-status')
             .then(r => {
@@ -850,7 +1137,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const badgeActive = document.getElementById('badgeDownloadActive');
                 if (!widget) return;
                 
-                // Show header button if there is any history/activity
+                // Show header navbar button if there is any download history/activity
                 if (res.total > 0 && btnShow) {
                     btnShow.style.display = 'block';
                 }
@@ -860,106 +1147,208 @@ document.addEventListener('DOMContentLoaded', function() {
                     badgeActive.classList.add('d-none');
                 }
                 
-                // Only show if active, or if it just finished (to show 100% briefly)
+                let effectiveTotal = res.total - (res.failed || 0);
+
+                // --- 1. ACTIVE STATE ---
                 if (res.active) {
-                    widget.classList.remove('d-none');
-                    let currentTxt = 'Mengunduh Berkas';
+                    if (autoHideTimer) { clearTimeout(autoHideTimer); autoHideTimer = null; }
+                    
+                    if (!dockClosedByUser) {
+                        widget.classList.remove('d-none');
+                        toggleExpandWidget(isDockExpanded);
+                    }
+
+                    // Compact Pill updates
+                    const pillTitle = document.getElementById('pillDownloadTitle');
+                    const pillCount = document.getElementById('pillDownloadCount');
+                    const pillPct = document.getElementById('pillDownloadPct');
+                    const pillBar = document.getElementById('pillProgressBar');
+                    const pillIcon = document.getElementById('pillDownloadIcon');
+                    const pillIconWrapper = document.getElementById('pillIconWrapper');
+
                     if (res.paused_all) {
-                        currentTxt = 'Semua Di-jeda';
-                        document.getElementById('bgDownloadIcon').className = 'bi bi-pause-circle me-2';
-                        document.getElementById('bgDownloadBar').classList.remove('progress-bar-animated');
-                        document.getElementById('bgDownloadGlobalActions').innerHTML = `
-                            <button class="btn btn-sm btn-outline-primary py-0" style="font-size: 0.75rem;" onclick="doDownloadAction('resume', 'ALL')"><i class="bi bi-play-fill"></i> Resume All</button>
-                            <button class="btn btn-sm btn-outline-danger py-0" style="font-size: 0.75rem;" onclick="doDownloadAction('cancel', 'ALL')"><i class="bi bi-x"></i> Batalkan Sisa</button>
-                        `;
+                        if (pillTitle) pillTitle.textContent = 'Semua Di-jeda';
+                        if (pillIcon) pillIcon.className = 'bi bi-pause-circle text-warning';
+                        if (pillIconWrapper) pillIconWrapper.style.backgroundColor = '#fef3c7';
                     } else {
-                        if (res.current) currentTxt = 'Mengunduh: ' + res.current;
-                        document.getElementById('bgDownloadIcon').className = 'bi bi-cloud-arrow-down me-2';
-                        document.getElementById('bgDownloadBar').classList.add('progress-bar-animated');
-                        document.getElementById('bgDownloadGlobalActions').innerHTML = `
-                            <button class="btn btn-sm btn-outline-secondary py-0" style="font-size: 0.75rem;" onclick="doDownloadAction('pause', 'ALL')"><i class="bi bi-pause-fill"></i> Pause All</button>
-                            <button class="btn btn-sm btn-outline-danger py-0" style="font-size: 0.75rem;" onclick="doDownloadAction('cancel', 'ALL')"><i class="bi bi-x"></i> Batalkan Sisa</button>
-                        `;
+                        if (pillTitle) pillTitle.textContent = res.current ? 'Mengunduh: ' + res.current : 'Mengunduh Berkas...';
+                        if (pillIcon) pillIcon.className = 'bi bi-cloud-arrow-down-fill text-primary';
+                        if (pillIconWrapper) pillIconWrapper.style.backgroundColor = '#eff6ff';
                     }
-                    document.getElementById('bgDownloadTitle').textContent = currentTxt;
-                    let effectiveTotal = res.total - (res.failed || 0);
-                    document.getElementById('bgDownloadText').textContent = 'Selesai: ' + res.completed + '/' + effectiveTotal;
-                    document.getElementById('bgDownloadPct').textContent = res.percent + '%';
-                    document.getElementById('bgDownloadMinPct').textContent = res.percent + '%';
-                    document.getElementById('bgDownloadBar').style.width = res.percent + '%';
-                    
+
+                    if (pillCount) pillCount.textContent = res.completed + '/' + effectiveTotal + ' Berkas';
+                    if (pillPct) pillPct.textContent = res.percent + '%';
+                    if (pillBar) pillBar.style.width = res.percent + '%';
+
+                    // Expanded Card updates
+                    const cardTitle = document.getElementById('bgDownloadTitle');
+                    const cardSubtitle = document.getElementById('bgDownloadSubtitle');
+                    const cardPulse = document.getElementById('headerPulseDot');
+                    const cardText = document.getElementById('bgDownloadText');
+                    const cardPct = document.getElementById('bgDownloadPct');
+                    const cardBar = document.getElementById('bgDownloadBar');
+                    const cardActions = document.getElementById('bgDownloadGlobalActions');
+                    const totalItems = document.getElementById('bgDownloadTotalItems');
+
+                    if (cardTitle) cardTitle.textContent = res.current ? 'Mengunduh: ' + res.current : 'Mengunduh Berkas';
+                    if (cardSubtitle) cardSubtitle.textContent = res.total + ' total berkas antrean server';
+                    if (cardPulse) cardPulse.className = res.paused_all ? 'status-pulse-dot paused' : 'status-pulse-dot';
+                    if (cardText) cardText.textContent = 'Selesai: ' + res.completed + '/' + effectiveTotal + ' Berkas';
+                    if (cardPct) cardPct.textContent = res.percent + '%';
+                    if (cardBar) cardBar.style.width = res.percent + '%';
+
+                    if (cardActions) {
+                        if (res.paused_all) {
+                            cardActions.innerHTML = `
+                                <button class="btn btn-sm btn-light border text-primary flex-fill fw-semibold py-1" style="font-size: 0.78rem;" onclick="doDownloadAction('resume', 'ALL')">
+                                    <i class="bi bi-play-fill me-1"></i> Lanjutkan Semua
+                                </button>
+                                <button class="btn btn-sm btn-light border text-danger flex-fill fw-semibold py-1" style="font-size: 0.78rem;" onclick="doDownloadAction('cancel', 'ALL')">
+                                    <i class="bi bi-x-circle me-1"></i> Batalkan Sisa
+                                </button>
+                            `;
+                        } else {
+                            cardActions.innerHTML = `
+                                <button class="btn btn-sm btn-light border text-secondary flex-fill fw-semibold py-1" style="font-size: 0.78rem;" onclick="doDownloadAction('pause', 'ALL')">
+                                    <i class="bi bi-pause-fill me-1"></i> Jeda Semua
+                                </button>
+                                <button class="btn btn-sm btn-light border text-danger flex-fill fw-semibold py-1" style="font-size: 0.78rem;" onclick="doDownloadAction('cancel', 'ALL')">
+                                    <i class="bi bi-x-circle me-1"></i> Batalkan Sisa
+                                </button>
+                            `;
+                        }
+                    }
+
+                    if (totalItems && res.santri_list) {
+                        totalItems.textContent = res.santri_list.length + ' Santri';
+                    }
+
                     lastPercent = res.percent;
+
+                // --- 2. FINISHED / IDLE STATE ---
                 } else if (res.total > 0 && lastPercent !== -1) {
-                    // Just finished or cancelled!
-                    if (res.failed > 0 && res.completed === 0) {
-                        document.getElementById('bgDownloadTitle').textContent = 'Pengunduhan Dibatalkan';
-                        document.getElementById('bgDownloadBar').classList.remove('bg-primary');
-                        document.getElementById('bgDownloadBar').classList.add('bg-danger');
-                    } else if (res.failed > 0) {
-                        document.getElementById('bgDownloadTitle').textContent = 'Selesai (Sebagian Gagal)';
-                        document.getElementById('bgDownloadBar').classList.remove('bg-primary');
-                        document.getElementById('bgDownloadBar').classList.add('bg-warning');
+                    const pillTitle = document.getElementById('pillDownloadTitle');
+                    const pillIcon = document.getElementById('pillDownloadIcon');
+                    const pillIconWrapper = document.getElementById('pillIconWrapper');
+                    const pillCount = document.getElementById('pillDownloadCount');
+                    const pillPct = document.getElementById('pillDownloadPct');
+                    const pillBar = document.getElementById('pillProgressBar');
+
+                    const cardTitle = document.getElementById('bgDownloadTitle');
+                    const cardSubtitle = document.getElementById('bgDownloadSubtitle');
+                    const cardPulse = document.getElementById('headerPulseDot');
+                    const cardText = document.getElementById('bgDownloadText');
+                    const cardPct = document.getElementById('bgDownloadPct');
+                    const cardBar = document.getElementById('bgDownloadBar');
+                    const cardActions = document.getElementById('bgDownloadGlobalActions');
+
+                    let statusText = 'Selesai Semua';
+                    let isAllFail = (res.failed > 0 && res.completed === 0);
+                    let isPartialFail = (res.failed > 0 && res.completed > 0);
+
+                    if (isAllFail) {
+                        statusText = 'Pengunduhan Dibatalkan';
+                        if (pillIcon) pillIcon.className = 'bi bi-x-circle-fill text-danger';
+                        if (pillIconWrapper) pillIconWrapper.style.backgroundColor = '#fee2e2';
+                        if (cardPulse) cardPulse.className = 'status-pulse-dot paused';
+                    } else if (isPartialFail) {
+                        statusText = 'Selesai (Ada Gagal)';
+                        if (pillIcon) pillIcon.className = 'bi bi-exclamation-circle-fill text-warning';
+                        if (pillIconWrapper) pillIconWrapper.style.backgroundColor = '#fef3c7';
+                        if (cardPulse) cardPulse.className = 'status-pulse-dot paused';
                     } else {
-                        document.getElementById('bgDownloadTitle').textContent = 'Selesai Semua';
-                        document.getElementById('bgDownloadBar').classList.remove('bg-danger', 'bg-warning');
-                        document.getElementById('bgDownloadBar').classList.add('bg-primary');
+                        statusText = 'Selesai Semua';
+                        if (pillIcon) pillIcon.className = 'bi bi-check-circle-fill text-success';
+                        if (pillIconWrapper) pillIconWrapper.style.backgroundColor = '#dcfce7';
+                        if (cardPulse) cardPulse.className = 'status-pulse-dot success';
                     }
-                    
-                    document.getElementById('bgDownloadPct').textContent = res.percent + '%';
-                    document.getElementById('bgDownloadMinPct').textContent = res.percent + '%';
-                    document.getElementById('bgDownloadBar').style.width = res.percent + '%';
-                    
-                    let effectiveTotal2 = res.total - (res.failed || 0);
-                    document.getElementById('bgDownloadText').textContent = 'Selesai: ' + res.completed + '/' + effectiveTotal2;
-                    
-                    // Add Bersihkan Riwayat button and Lihat Riwayat button
-                    document.getElementById('bgDownloadGlobalActions').innerHTML = `
-                        <button class="btn btn-sm btn-outline-primary py-0 w-50" style="font-size: 0.75rem;" onclick="openRiwayatUnduh()"><i class="bi bi-clock-history"></i> Detail</button>
-                        <button class="btn btn-sm btn-outline-danger py-0 w-50" style="font-size: 0.75rem;" onclick="clearDownloadHistory()"><i class="bi bi-trash"></i> Bersihkan</button>
-                    `;
-                    
-                    lastPercent = -1; // Prevent showing again until new downloads start
-                    
+
+                    if (pillTitle) pillTitle.textContent = statusText;
+                    if (pillCount) pillCount.textContent = res.completed + '/' + effectiveTotal + ' Berkas';
+                    if (pillPct) pillPct.textContent = res.percent + '%';
+                    if (pillBar) pillBar.style.width = res.percent + '%';
+
+                    if (cardTitle) cardTitle.textContent = statusText;
+                    if (cardSubtitle) cardSubtitle.textContent = 'Proses unduhan berkas telah selesai';
+                    if (cardText) cardText.textContent = 'Selesai: ' + res.completed + '/' + effectiveTotal + ' Berkas';
+                    if (cardPct) cardPct.textContent = res.percent + '%';
+                    if (cardBar) cardBar.style.width = res.percent + '%';
+
+                    if (cardActions) {
+                        cardActions.innerHTML = `
+                            <button class="btn btn-sm btn-light border text-primary flex-fill fw-semibold py-1" style="font-size: 0.78rem;" onclick="openRiwayatUnduh()">
+                                <i class="bi bi-clock-history me-1"></i> Detail
+                            </button>
+                            <button class="btn btn-sm btn-light border text-danger flex-fill fw-semibold py-1" style="font-size: 0.78rem;" onclick="clearDownloadHistory()">
+                                <i class="bi bi-trash me-1"></i> Bersihkan
+                            </button>
+                        `;
+                    }
+
+                    lastPercent = -1; // Reset until new download begins
+
+                    // Auto hide if minimized in pill mode after 10 seconds
+                    if (!isDockExpanded) {
+                        autoHideTimer = setTimeout(() => {
+                            if (widget && !isDockExpanded) widget.classList.add('d-none');
+                        }, 10000);
+                    }
+
                 } else if (res.total === 0) {
                     widget.classList.add('d-none');
                 }
-                
-                // ALWAYS render list if total > 0
-                if (res.total > 0) {
+
+                // Render Santri Items List
+                if (res.total > 0 && res.santri_list) {
                     const listContainer = document.getElementById('bgDownloadSantriList');
-                    listContainer.innerHTML = '';
-                    if (res.santri_list && res.santri_list.length > 0) {
+                    if (listContainer) {
+                        listContainer.innerHTML = '';
                         res.santri_list.forEach(item => {
                             let statusBadge = '';
                             let actionBtns = '';
+
                             if (item.status === 'Mengunduh') {
-                                statusBadge = '<span class="badge bg-primary ms-1" style="font-size:0.65rem;">Mengunduh</span>';
-                                actionBtns = `<button onclick="doDownloadAction('pause', '${item.kode_santri}')" class="btn btn-sm btn-link text-secondary p-0 me-2" title="Pause"><i class="bi bi-pause-circle"></i></button>`;
-                                actionBtns += `<button onclick="doDownloadAction('cancel', '${item.kode_santri}')" class="btn btn-sm btn-link text-danger p-0" title="Cancel"><i class="bi bi-x-circle"></i></button>`;
+                                statusBadge = `<span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size:0.65rem;"><span class="spinner-border spinner-border-sm me-1" style="width:0.55rem;height:0.55rem;border-width:1px;"></span>Mengunduh</span>`;
+                                actionBtns = `
+                                    <button onclick="doDownloadAction('pause', '${item.kode_santri}')" class="btn-dock-icon text-secondary" title="Jeda"><i class="bi bi-pause-fill"></i></button>
+                                    <button onclick="doDownloadAction('cancel', '${item.kode_santri}')" class="btn-dock-icon text-danger" title="Batalkan"><i class="bi bi-x"></i></button>
+                                `;
                             } else if (item.status === 'Jeda') {
-                                statusBadge = '<span class="badge bg-warning text-dark ms-1" style="font-size:0.65rem;">Jeda</span>';
-                                actionBtns = `<button onclick="doDownloadAction('resume', '${item.kode_santri}')" class="btn btn-sm btn-link text-success p-0 me-2" title="Resume"><i class="bi bi-play-circle"></i></button>`;
-                                actionBtns += `<button onclick="doDownloadAction('cancel', '${item.kode_santri}')" class="btn btn-sm btn-link text-danger p-0" title="Cancel"><i class="bi bi-x-circle"></i></button>`;
+                                statusBadge = `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle" style="font-size:0.65rem;"><i class="bi bi-pause me-1"></i>Jeda</span>`;
+                                actionBtns = `
+                                    <button onclick="doDownloadAction('resume', '${item.kode_santri}')" class="btn-dock-icon text-success" title="Lanjutkan"><i class="bi bi-play-fill"></i></button>
+                                    <button onclick="doDownloadAction('cancel', '${item.kode_santri}')" class="btn-dock-icon text-danger" title="Batalkan"><i class="bi bi-x"></i></button>
+                                `;
                             } else if (item.status === 'Menunggu') {
-                                statusBadge = '<span class="badge bg-secondary ms-1" style="font-size:0.65rem;">Menunggu</span>';
-                                actionBtns = `<button onclick="doDownloadAction('pause', '${item.kode_santri}')" class="btn btn-sm btn-link text-secondary p-0 me-2" title="Pause"><i class="bi bi-pause-circle"></i></button>`;
-                                actionBtns += `<button onclick="doDownloadAction('cancel', '${item.kode_santri}')" class="btn btn-sm btn-link text-danger p-0" title="Cancel"><i class="bi bi-x-circle"></i></button>`;
+                                statusBadge = `<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle" style="font-size:0.65rem;">Menunggu</span>`;
+                                actionBtns = `
+                                    <button onclick="doDownloadAction('pause', '${item.kode_santri}')" class="btn-dock-icon text-secondary" title="Jeda"><i class="bi bi-pause-fill"></i></button>
+                                    <button onclick="doDownloadAction('cancel', '${item.kode_santri}')" class="btn-dock-icon text-danger" title="Batalkan"><i class="bi bi-x"></i></button>
+                                `;
                             } else if (item.status === 'Selesai') {
-                                statusBadge = '<span class="badge bg-success ms-1" style="font-size:0.65rem;">Selesai</span>';
+                                statusBadge = `<span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size:0.65rem;"><i class="bi bi-check2 me-1"></i>Selesai</span>`;
                             } else if (item.status === 'Dibatalkan') {
-                                statusBadge = '<span class="badge bg-danger ms-1" style="font-size:0.65rem;">Dibatalkan</span>';
+                                statusBadge = `<span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size:0.65rem;">Dibatalkan</span>`;
                             } else if (item.status === 'Selesai (Ada Gagal)') {
-                                statusBadge = '<span class="badge bg-warning text-dark ms-1" style="font-size:0.65rem;">Selesai (Ada Gagal)</span>';
+                                statusBadge = `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle" style="font-size:0.65rem;">Ada Gagal</span>`;
                             }
-                            
+
                             let itemEffective = item.total - (item.failed || 0);
+                            let initial = (item.nama && item.nama.trim().length > 0) ? item.nama.trim().charAt(0).toUpperCase() : 'S';
+
                             listContainer.innerHTML += `
-                                <div class="p-2 border-bottom d-flex justify-content-between align-items-center" style="font-size: 0.75rem;">
-                                    <div class="text-truncate me-2" style="max-width: 180px;">
-                                        <strong>${item.nama}</strong><br>
-                                        <span class="text-muted">${item.completed}/${itemEffective} Berkas</span> ${statusBadge}
+                                <div class="santri-dl-item">
+                                    <div class="d-flex align-items-center text-truncate me-2" style="max-width: 220px;">
+                                        <div class="santri-avatar me-2">${initial}</div>
+                                        <div class="text-truncate">
+                                            <div class="fw-bold text-dark text-truncate" style="font-size: 0.78rem;">${item.nama}</div>
+                                            <div class="text-muted d-flex align-items-center gap-1" style="font-size: 0.68rem;">
+                                                <span>${item.completed}/${itemEffective} Berkas</span>
+                                                ${statusBadge}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="d-flex align-items-center">
+                                    <div class="d-flex align-items-center gap-1">
                                         ${actionBtns}
                                     </div>
                                 </div>
@@ -1083,6 +1472,98 @@ window.addEventListener('pagehide', function() {
 });
 </script>
 <?php endif; ?>
+
+<script>
+// ── PWA & Service Worker Registration ─────────────────────────────
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        const swPath = '<?= ASSET_URL ?>/sw.js';
+        navigator.serviceWorker.register(swPath).then((reg) => {
+            console.log('SiPLN PWA ServiceWorker ready with scope:', reg.scope);
+        }).catch((err) => {
+            console.warn('ServiceWorker registration error:', err);
+        });
+    });
+}
+
+// PWA Install Prompt Handler
+let deferredPwaPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPwaPrompt = e;
+    
+    // Tampilkan tombol instalasi di header dan sidebar
+    const btnHeader = document.getElementById('btnPwaInstallHeader');
+    const containerSidebar = document.getElementById('sidebarInstallContainer');
+    if (btnHeader) {
+        btnHeader.classList.remove('d-none');
+        btnHeader.classList.add('d-inline-flex');
+    }
+    if (containerSidebar) {
+        containerSidebar.classList.remove('d-none');
+    }
+});
+
+window.triggerPwaInstall = async function() {
+    if (deferredPwaPrompt) {
+        deferredPwaPrompt.prompt();
+        const choiceResult = await deferredPwaPrompt.userChoice;
+        if (choiceResult.outcome === 'accepted') {
+            console.log('User accepted PWA installation');
+        } else {
+            console.log('User dismissed PWA installation');
+        }
+        deferredPwaPrompt = null;
+    } else {
+        // Panduan jika browser butuh instalasi manual atau sudah terinstall
+        Swal.fire({
+            title: '<strong>Install SiPLN ke Desktop</strong>',
+            icon: 'info',
+            html: `
+                <div class="text-start" style="font-size: 0.88rem; line-height: 1.6;">
+                    <p class="mb-2">Untuk menginstal aplikasi SiPLN langsung ke Desktop Anda:</p>
+                    <div class="p-3 bg-light border rounded mb-3">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="badge bg-primary rounded-circle">1</span>
+                            <span>Periksa bilah alamat URL di kanan atas browser Anda.</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="badge bg-primary rounded-circle">2</span>
+                            <span>Klik ikon <strong>Install / Pasang ( <i class="bi bi-display text-primary"></i> / <i class="bi bi-download text-primary"></i> )</strong>.</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-primary rounded-circle">3</span>
+                            <span>Atau klik titik tiga <strong>( ⋮ )</strong> &rarr; pilih <strong>"Simpan dan bagikan" / "Aplikasi"</strong> &rarr; klik <strong>"Install SiPLN"</strong>.</span>
+                        </div>
+                    </div>
+                    <div class="alert alert-success d-flex align-items-center gap-2 py-2 mb-0" style="font-size: 0.8rem;">
+                        <i class="bi bi-check-circle-fill fs-5"></i>
+                        <div>Setelah dipasang, shortcut SiPLN akan otomatis tersedia di <strong>Desktop</strong> komputer Anda!</div>
+                    </div>
+                </div>
+            `,
+            confirmButtonText: '<i class="bi bi-check2-circle me-1"></i> Mengerti',
+            confirmButtonColor: '#3461ff'
+        });
+    }
+};
+
+window.addEventListener('appinstalled', () => {
+    deferredPwaPrompt = null;
+    const btnHeader = document.getElementById('btnPwaInstallHeader');
+    const containerSidebar = document.getElementById('sidebarInstallContainer');
+    if (btnHeader) btnHeader.classList.add('d-none');
+    if (containerSidebar) containerSidebar.classList.add('d-none');
+    
+    Swal.fire({
+        title: 'Berhasil Terpasang!',
+        text: 'Aplikasi SiPLN berhasil diinstal ke Desktop Anda. Sekarang Anda dapat membukanya langsung dari Desktop kapan saja!',
+        icon: 'success',
+        confirmButtonColor: '#3461ff'
+    });
+});
+</script>
 
 <?php $this->endBody() ?>
 </body>

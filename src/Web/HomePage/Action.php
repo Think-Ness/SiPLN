@@ -44,14 +44,17 @@ final class Action
         // Capel Filter Logic (Legacy + New)
         $capelWhere = "(kelas IN ('CAPEL PENERIMAAN', 'CAPEL PERSIAPAN') OR status_santri IN ('Program Penerimaan', 'Program Persiapan'))";
 
-        $total     = (int) $db->createCommand("SELECT COUNT(*) FROM master_santri WHERE 1=1 $whereExt", $params)->queryScalar();
-        $aktif     = (int) $db->createCommand("SELECT COUNT(*) FROM master_santri WHERE aktif=1 AND NOT $capelWhere $whereExt", $params)->queryScalar();
-        $capel      = (int) $db->createCommand("SELECT COUNT(*) FROM master_santri WHERE $capelWhere $whereExt", $params)->queryScalar();
-        $capelBreakdown = $db->createCommand("SELECT IF(kelas LIKE 'CAPEL%', kelas, status_santri) as program, COUNT(*) as count FROM master_santri WHERE $capelWhere $whereExt GROUP BY program ORDER BY count DESC", $params)->queryAll();
-        $alumni     = (int) $db->createCommand("SELECT COUNT(*) FROM master_santri WHERE kelas = 'Alumni' $whereExt", $params)->queryScalar();
-        $pengabdian = (int) $db->createCommand("SELECT COUNT(*) FROM master_santri WHERE kelas = 'Pengabdian' $whereExt", $params)->queryScalar();
-        $pengabdianBreakdown = $db->createCommand("SELECT pondok, COUNT(*) as count FROM master_santri WHERE kelas = 'Pengabdian' $whereExt GROUP BY pondok ORDER BY count DESC", $params)->queryAll();
-        $inaktif    = (int) $db->createCommand("SELECT COUNT(*) FROM master_santri WHERE aktif=0 AND NOT $capelWhere $whereExt", $params)->queryScalar();
+        $total           = (int) $db->createCommand("SELECT COUNT(*) FROM master_santri WHERE 1=1 $whereExt", $params)->queryScalar();
+        $totalAktif      = (int) $db->createCommand("SELECT COUNT(*) FROM master_santri WHERE aktif=1 $whereExt", $params)->queryScalar();
+        // Santri Aktif Reguler (Belajar di Kelas 1 s/d 6, bukan pengabdian dan bukan capel)
+        $aktif           = (int) $db->createCommand("SELECT COUNT(*) FROM master_santri WHERE aktif=1 AND (kelas IS NULL OR kelas != 'Pengabdian') AND NOT $capelWhere $whereExt", $params)->queryScalar();
+        $aktifBreakdown  = $db->createCommand("SELECT pondok, COUNT(*) as count FROM master_santri WHERE aktif=1 AND (kelas IS NULL OR kelas != 'Pengabdian') AND NOT $capelWhere $whereExt GROUP BY pondok ORDER BY count DESC", $params)->queryAll();
+        $capel           = (int) $db->createCommand("SELECT COUNT(*) FROM master_santri WHERE aktif=1 AND $capelWhere $whereExt", $params)->queryScalar();
+        $capelBreakdown  = $db->createCommand("SELECT IF(kelas LIKE 'CAPEL%', kelas, status_santri) as program, COUNT(*) as count FROM master_santri WHERE aktif=1 AND $capelWhere $whereExt GROUP BY program ORDER BY count DESC", $params)->queryAll();
+        $alumni          = (int) $db->createCommand("SELECT COUNT(*) FROM master_santri WHERE kelas = 'Alumni' $whereExt", $params)->queryScalar();
+        $pengabdian      = (int) $db->createCommand("SELECT COUNT(*) FROM master_santri WHERE aktif = 1 AND kelas = 'Pengabdian' $whereExt", $params)->queryScalar();
+        $pengabdianBreakdown = $db->createCommand("SELECT pondok, COUNT(*) as count FROM master_santri WHERE aktif = 1 AND kelas = 'Pengabdian' $whereExt GROUP BY pondok ORDER BY count DESC", $params)->queryAll();
+        $inaktif         = (int) $db->createCommand("SELECT COUNT(*) FROM master_santri WHERE aktif=0 $whereExt", $params)->queryScalar();
 
         // Santri Asli vs Pindahan (Only relevant if view = 'my' and user has instansi)
         $santriAsli = 0;
@@ -97,7 +100,9 @@ final class Action
 
         return $viewRenderer->render(__DIR__ . '/template', [
             'total'          => $total,
+            'totalAktif'     => $totalAktif,
             'aktif'          => $aktif,
+            'aktifBreakdown' => $aktifBreakdown,
             'inaktif'        => $inaktif,
             'capel'          => $capel,
             'capelBreakdown' => $capelBreakdown,

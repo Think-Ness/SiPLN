@@ -40,10 +40,7 @@ final class UploadDocAction
             return JsonResponse::create(['success' => false, 'message' => 'File tidak valid atau tidak ada file yang diunggah'], 400);
         }
 
-        $instansi = $db->createCommand("SELECT path_folder FROM master_instansi WHERE kode = " . (int)($_SESSION['instansi_id'] ?? 0) . " LIMIT 1")->queryOne();
-        $baseDir = !empty($instansi['path_folder']) ? rtrim($instansi['path_folder'], '/\\') : __DIR__ . '/../../../../public/uploads';
-        $baseDir .= DIRECTORY_SEPARATOR . $type;
-        if (!is_dir($baseDir)) @mkdir($baseDir, 0777, true);
+        $baseDir = \App\Shared\UploadPath::getFolder($db, $type, (int)($_SESSION['instansi_id'] ?? 0));
         
         $ext = pathinfo($files['file']->getClientFilename(), PATHINFO_EXTENSION);
         

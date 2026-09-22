@@ -103,7 +103,7 @@ foreach ($stepDurations as $urut => $data) {
     .step-dot.proses { background: #0d6efd; border-color: #0d6efd; animation: pulse-dot 1.5s infinite; }
     .step-dot.blocked { background: #dc3545; border-color: #dc3545; }
     @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.4} }
-    .stat-card { border-radius: 12px; padding: 16px 20px; transition: all .2s; }
+    .stat-card { border-radius: 14px; padding: 16px 20px; transition: all .2s; }
     .stat-card:hover { box-shadow: 0 6px 15px rgba(0,0,0,.05) !important; transform: translateY(-2px); }
     .filter-pill { border-radius: 20px; padding: 6px 16px; font-size: .8rem; font-weight: 600; text-decoration: none; transition: all .2s; cursor: pointer; }
     .filter-pill:hover { opacity: .85; }
@@ -112,6 +112,139 @@ foreach ($stepDurations as $urut => $data) {
     
     /* Highlight for selected row */
     .table-hover tbody tr.selected-row { background-color: #f0f6ff !important; }
+
+    /* Column Search Inputs */
+    .col-search {
+        border: 1.5px solid #cbd5e1 !important;
+        border-radius: 8px !important;
+        font-size: 0.72rem !important;
+        padding: 4px 8px !important;
+        transition: all 0.2s ease !important;
+        background-color: #ffffff !important;
+    }
+    .col-search:focus {
+        border-color: #0ea5e9 !important;
+        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15) !important;
+        outline: none !important;
+    }
+
+    /* Step Flow Container Scroll */
+    .step-flow-container {
+        display: flex;
+        align-items: flex-start;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 12px;
+    }
+    .step-flow-container::-webkit-scrollbar {
+        height: 6px;
+    }
+    .step-flow-container::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+
+    @media (max-width: 767.98px) {
+        .page-header-responsive {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 12px !important;
+        }
+        .page-header-responsive > div:last-child {
+            width: 100% !important;
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: 8px !important;
+        }
+        .page-header-responsive > div:last-child form,
+        .page-header-responsive > div:last-child select,
+        .page-header-responsive > div:last-child .btn,
+        .page-header-responsive > div:last-child a.btn {
+            width: 100% !important;
+            min-width: 100% !important;
+            justify-content: center !important;
+            text-align: center !important;
+        }
+        .filter-pill-container {
+            width: 100% !important;
+            justify-content: space-between !important;
+            overflow-x: auto !important;
+        }
+        .filter-pill-container .filter-pill {
+            flex: 1 1 auto !important;
+            text-align: center !important;
+            padding: 5px 8px !important;
+            font-size: 0.75rem !important;
+        }
+
+        /* Process Card Mobile */
+        .jd-card {
+            border-radius: 14px !important;
+        }
+        .jd-card .card-body {
+            padding: 16px !important;
+        }
+        .jd-card .rounded-circle {
+            width: 46px !important;
+            height: 46px !important;
+            font-size: 1.25rem !important;
+            margin-top: -10px !important;
+        }
+        .jd-card h5 {
+            font-size: 1.1rem !important;
+        }
+        .jd-card p {
+            font-size: 0.75rem !important;
+            margin-bottom: 14px !important;
+        }
+
+        /* Stat Card Mobile */
+        .stat-card {
+            padding: 14px 16px !important;
+            border-radius: 12px !important;
+        }
+        .stat-card .card-body {
+            padding: 0 !important;
+        }
+        .stat-card h2 {
+            font-size: 2rem !important;
+        }
+        .stat-card h1 {
+            font-size: 2.2rem !important;
+        }
+        .stat-card h3 {
+            font-size: 1.35rem !important;
+        }
+        .stat-card h4 {
+            font-size: 1.05rem !important;
+        }
+        .stat-card .rounded-circle {
+            width: 36px !important;
+            height: 36px !important;
+        }
+        .stat-card .rounded-circle i {
+            font-size: 1rem !important;
+        }
+
+        #bulkActionBar .card-body {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 10px !important;
+        }
+        #bulkActionBar .card-body > div:last-child {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: 6px !important;
+            width: 100% !important;
+        }
+        #bulkActionBar .card-body > div:last-child .btn {
+            flex: 1 1 auto !important;
+            font-size: 0.75rem !important;
+            padding: 7px 12px !important;
+            justify-content: center !important;
+            margin-left: 0 !important;
+        }
+    }
 </style>
 
 <div class="px-2 py-3">
@@ -188,13 +321,13 @@ foreach ($stepDurations as $urut => $data) {
             </div>
         <?php endif; ?>
 
-        <div class="row g-4 mb-4">
+        <div class="row g-3 g-md-4 mb-4">
             <?php foreach ($groupProcs as $index => $p): 
                 $theme = $cardColors[$index % count($cardColors)];
                 $total = $p['stats']['total'] ?: 1; // Prevent div by zero
                 $progressPct = round(($p['stats']['selesai'] / $total) * 100);
             ?>
-                <div class="col-md-6 col-lg-4">
+                <div class="col-12 col-md-6 col-lg-4">
                     <div class="card h-100 border-0 rounded-4 jd-card position-relative overflow-hidden" 
                          style="cursor: pointer; background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.04); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);" 
                          onmouseover="this.style.boxShadow='0 20px 40px <?= $theme['shadow'] ?>'; this.style.transform='translateY(-6px)';"
@@ -270,10 +403,10 @@ foreach ($stepDurations as $urut => $data) {
         </div>
     </div>
 
-    <div class="row mb-5 g-4">
+    <div class="row mb-5 g-3 g-md-4">
         <div class="col-lg-8">
-            <div class="row g-4 mb-4">
-                <div class="col-md-4">
+            <div class="row g-3 g-md-4 mb-4">
+                <div class="col-12 col-sm-4">
                     <div class="card border-0 rounded-4 h-100 stat-card" style="background: linear-gradient(135deg, #4f46e5, #3b82f6); color: white; box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3) !important;">
                         <div class="card-body p-4 d-flex flex-column">
                             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -284,7 +417,7 @@ foreach ($stepDurations as $urut => $data) {
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-12 col-sm-4">
                     <div class="card border-0 rounded-4 h-100 stat-card" style="background: linear-gradient(135deg, #10b981, #059669); color: white; box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3) !important;">
                         <div class="card-body p-4 d-flex flex-column">
                             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -295,7 +428,7 @@ foreach ($stepDurations as $urut => $data) {
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-12 col-sm-4">
                     <div class="card border-0 rounded-4 h-100 stat-card" style="background: linear-gradient(135deg, #f43f5e, #e11d48); color: white; box-shadow: 0 10px 30px rgba(225, 29, 72, 0.3) !important;">
                         <div class="card-body p-4 d-flex flex-column">
                             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -309,8 +442,8 @@ foreach ($stepDurations as $urut => $data) {
             </div>
 
             <!-- New Analytics Row -->
-            <div class="row g-4">
-                <div class="col-md-6">
+            <div class="row g-3 g-md-4">
+                <div class="col-12 col-md-6">
                     <div class="card border-0 rounded-4 h-100 stat-card" style="background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3) !important;">
                         <div class="card-body p-4">
                             <div class="text-white-50 fw-semibold tracking-wide mb-3" style="font-size: .8rem; letter-spacing: 1px;">RATA-RATA PENYELESAIAN</div>
@@ -322,7 +455,7 @@ foreach ($stepDurations as $urut => $data) {
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-12 col-md-6">
                     <div class="card border-0 rounded-4 h-100 stat-card" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; box-shadow: 0 10px 30px rgba(245, 158, 11, 0.3) !important;">
                         <div class="card-body p-4">
                             <div class="text-white-50 fw-semibold tracking-wide mb-3" style="font-size: .8rem; letter-spacing: 1px;">TITIK KEMACETAN (BOTTLENECK)</div>
@@ -510,8 +643,8 @@ foreach ($stepDurations as $urut => $data) {
         <span class="badge bg-light text-dark border px-3 py-2 rounded-pill shadow-sm"><i class="bi bi-receipt me-1"></i><?= $finSummary['total_cases'] ?> Transaksi</span>
     </div>
     
-    <div class="row g-4 mb-5">
-        <div class="col-md-4">
+    <div class="row g-3 g-md-4 mb-5">
+        <div class="col-12 col-md-4">
             <div class="card border-0 rounded-4 h-100 stat-card overflow-hidden position-relative" style="background: linear-gradient(135deg, #059669, #10b981); color: white; box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3) !important;">
                 <div class="card-body p-4 d-flex flex-column">
                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -525,7 +658,7 @@ foreach ($stepDurations as $urut => $data) {
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-12 col-md-4">
             <div class="card border-0 rounded-4 h-100 stat-card overflow-hidden position-relative" style="background: linear-gradient(135deg, #4f46e5, #6366f1); color: white; box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3) !important;">
                 <div class="card-body p-4 d-flex flex-column">
                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -539,7 +672,7 @@ foreach ($stepDurations as $urut => $data) {
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-12 col-md-4">
             <div class="card border-0 rounded-4 h-100 stat-card overflow-hidden position-relative" style="background: linear-gradient(135deg, #d97706, #f59e0b); color: white; box-shadow: 0 10px 30px rgba(245, 158, 11, 0.3) !important;">
                 <div class="card-body p-4 d-flex flex-column">
                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -560,8 +693,8 @@ foreach ($stepDurations as $urut => $data) {
     <!-- Page Header (Process View) -->
     <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3 page-header-responsive">
         <div class="d-flex align-items-center gap-3">
-            <button class="btn btn-white border shadow-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;" onclick="setProcessFilter('all')" title="Kembali ke Dashboard">
-                <i class="bi bi-arrow-left text-dark"></i>
+            <button class="btn btn-white border shadow-sm rounded-circle d-flex align-items-center justify-content-center btn-back-circle" onclick="setProcessFilter('all')" title="Kembali ke Dashboard">
+                <i class="bi bi-arrow-left text-dark fs-5"></i>
             </button>
             <div>
                 <h4 class="fw-bold text-dark mb-1">
@@ -570,13 +703,17 @@ foreach ($stepDurations as $urut => $data) {
                 <p class="text-muted small mb-0">Detail & manajemen tahapan proses</p>
             </div>
         </div>
-        <div class="d-flex gap-3 align-items-center flex-wrap">
-            <div class="d-flex gap-2 bg-light p-1 rounded-pill border">
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+            <div class="d-flex gap-2 bg-light p-1 rounded-pill border filter-pill-container">
                 <a href="#" onclick="setFilterStatus('aktif')" class="filter-pill <?= $statusFilter === 'aktif' ? 'active-pill bg-primary shadow-sm' : 'text-secondary' ?>">Aktif</a>
                 <a href="#" onclick="setFilterStatus('selesai')" class="filter-pill <?= $statusFilter === 'selesai' ? 'active-pill bg-success shadow-sm' : 'text-secondary' ?>">Selesai</a>
                 <a href="#" onclick="setFilterStatus('batal')" class="filter-pill <?= $statusFilter === 'batal' ? 'active-pill bg-danger shadow-sm' : 'text-secondary' ?>">Batal</a>
                 <a href="#" onclick="setFilterStatus('all')" class="filter-pill <?= $statusFilter === 'all' ? 'active-pill bg-dark shadow-sm' : 'text-secondary' ?>">Semua</a>
             </div>
+            <!-- Tombol Tambah Santri ke Progres -->
+            <button type="button" class="btn btn-success btn-sm px-4 rounded-pill fw-bold shadow-sm d-flex align-items-center gap-2" style="background: linear-gradient(135deg, #10b981, #059669); border: none; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'" onclick="openTambahSantriModal(<?= (int)$processFilter ?>)">
+                <i class="bi bi-person-plus-fill"></i> Tambah Santri ke Progres
+            </button>
             <!-- Dynamic Print Button for this specific process -->
             <a href="<?= API_URL ?>/job-desk/report?process_id=<?= $processFilter ?>&status=<?= $statusFilter ?>" target="_blank" class="btn btn-primary btn-sm px-4 rounded-pill fw-bold shadow-sm d-flex align-items-center gap-2" style="background: linear-gradient(45deg, #3b82f6, #0ea5e9); border: none; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
                 <i class="bi bi-printer"></i> Cetak Job Desk Ini
@@ -650,7 +787,7 @@ foreach ($stepDurations as $urut => $data) {
             <!-- Collapsible Content -->
             <div class="collapse" id="collapseFlowMap">
                 <div class="pt-3 border-top border-light mt-3">
-                    <div class="d-flex align-items-stretch flex-wrap pb-3 justify-content-center justify-content-lg-start" style="gap: 1.5rem 0; padding-top: 10px;">
+                    <div class="step-flow-container pb-3 justify-content-start justify-content-lg-start">
                         <?php 
                         foreach ($templateSteps as $fi => $fs): 
                             $cnt = $stepCounts[$fs['urut']] ?? 0;
@@ -716,7 +853,14 @@ foreach ($stepDurations as $urut => $data) {
     </div>
     
     <style>
-        /* Premium Hover Effects for Step Cards */
+        /* Step Flow Map Styling */
+        .step-flow-container {
+            display: flex;
+            align-items: stretch;
+            flex-wrap: wrap;
+            gap: 1.5rem 0;
+            padding-top: 10px;
+        }
         .step-item:hover .step-node {
             transform: scale(1.15);
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.1) !important;
@@ -737,6 +881,41 @@ foreach ($stepDurations as $urut => $data) {
         }
         .step-card:hover .badge-santri {
             transform: scale(1.04);
+        }
+
+        /* Mobile Swipeable Pipeline Steps */
+        @media (max-width: 991px) {
+            .step-flow-container {
+                flex-wrap: nowrap !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                justify-content: flex-start !important;
+                padding-bottom: 16px !important;
+                padding-left: 4px !important;
+                padding-right: 4px !important;
+                gap: 0 !important;
+                scrollbar-width: thin;
+            }
+            .step-flow-container .step-item {
+                width: 145px !important;
+                flex-shrink: 0 !important;
+            }
+            .step-flow-container .step-connector {
+                width: 26px !important;
+                flex-shrink: 0 !important;
+            }
+            .step-flow-container .step-node {
+                width: 42px !important;
+                height: 42px !important;
+                font-size: 1rem !important;
+            }
+            .step-flow-container .step-card {
+                min-height: 115px !important;
+            }
+            .step-flow-container .step-card .card-body {
+                padding: 10px !important;
+                min-height: 115px !important;
+            }
         }
     </style>
     
@@ -1830,3 +2009,1017 @@ function openPaymentHistory(kds) {
         </div>
     </div>
 </div>
+
+<!-- ============================================================== -->
+<!-- MODAL TAMBAH SANTRI KE PROGRES JOB DESK (DRAG-TO-SELECT)       -->
+<!-- ============================================================== -->
+<style>
+    #tableSantriJobDesk {
+        user-select: none;
+        -webkit-user-select: none;
+        border-collapse: separate;
+        border-spacing: 0;
+        min-width: 720px;
+    }
+    #tableSantriJobDesk tbody tr {
+        cursor: pointer;
+        transition: background-color 0.12s ease;
+    }
+    #tableSantriJobDesk tbody tr:hover {
+        background-color: #f1f5f9 !important;
+    }
+    #tableSantriJobDesk tbody tr.row-selected {
+        background-color: #e0f2fe !important;
+    }
+    #tableSantriJobDesk tbody tr.row-selected td:first-child {
+        border-left: 3.5px solid #0284c7 !important;
+    }
+    #tableSantriJobDesk tbody tr.row-already-active {
+        background-color: #fffbeb;
+    }
+    .modal-compact-cell {
+        padding: 8px 10px !important;
+        vertical-align: middle;
+    }
+
+    /* Modern Unified Search Bar */
+    .modern-search-wrapper {
+        position: relative;
+        width: 100%;
+        display: flex;
+        align-items: center;
+    }
+    .modern-search-input {
+        width: 100% !important;
+        height: 38px !important;
+        padding-left: 36px !important;
+        padding-right: 34px !important;
+        border: 1.5px solid #cbd5e1 !important;
+        border-radius: 10px !important;
+        background-color: #ffffff !important;
+        font-size: 0.82rem !important;
+        color: #1e293b !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+        transition: all 0.2s ease-in-out !important;
+    }
+    .modern-search-input:focus {
+        border-color: #0ea5e9 !important;
+        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.18) !important;
+        background-color: #ffffff !important;
+        outline: none !important;
+    }
+    .modern-search-icon {
+        position: absolute;
+        top: 50%;
+        left: 12px;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 0.9rem;
+        pointer-events: none;
+        z-index: 5;
+    }
+    .modern-search-clear {
+        position: absolute;
+        top: 50%;
+        right: 10px;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        background: transparent;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.95rem;
+        z-index: 5;
+    }
+    .modern-search-clear:hover {
+        color: #475569;
+    }
+
+    /* Back Button Circle */
+    .btn-back-circle {
+        width: 44px !important;
+        min-width: 44px !important;
+        max-width: 44px !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
+        border-radius: 50% !important;
+        padding: 0 !important;
+        flex-shrink: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Responsive adjustments for Mobile */
+    @media (max-width: 768px) {
+        .page-header-responsive {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 12px !important;
+        }
+        .page-header-responsive > div:first-child {
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            width: 100% !important;
+        }
+        .page-header-responsive > div:last-child {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 8px !important;
+            width: 100% !important;
+        }
+        .page-header-responsive .filter-pill-container {
+            display: flex !important;
+            overflow-x: auto !important;
+            width: 100% !important;
+            justify-content: space-between !important;
+            -webkit-overflow-scrolling: touch !important;
+        }
+        .page-header-responsive > div:last-child .btn,
+        .page-header-responsive > div:last-child a.btn {
+            width: 100% !important;
+            justify-content: center !important;
+        }
+        
+        /* Modal on mobile */
+        #modalTambahSantriJobDesk .modal-dialog {
+            margin: 0.4rem;
+            max-width: calc(100% - 0.8rem) !important;
+        }
+        #modalTambahSantriJobDesk .modal-content {
+            border-radius: 16px !important;
+            max-height: 94vh !important;
+        }
+        #modalTambahSantriJobDesk .modal-header {
+            padding: 12px 14px !important;
+        }
+        #modalTambahSantriJobDesk .modal-header h5 {
+            font-size: 0.95rem !important;
+        }
+        #modalTambahSantriJobDesk .modal-header p {
+            font-size: 0.72rem !important;
+        }
+        #modalTambahSantriJobDesk .modal-body .filter-panel-body {
+            padding: 10px 12px !important;
+        }
+        #modalTambahSantriJobDesk .modal-footer {
+            padding: 10px 12px !important;
+            flex-direction: column !important;
+            gap: 10px !important;
+        }
+        #modalTambahSantriJobDesk .modal-footer > div {
+            width: 100% !important;
+            justify-content: space-between !important;
+        }
+        #modalTambahSantriJobDesk .modal-footer .btn {
+            font-size: 0.82rem !important;
+            padding: 8px 14px !important;
+        }
+        #btnSubmitTambahSantri {
+            flex: 1;
+            justify-content: center;
+        }
+        .mobile-quick-actions {
+            width: 100% !important;
+            justify-content: space-between !important;
+            flex-wrap: wrap !important;
+            gap: 6px !important;
+        }
+        .mobile-quick-actions .btn {
+            font-size: 0.72rem !important;
+            padding: 4px 10px !important;
+        }
+        .mobile-status-radio {
+            width: 100% !important;
+        }
+        .mobile-status-radio .btn-group {
+            width: 100% !important;
+        }
+        .mobile-status-radio .btn {
+            font-size: 0.72rem !important;
+            padding: 5px 6px !important;
+            flex: 1;
+        }
+
+        /* Step Detail Modal on mobile */
+        #stepDetailModal .modal-dialog {
+            margin: 0.4rem;
+            max-width: calc(100% - 0.8rem) !important;
+        }
+        #stepDetailModal .modal-content {
+            border-radius: 16px !important;
+            max-height: 94vh !important;
+        }
+        #stepDetailModal .modal-header {
+            padding: 12px 14px !important;
+        }
+        #stepDetailModal .modal-header h5 {
+            font-size: 0.95rem !important;
+        }
+        #stepDetailModal .modal-footer {
+            padding: 10px 12px !important;
+            flex-direction: column !important;
+            gap: 8px !important;
+        }
+        #stepDetailModal .modal-footer .btn {
+            width: 100% !important;
+            font-size: 0.82rem !important;
+            padding: 8px 14px !important;
+            justify-content: center !important;
+        }
+        #stepDetailModal .table-responsive table {
+            min-width: 620px;
+        }
+    }
+</style>
+
+<div class="modal fade" id="modalTambahSantriJobDesk" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <!-- Modal Header -->
+            <div class="modal-header bg-white border-bottom px-4 py-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px;">
+                        <i class="bi bi-person-plus-fill fs-5"></i>
+                    </div>
+                    <div class="text-truncate">
+                        <h5 class="modal-title fw-bold text-dark mb-0 text-truncate">Tambah Santri ke Progres Job Desk</h5>
+                        <p class="text-muted small mb-0 text-truncate">Target Proses: <span id="tambahSantriProcessTitle" class="fw-bold text-primary">...</span></p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close flex-shrink-0" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body p-0">
+                <!-- Filter Toolbar -->
+                <div class="p-3 bg-light border-bottom filter-panel-body">
+                    <div class="row g-2 mb-2">
+                        <!-- Upgraded Search Box -->
+                        <div class="col-lg-4 col-12">
+                            <div class="modern-search-wrapper">
+                                <i class="bi bi-search modern-search-icon"></i>
+                                <input type="text" id="filterSantriSearch" class="modern-search-input" placeholder="Cari Nama, KDS, No. Paspor..." oninput="handleSantriSearchInput(this)">
+                                <button id="btnClearSantriSearch" class="modern-search-clear" type="button" onclick="clearSantriSearch()" title="Reset Pencarian">
+                                    <i class="bi bi-x-circle-fill"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Filter Pondok -->
+                        <div class="col-lg-2 col-6">
+                            <select id="filterSantriPondok" class="form-select form-select-sm shadow-sm rounded-3 border-secondary-subtle" style="height: 38px; font-size: 0.82rem;" onchange="filterSantriModalList()">
+                                <option value="">Semua Pondok</option>
+                            </select>
+                        </div>
+                        <!-- Filter Kelas -->
+                        <div class="col-lg-2 col-6">
+                            <select id="filterSantriKelas" class="form-select form-select-sm shadow-sm rounded-3 border-secondary-subtle" style="height: 38px; font-size: 0.82rem;" onchange="filterSantriModalList()">
+                                <option value="">Semua Kelas</option>
+                            </select>
+                        </div>
+                        <!-- Filter Exp Paspor -->
+                        <div class="col-lg-2 col-6">
+                            <select id="filterSantriExpPaspor" class="form-select form-select-sm shadow-sm rounded-3 border-secondary-subtle" style="height: 38px; font-size: 0.82rem;" onchange="filterSantriModalList()">
+                                <option value="">Semua Exp Paspor</option>
+                                <option value="expired">Sudah Expired</option>
+                                <option value="kritis_6bln">Kritis (&lt; 6 Bulan)</option>
+                                <option value="mendekati_1th">Mendekati (&lt; 1 Tahun)</option>
+                            </select>
+                        </div>
+                        <!-- Filter Exp ITAS -->
+                        <div class="col-lg-2 col-6">
+                            <select id="filterSantriExpItas" class="form-select form-select-sm shadow-sm rounded-3 border-secondary-subtle" style="height: 38px; font-size: 0.82rem;" onchange="filterSantriModalList()">
+                                <option value="">Semua Exp ITAS</option>
+                                <option value="expired">Sudah Expired</option>
+                                <option value="kritis_3bln">Kritis (&lt; 3 Bulan)</option>
+                                <option value="mendekati_6bln">Mendekati (&lt; 6 Bulan)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Filter Row 2: Status & Quick Actions -->
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 pt-1">
+                        <div class="d-flex align-items-center gap-2 mobile-status-radio">
+                            <div class="btn-group btn-group-sm shadow-sm rounded-3 overflow-hidden border" role="group">
+                                <input type="radio" class="btn-check" name="filterSantriStatusRadio" id="statusRadioBelum" value="belum" checked onchange="filterSantriModalList()">
+                                <label class="btn btn-outline-primary border-0" for="statusRadioBelum">Belum Ada Progres (Rekomendasi)</label>
+
+                                <input type="radio" class="btn-check" name="filterSantriStatusRadio" id="statusRadioSemua" value="semua" onchange="filterSantriModalList()">
+                                <label class="btn btn-outline-secondary border-0" for="statusRadioSemua">Semua Santri</label>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2 mobile-quick-actions">
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm" onclick="selectAllFilteredSantri(true)">
+                                <i class="bi bi-check-all me-1"></i>Pilih Semua
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="deselectAllSantri()">
+                                <i class="bi bi-x-circle me-1"></i>Reset Pilihan
+                            </button>
+                            <button type="button" class="btn btn-sm btn-link text-muted p-0 text-decoration-none" onclick="resetSantriFilters()">
+                                <i class="bi bi-arrow-counterclockwise"></i> Reset Filter
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Guidance Info Bar -->
+                <div class="d-flex justify-content-between align-items-center px-4 py-2 bg-white border-bottom text-muted flex-wrap gap-2" style="font-size: 0.78rem;">
+                    <span>
+                        <i class="bi bi-mouse2 text-primary me-1"></i>
+                        <strong>Interaksi:</strong> Klik baris untuk memilih, atau <strong>tahan klik kiri & geser (drag)</strong> untuk memilih rentang banyak santri sekaligus.
+                    </span>
+                    <span id="labelFilteredCount" class="fw-bold text-dark">Memuat data...</span>
+                </div>
+
+                <!-- Table Content -->
+                <div class="table-responsive position-relative" style="max-height: 420px; min-height: 250px; -webkit-overflow-scrolling: touch;">
+                    <div id="loadingSantriSpinner" class="position-absolute top-50 start-50 translate-middle text-center py-5">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="text-muted small mt-2 mb-0">Memuat data master santri...</p>
+                    </div>
+
+                    <table id="tableSantriJobDesk" class="table table-hover align-middle mb-0" style="font-size: 0.82rem;">
+                        <thead class="table-light sticky-top shadow-sm" style="z-index: 10;">
+                            <tr>
+                                <th class="text-center modal-compact-cell" style="width: 44px;">
+                                    <input type="checkbox" id="checkAllSantriModal" class="form-check-input" onchange="toggleSelectAllModal(this.checked)" title="Pilih Semua di Tabel">
+                                </th>
+                                <th class="modal-compact-cell" style="width: 130px;">KDS / Stambuk</th>
+                                <th class="modal-compact-cell">Nama Santri & Negara</th>
+                                <th class="modal-compact-cell" style="width: 140px;">Pondok & Kelas</th>
+                                <th class="modal-compact-cell text-center" style="width: 130px;">Exp Paspor</th>
+                                <th class="modal-compact-cell text-center" style="width: 130px;">Exp ITAS</th>
+                                <th class="modal-compact-cell" style="width: 170px;">Status Job Desk</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodySantriModal">
+                            <!-- Populated via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Modal Footer (Sticky Bottom Action Bar) -->
+            <div class="modal-footer bg-white border-top d-flex justify-content-between align-items-center px-4 py-3">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span class="badge bg-primary rounded-pill px-3 py-2 fs-6 shadow-sm d-flex align-items-center gap-2">
+                        <i class="bi bi-check2-circle fs-6"></i>
+                        <span><strong id="badgeCountSelectedSantri">0</strong> Santri Dipilih</span>
+                    </span>
+                    <div id="chipsSelectedContainer" class="d-none d-lg-flex align-items-center gap-1 overflow-x-auto flex-nowrap ms-2" style="max-width: 450px;">
+                        <!-- Chips of selected santri names -->
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-medium" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" id="btnSubmitTambahSantri" class="btn btn-success rounded-pill px-4 fw-bold shadow-sm d-flex align-items-center gap-2" style="background: linear-gradient(135deg, #10b981, #059669); border: none; transition: transform 0.2s;" onclick="submitTambahSantriJobDesk()" disabled>
+                        <i class="bi bi-rocket-takeoff-fill"></i> Mulai Progres (<span id="btnLabelCountSantri">0</span> Santri)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ==============================================================
+// JAVASCRIPT LOGIKA MODAL TAMBAH SANTRI KE PROGRES (DRAG-TO-SELECT)
+// ==============================================================
+let _masterSantriList = [];
+let _masterSantriLoaded = false;
+let _activeJobDeskMap = {};
+let _selectedSantriMap = new Map(); // kds => santri data
+let _currentTargetProcessId = <?= (int)($processFilter !== 'all' ? $processFilter : 1) ?>;
+let _allProcessesList = <?= json_encode($processes ?? []) ?>;
+
+// Drag to select variables
+let _isDragMouseDown = false;
+let _dragSelectMode = true; // true = selecting, false = unselecting
+let _lastClickedRowIndex = -1;
+
+function openTambahSantriModal(processId) {
+    _currentTargetProcessId = parseInt(processId) || 1;
+    
+    // Cari nama proses
+    let procName = 'Proses #' + _currentTargetProcessId;
+    for (let p of _allProcessesList) {
+        if (parseInt(p.id) === _currentTargetProcessId) {
+            procName = p.nama_proses;
+            break;
+        }
+    }
+    
+    const titleEl = document.getElementById('tambahSantriProcessTitle');
+    if (titleEl) titleEl.innerText = procName;
+
+    // Reset pilihan
+    _selectedSantriMap.clear();
+    updateSelectionUI();
+
+    const modalEl = document.getElementById('modalTambahSantriJobDesk');
+    const modalObj = new bootstrap.Modal(modalEl);
+    modalObj.show();
+
+    if (!_masterSantriLoaded) {
+        loadMasterSantriData();
+    } else {
+        filterSantriModalList();
+    }
+}
+
+function loadMasterSantriData() {
+    const spinner = document.getElementById('loadingSantriSpinner');
+    if (spinner) spinner.style.display = 'block';
+
+    fetch('<?= API_URL ?>/api/master-data?status=1')
+        .then(r => r.json())
+        .then(res => {
+            if (spinner) spinner.style.display = 'none';
+            if (res.success && res.data) {
+                _masterSantriList = res.data.santris || [];
+                _activeJobDeskMap = res.data.activeJobDesk || {};
+                _masterSantriLoaded = true;
+
+                populateFilterDropdowns(res.data.filters || {});
+                filterSantriModalList();
+            } else {
+                Swal.fire('Gagal', 'Gagal memuat data master santri', 'error');
+            }
+        })
+        .catch(err => {
+            if (spinner) spinner.style.display = 'none';
+            console.error('Error fetching master data:', err);
+            Swal.fire('Error', 'Terjadi kesalahan koneksi ke server saat memuat data santri', 'error');
+        });
+}
+
+function populateFilterDropdowns(filters) {
+    // Pondok
+    const selPondok = document.getElementById('filterSantriPondok');
+    if (selPondok && filters.pondok) {
+        selPondok.innerHTML = '<option value="">Semua Pondok</option>';
+        filters.pondok.forEach(p => {
+            if (p) selPondok.innerHTML += `<option value="${p}">${p}</option>`;
+        });
+    }
+
+    // Kelas
+    const selKelas = document.getElementById('filterSantriKelas');
+    if (selKelas && filters.kelas) {
+        selKelas.innerHTML = '<option value="">Semua Kelas</option>';
+        filters.kelas.forEach(k => {
+            if (k) selKelas.innerHTML += `<option value="${k}">${k}</option>`;
+        });
+    }
+
+    // Exp Paspor Years
+    const selPaspor = document.getElementById('filterSantriExpPaspor');
+    if (selPaspor && filters.exp_paspor) {
+        let optYears = '';
+        filters.exp_paspor.forEach(y => {
+            if (y) optYears += `<option value="year_${y}">Tahun Exp ${y}</option>`;
+        });
+        selPaspor.innerHTML = `
+            <option value="">Semua Exp Paspor</option>
+            <option value="expired">Sudah Expired</option>
+            <option value="kritis_6bln">Kritis (&lt; 6 Bulan)</option>
+            <option value="mendekati_1th">Mendekati (&lt; 1 Tahun)</option>
+            ${optYears}
+        `;
+    }
+
+    // Exp ITAS Months
+    const selItas = document.getElementById('filterSantriExpItas');
+    if (selItas && filters.exp_itas) {
+        let optMonths = '';
+        filters.exp_itas.forEach(ym => {
+            if (ym) optMonths += `<option value="ym_${ym}">Bulan ${ym}</option>`;
+        });
+        selItas.innerHTML = `
+            <option value="">Semua Exp ITAS</option>
+            <option value="expired">Sudah Expired</option>
+            <option value="kritis_3bln">Kritis (&lt; 3 Bulan)</option>
+            <option value="mendekati_6bln">Mendekati (&lt; 6 Bulan)</option>
+            ${optMonths}
+        `;
+    }
+}
+
+function filterSantriModalList() {
+    if (!_masterSantriList || _masterSantriList.length === 0) return;
+
+    const q = (document.getElementById('filterSantriSearch')?.value || '').toLowerCase().trim();
+    const pondok = document.getElementById('filterSantriPondok')?.value || '';
+    const kelas = document.getElementById('filterSantriKelas')?.value || '';
+    const expPasporFilter = document.getElementById('filterSantriExpPaspor')?.value || '';
+    const expItasFilter = document.getElementById('filterSantriExpItas')?.value || '';
+    const statusRadio = document.querySelector('input[name="filterSantriStatusRadio"]:checked')?.value || 'belum';
+
+    const now = new Date();
+
+    // Filter santri
+    const filtered = _masterSantriList.filter(s => {
+        // Search text (kds, nama, stambuk, no_paspor)
+        if (q) {
+            const matchKds = (s.kds || '').toLowerCase().includes(q);
+            const matchNama = (s.nama || '').toLowerCase().includes(q);
+            const matchStambuk = (s.stambuk || '').toLowerCase().includes(q);
+            const matchPaspor = (s.no_paspor || '').toLowerCase().includes(q);
+            if (!matchKds && !matchNama && !matchStambuk && !matchPaspor) return false;
+        }
+
+        // Pondok
+        if (pondok && s.pondok !== pondok) return false;
+
+        // Kelas
+        if (kelas && s.kelas !== kelas) return false;
+
+        // Cek status job desk aktif untuk kds ini
+        const activeJd = _activeJobDeskMap[s.kds];
+        const isCurrentProcessActive = activeJd && activeJd.nama_proses && activeJd.nama_proses === getProcessNameById(_currentTargetProcessId);
+
+        if (statusRadio === 'belum' && isCurrentProcessActive) {
+            return false;
+        }
+
+        // Exp Paspor Filter
+        if (expPasporFilter) {
+            if (!s.exp_paspor) return false;
+            const expP = new Date(s.exp_paspor);
+            const diffDays = Math.ceil((expP - now) / (1000 * 60 * 60 * 24));
+
+            if (expPasporFilter === 'expired' && diffDays > 0) return false;
+            if (expPasporFilter === 'kritis_6bln' && (diffDays <= 0 || diffDays > 180)) return false;
+            if (expPasporFilter === 'mendekati_1th' && (diffDays <= 0 || diffDays > 365)) return false;
+            if (expPasporFilter.startsWith('year_')) {
+                const targetYear = expPasporFilter.replace('year_', '');
+                if (s.exp_paspor.substring(0, 4) !== targetYear) return false;
+            }
+        }
+
+        // Exp ITAS Filter
+        if (expItasFilter) {
+            if (!s.exp_itas) return false;
+            const expI = new Date(s.exp_itas);
+            const diffDays = Math.ceil((expI - now) / (1000 * 60 * 60 * 24));
+
+            if (expItasFilter === 'expired' && diffDays > 0) return false;
+            if (expItasFilter === 'kritis_3bln' && (diffDays <= 0 || diffDays > 90)) return false;
+            if (expItasFilter === 'mendekati_6bln' && (diffDays <= 0 || diffDays > 180)) return false;
+            if (expItasFilter.startsWith('ym_')) {
+                const targetYM = expItasFilter.replace('ym_', '');
+                if (s.exp_itas.substring(0, 7) !== targetYM) return false;
+            }
+        }
+
+        return true;
+    });
+
+    renderSantriModalTable(filtered);
+}
+
+function getProcessNameById(pid) {
+    for (let p of _allProcessesList) {
+        if (parseInt(p.id) === pid) return p.nama_proses;
+    }
+    return '';
+}
+
+function renderSantriModalTable(list) {
+    const tbody = document.getElementById('tbodySantriModal');
+    const labelCount = document.getElementById('labelFilteredCount');
+    if (!tbody) return;
+
+    if (labelCount) labelCount.innerText = `Menampilkan ${list.length} santri dari total ${_masterSantriList.length}`;
+
+    if (list.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-5 text-muted">
+                    <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>
+                    Tidak ada santri yang cocok dengan filter yang dipilih.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    const now = new Date();
+    const currentProcName = getProcessNameById(_currentTargetProcessId);
+
+    let html = '';
+    list.forEach((s, idx) => {
+        const isSelected = _selectedSantriMap.has(s.kds);
+        const activeJd = _activeJobDeskMap[s.kds];
+        const isCurrentProcActive = activeJd && activeJd.nama_proses === currentProcName;
+
+        let rowClass = isSelected ? 'row-selected' : '';
+        if (isCurrentProcActive) rowClass += ' row-already-active';
+
+        // Badge Exp Paspor
+        let pasporBadge = '<span class="text-muted">-</span>';
+        if (s.exp_paspor) {
+            const expP = new Date(s.exp_paspor);
+            const diffDays = Math.ceil((expP - now) / (1000 * 60 * 60 * 24));
+            let color = 'bg-light text-dark border';
+            let labelHtml = '';
+
+            if (diffDays <= 0) {
+                color = 'bg-danger text-white';
+                labelHtml = '<div class="badge bg-danger mt-1 d-inline-block" style="font-size: 0.65rem;"><i class="bi bi-exclamation-octagon me-1"></i>KADALUARSA</div>';
+            } else if (diffDays <= 180) {
+                color = 'bg-warning text-dark';
+                labelHtml = `<div class="badge bg-warning text-dark mt-1 d-inline-block" style="font-size: 0.65rem;"><i class="bi bi-clock-history me-1"></i>${diffDays > 90 ? Math.floor(diffDays / 30) + ' bln lagi' : diffDays + ' hari lagi'}</div>`;
+            } else if (diffDays <= 365) {
+                color = 'bg-info bg-opacity-25 text-primary border border-info-subtle';
+                labelHtml = `<div class="text-primary mt-1" style="font-size: 0.68rem;">${Math.floor(diffDays / 30)} bln lagi</div>`;
+            } else {
+                labelHtml = `<div class="text-muted mt-1" style="font-size: 0.68rem;">${(diffDays / 365).toFixed(1)} thn lagi</div>`;
+            }
+            
+            pasporBadge = `<div><span class="badge ${color} rounded-pill px-2 py-1" style="font-size: 0.72rem;">${s.exp_paspor}</span></div>${labelHtml}`;
+        }
+
+        // Badge Exp ITAS
+        let itasBadge = '<span class="text-muted">-</span>';
+        if (s.exp_itas) {
+            const expI = new Date(s.exp_itas);
+            const diffDays = Math.ceil((expI - now) / (1000 * 60 * 60 * 24));
+            let color = 'bg-light text-dark border';
+            let labelHtml = '';
+
+            if (diffDays <= 0) {
+                color = 'bg-danger text-white';
+                labelHtml = '<div class="badge bg-danger mt-1 d-inline-block" style="font-size: 0.65rem;"><i class="bi bi-exclamation-octagon me-1"></i>KADALUARSA</div>';
+            } else if (diffDays <= 90) {
+                color = 'bg-danger bg-opacity-75 text-white';
+                labelHtml = `<div class="badge bg-danger text-white mt-1 d-inline-block" style="font-size: 0.65rem;"><i class="bi bi-exclamation-circle me-1"></i>${diffDays} hari lagi</div>`;
+            } else if (diffDays <= 180) {
+                color = 'bg-warning text-dark';
+                labelHtml = `<div class="badge bg-warning text-dark mt-1 d-inline-block" style="font-size: 0.65rem;"><i class="bi bi-clock-history me-1"></i>${Math.floor(diffDays / 30)} bln lagi</div>`;
+            } else {
+                color = 'bg-success bg-opacity-10 text-success border border-success-subtle';
+                labelHtml = `<div class="text-success mt-1" style="font-size: 0.68rem;">${diffDays > 365 ? (diffDays / 365).toFixed(1) + ' thn lagi' : Math.floor(diffDays / 30) + ' bln lagi'}</div>`;
+            }
+
+            itasBadge = `<div><span class="badge ${color} rounded-pill px-2 py-1" style="font-size: 0.72rem;">${s.exp_itas}</span></div>${labelHtml}`;
+        }
+
+        // Status Job Desk
+        let statusJdHtml = '<span class="badge bg-light text-muted border rounded-pill px-2 py-1" style="font-size: 0.72rem;"><i class="bi bi-check-circle text-success me-1"></i>Belum Ada</span>';
+        if (activeJd && activeJd.nama_proses) {
+            const isWarn = isCurrentProcActive ? 'border-warning text-warning-emphasis bg-warning bg-opacity-10' : 'border-primary-subtle text-primary bg-primary bg-opacity-10';
+            const icon = isCurrentProcActive ? 'bi-exclamation-triangle-fill text-warning' : 'bi-arrow-repeat text-primary';
+            const tahap = activeJd.tahap_saat_ini ? `<div class="text-muted small" style="font-size: 0.68rem;">&rsaquo; ${activeJd.tahap_saat_ini}</div>` : '';
+            statusJdHtml = `<span class="badge ${isWarn} border text-wrap text-start mb-0 py-1" style="font-size: 0.72rem; line-height: 1.3;"><i class="bi ${icon} me-1"></i>${activeJd.nama_proses}</span>${tahap}`;
+        }
+
+        html += `
+            <tr data-kds="${s.kds}" data-index="${idx}" class="${rowClass}">
+                <td class="text-center modal-compact-cell">
+                    <input type="checkbox" class="form-check-input santri-row-checkbox" value="${s.kds}" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); toggleSingleSantriCheck('${s.kds}', this.checked)">
+                </td>
+                <td class="modal-compact-cell fw-semibold font-monospace" style="font-size: 0.78rem;">
+                    <div>${s.kds}</div>
+                    ${s.stambuk ? `<span class="badge bg-secondary bg-opacity-10 text-secondary" style="font-size: 0.68rem;">Stb: ${s.stambuk}</span>` : ''}
+                </td>
+                <td class="modal-compact-cell">
+                    <div class="fw-bold text-dark text-truncate" style="max-width: 250px;">${s.nama}</div>
+                    <span class="text-muted small" style="font-size: 0.72rem;"><i class="bi bi-geo-alt me-1"></i>${s.negara || s.daerah || '-'}</span>
+                </td>
+                <td class="modal-compact-cell">
+                    <div class="badge bg-light text-dark border px-2 py-1 mb-1" style="font-size: 0.72rem;">${s.pondok || '-'}</div>
+                    <div class="text-muted" style="font-size: 0.72rem;">Kelas: <strong>${s.kelas || '-'}</strong></div>
+                </td>
+                <td class="modal-compact-cell">${pasporBadge}</td>
+                <td class="modal-compact-cell">${itasBadge}</td>
+                <td class="modal-compact-cell">${statusJdHtml}</td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
+    setupDragToSelect();
+}
+
+function getSantriByKds(kds) {
+    return _masterSantriList.find(s => s.kds === kds);
+}
+
+function toggleSingleSantriCheck(kds, isChecked) {
+    const s = getSantriByKds(kds);
+    if (!s) return;
+
+    if (isChecked) {
+        _selectedSantriMap.set(kds, s);
+    } else {
+        _selectedSantriMap.delete(kds);
+    }
+
+    const tr = document.querySelector(`#tableSantriJobDesk tbody tr[data-kds="${kds}"]`);
+    if (tr) {
+        if (isChecked) tr.classList.add('row-selected');
+        else tr.classList.remove('row-selected');
+    }
+
+    updateSelectionUI();
+}
+
+function setupDragToSelect() {
+    const table = document.getElementById('tableSantriJobDesk');
+    if (!table) return;
+
+    const tbody = table.querySelector('tbody');
+    if (!tbody) return;
+
+    // Mouse Down on row
+    tbody.onmousedown = function(e) {
+        if (e.target.tagName === 'INPUT' && e.target.type === 'checkbox') return;
+        const tr = e.target.closest('tr');
+        if (!tr || !tr.hasAttribute('data-kds')) return;
+
+        _isDragMouseDown = true;
+        const kds = tr.getAttribute('data-kds');
+        const isCurrentlySelected = _selectedSantriMap.has(kds);
+        const visibleRows = Array.from(tbody.querySelectorAll('tr[data-kds]'));
+        const currentIndex = visibleRows.indexOf(tr);
+
+        // Shift + Click Range Selection
+        if (e.shiftKey && _lastClickedRowIndex !== -1 && currentIndex !== -1) {
+            const start = Math.min(_lastClickedRowIndex, currentIndex);
+            const end = Math.max(_lastClickedRowIndex, currentIndex);
+            for (let i = start; i <= end; i++) {
+                const rowKds = visibleRows[i].getAttribute('data-kds');
+                const rowSantri = getSantriByKds(rowKds);
+                if (rowSantri) {
+                    _selectedSantriMap.set(rowKds, rowSantri);
+                    visibleRows[i].classList.add('row-selected');
+                    const cb = visibleRows[i].querySelector('.santri-row-checkbox');
+                    if (cb) cb.checked = true;
+                }
+            }
+            updateSelectionUI();
+            return;
+        }
+
+        _lastClickedRowIndex = currentIndex;
+        _dragSelectMode = !isCurrentlySelected;
+
+        // Apply toggle to this row
+        const rowSantri = getSantriByKds(kds);
+        if (rowSantri) {
+            if (_dragSelectMode) {
+                _selectedSantriMap.set(kds, rowSantri);
+                tr.classList.add('row-selected');
+            } else {
+                _selectedSantriMap.delete(kds);
+                tr.classList.remove('row-selected');
+            }
+            const cb = tr.querySelector('.santri-row-checkbox');
+            if (cb) cb.checked = _dragSelectMode;
+            updateSelectionUI();
+        }
+    };
+
+    // Mouse Over while dragging
+    tbody.onmouseover = function(e) {
+        if (!_isDragMouseDown) return;
+        const tr = e.target.closest('tr');
+        if (!tr || !tr.hasAttribute('data-kds')) return;
+
+        const kds = tr.getAttribute('data-kds');
+        const rowSantri = getSantriByKds(kds);
+        if (rowSantri) {
+            if (_dragSelectMode) {
+                _selectedSantriMap.set(kds, rowSantri);
+                tr.classList.add('row-selected');
+            } else {
+                _selectedSantriMap.delete(kds);
+                tr.classList.remove('row-selected');
+            }
+            const cb = tr.querySelector('.santri-row-checkbox');
+            if (cb) cb.checked = _dragSelectMode;
+            updateSelectionUI();
+        }
+    };
+
+    // Global mouseup
+    window.onmouseup = function() {
+        _isDragMouseDown = false;
+    };
+}
+
+function updateSelectionUI() {
+    const count = _selectedSantriMap.size;
+
+    const badgeCount = document.getElementById('badgeCountSelectedSantri');
+    if (badgeCount) badgeCount.innerText = count;
+
+    const btnLabel = document.getElementById('btnLabelCountSantri');
+    if (btnLabel) btnLabel.innerText = count;
+
+    const btnSubmit = document.getElementById('btnSubmitTambahSantri');
+    if (btnSubmit) {
+        btnSubmit.disabled = (count === 0);
+    }
+
+    // Header checkbox sync
+    const checkAll = document.getElementById('checkAllSantriModal');
+    const visibleCheckboxes = document.querySelectorAll('#tbodySantriModal .santri-row-checkbox');
+    if (checkAll && visibleCheckboxes.length > 0) {
+        const allChecked = Array.from(visibleCheckboxes).every(cb => cb.checked);
+        checkAll.checked = allChecked;
+    }
+
+    // Chips container
+    const chipsContainer = document.getElementById('chipsSelectedContainer');
+    if (chipsContainer) {
+        if (count === 0) {
+            chipsContainer.innerHTML = '';
+        } else {
+            let chipsHtml = '';
+            let idx = 0;
+            for (let [kds, s] of _selectedSantriMap) {
+                if (idx < 4) {
+                    chipsHtml += `<span class="badge bg-light text-dark border rounded-pill px-2 py-1 text-truncate" style="max-width: 110px;" title="${s.nama}">${s.nama.split(' ')[0]}</span>`;
+                }
+                idx++;
+            }
+            if (count > 4) {
+                chipsHtml += `<span class="badge bg-secondary text-white rounded-pill px-2 py-1">+${count - 4}</span>`;
+            }
+            chipsContainer.innerHTML = chipsHtml;
+        }
+    }
+}
+
+function selectAllFilteredSantri(select) {
+    const visibleRows = document.querySelectorAll('#tbodySantriModal tr[data-kds]');
+    visibleRows.forEach(tr => {
+        const kds = tr.getAttribute('data-kds');
+        const s = getSantriByKds(kds);
+        if (s) {
+            if (select) {
+                _selectedSantriMap.set(kds, s);
+                tr.classList.add('row-selected');
+            } else {
+                _selectedSantriMap.delete(kds);
+                tr.classList.remove('row-selected');
+            }
+            const cb = tr.querySelector('.santri-row-checkbox');
+            if (cb) cb.checked = select;
+        }
+    });
+    updateSelectionUI();
+}
+
+function toggleSelectAllModal(isChecked) {
+    selectAllFilteredSantri(isChecked);
+}
+
+function deselectAllSantri() {
+    _selectedSantriMap.clear();
+    const rows = document.querySelectorAll('#tbodySantriModal tr[data-kds]');
+    rows.forEach(tr => {
+        tr.classList.remove('row-selected');
+        const cb = tr.querySelector('.santri-row-checkbox');
+        if (cb) cb.checked = false;
+    });
+    updateSelectionUI();
+}
+
+function handleSantriSearchInput(input) {
+    const clearBtn = document.getElementById('btnClearSantriSearch');
+    if (clearBtn) {
+        clearBtn.style.display = input && input.value && input.value.trim().length > 0 ? 'inline-flex' : 'none';
+    }
+    filterSantriModalList();
+}
+
+function clearSantriSearch() {
+    const searchInput = document.getElementById('filterSantriSearch');
+    const clearBtn = document.getElementById('btnClearSantriSearch');
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.focus();
+    }
+    if (clearBtn) {
+        clearBtn.style.display = 'none';
+    }
+    filterSantriModalList();
+}
+
+function resetSantriFilters() {
+    const search = document.getElementById('filterSantriSearch');
+    if (search) search.value = '';
+
+    const clearBtn = document.getElementById('btnClearSantriSearch');
+    if (clearBtn) clearBtn.style.display = 'none';
+
+    const pondok = document.getElementById('filterSantriPondok');
+    if (pondok) pondok.value = '';
+
+    const kelas = document.getElementById('filterSantriKelas');
+    if (kelas) kelas.value = '';
+
+    const paspor = document.getElementById('filterSantriExpPaspor');
+    if (paspor) paspor.value = '';
+
+    const itas = document.getElementById('filterSantriExpItas');
+    if (itas) itas.value = '';
+
+    const statusRadio = document.getElementById('statusRadioBelum');
+    if (statusRadio) statusRadio.checked = true;
+
+    filterSantriModalList();
+}
+
+function submitTambahSantriJobDesk() {
+    const count = _selectedSantriMap.size;
+    if (count === 0) {
+        Swal.fire('Peringatan', 'Harap pilih minimal 1 santri untuk memulai proses.', 'warning');
+        return;
+    }
+
+    const items = [];
+    for (let [kds, s] of _selectedSantriMap) {
+        items.push({
+            kds: s.kds,
+            exp_itas: s.exp_itas || null,
+            tanggal_referensi: s.exp_itas || s.exp_paspor || null
+        });
+    }
+
+    const procName = getProcessNameById(_currentTargetProcessId);
+
+    Swal.fire({
+        title: 'Membuka Progres Baru',
+        html: `Apakah Anda yakin ingin membuka proses <strong>${procName}</strong> untuk <strong>${count} santri</strong> terpilih?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#10b981',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="bi bi-rocket-takeoff-fill me-1"></i> Ya, Mulai Sekarang!',
+        cancelButtonText: 'Batal',
+        customClass: { popup: 'rounded-4 shadow-lg' }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Sedang Memproses...',
+                html: 'Menyiapkan tahapan dan data pembayaran santri...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+            fetch('<?= API_URL ?>/api/job-desk/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrfToken
+                },
+                body: JSON.stringify({
+                    process_id: _currentTargetProcessId,
+                    items: items
+                })
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil Membuka Progres!',
+                        html: res.message,
+                        confirmButtonText: 'Lihat Daftar Kasus',
+                        confirmButtonColor: '#0ea5e9',
+                        customClass: { popup: 'rounded-4 shadow-lg' }
+                    }).then(() => {
+                        // Redirect atau muat ulang halaman ke proses terkait
+                        window.location.href = '<?= API_URL ?>/job-desk?status=aktif&process_id=' + _currentTargetProcessId;
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal Membuka Progres',
+                        html: res.message || 'Terjadi kesalahan pada server.',
+                        confirmButtonColor: '#0ea5e9'
+                    });
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                Swal.fire('Error', 'Terjadi gangguan jaringan saat membuka progres santri.', 'error');
+            });
+        }
+    });
+}
+</script>

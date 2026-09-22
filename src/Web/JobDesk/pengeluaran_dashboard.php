@@ -25,22 +25,171 @@ $formatRupiah = function($num) {
 ?>
 
 <style>
-.card-keuangan { transition: transform .2s, box-shadow .2s; }
-.card-keuangan:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,.12) !important; }
-.summary-stat-card { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 12px; padding: 14px 16px; transition: all .2s; position: relative; overflow: hidden; }
-.summary-stat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; border-radius: 2px 0 0 2px; }
-.summary-stat-card.accent-blue::before { background: #0d6efd; }
-.summary-stat-card.accent-green::before { background: #198754; }
-.summary-stat-card.accent-purple::before { background: #6f42c1; }
-.summary-stat-card:hover { background: #f0f4ff; border-color: #c9d4f7; }
-.summary-stat-label { font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #9fa8b3; margin-bottom: 4px; }
-.summary-stat-value { font-size: .95rem; font-weight: 700; color: #1a2035; }
-.summary-stat-sub { font-size: .65rem; color: #9fa8b3; margin-top: 3px; }
+/* Modern Compact & Responsive Styling for Pengeluaran Operasional */
+.card-keuangan {
+    transition: transform .2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow .2s ease;
+    border-radius: 14px;
+}
+.card-keuangan:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,.08) !important;
+}
 
-.kategori-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font-size: .72rem; font-weight: 600; color: white; transition: all .2s; }
-.kategori-chip:hover { opacity: .85; transform: scale(1.02); }
-.kategori-manage-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 10px; margin-bottom: 6px; }
-.kategori-manage-item .color-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+.kategori-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 16px;
+    font-size: .72rem;
+    font-weight: 600;
+    color: white;
+    transition: all .2s ease;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.kategori-chip:hover {
+    opacity: .92;
+    transform: translateY(-1px);
+}
+
+.kategori-manage-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    font-size: .82rem;
+}
+.kategori-manage-item .color-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* Table & Sticky Action Column */
+.pengeluaran-table-wrapper {
+    max-height: calc(100vh - 280px);
+    min-height: 260px;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    position: relative;
+    border-radius: 12px;
+}
+.pengeluaran-table-wrapper::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+.pengeluaran-table-wrapper::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+.pengeluaran-table-wrapper table {
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 760px;
+    width: 100%;
+    margin-bottom: 0;
+}
+.pengeluaran-table-wrapper thead th {
+    background: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0;
+    color: #475569;
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 10px 12px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+/* ONLY Action column is sticky on the right */
+.pengeluaran-sticky-action {
+    position: sticky;
+    right: 0;
+    z-index: 8;
+    background-color: #ffffff !important;
+    box-shadow: -4px 0 8px -2px rgba(0,0,0,0.06);
+}
+.pengeluaran-table-wrapper thead th.pengeluaran-sticky-action {
+    position: sticky;
+    top: 0;
+    right: 0;
+    z-index: 12;
+    background-color: #f8fafc !important;
+    box-shadow: -4px 0 8px -2px rgba(0,0,0,0.06);
+}
+.pengeluaran-table-wrapper tbody td {
+    padding: 10px 12px;
+    font-size: 0.82rem;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+}
+.pengeluaran-table-wrapper tbody tr:hover td {
+    background-color: #f8fafc;
+}
+.pengeluaran-table-wrapper tbody tr:hover td.pengeluaran-sticky-action {
+    background-color: #f8fafc !important;
+}
+
+.page-header-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+.page-header-controls .btn {
+    font-size: 0.78rem;
+    padding: 6px 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    border-radius: 20px;
+}
+
+/* Responsive Overrides */
+@media (max-width: 991.98px) {
+    .page-header-responsive {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px;
+    }
+    .page-header-controls {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+    }
+    .page-header-controls .btn {
+        width: 100%;
+        padding: 6px 10px;
+        font-size: 0.75rem;
+    }
+    .card-keuangan {
+        border-radius: 12px;
+    }
+    .pengeluaran-table-wrapper {
+        max-height: 52vh;
+    }
+}
+@media (max-width: 420px) {
+    .page-header-controls {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 5px;
+    }
+    .page-header-controls .btn {
+        font-size: 0.72rem;
+        padding: 5px 6px;
+    }
+}
 
 @media print {
     body * { visibility: hidden !important; }
@@ -52,73 +201,98 @@ $formatRupiah = function($num) {
 <div class="container-fluid px-0">
 
     <!-- === HEADER === -->
-    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
-        <div>
-            <h4 class="fw-bold text-dark mb-1"><i class="bi bi-receipt-cutoff text-primary me-2"></i>Pengeluaran Operasional</h4>
-            <p class="text-muted small mb-0">Pencatatan penggunaan dana operasional birokrasi</p>
+    <div class="d-flex align-items-center justify-content-between mb-3 page-header-responsive">
+        <div class="d-flex align-items-center gap-2">
+            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 shadow-sm" style="width: 38px; height: 38px; background: rgba(13, 110, 253, 0.1);">
+                <i class="bi bi-receipt-cutoff text-primary fs-5"></i>
+            </div>
+            <div>
+                <h5 class="fw-bold text-dark mb-0" style="letter-spacing: -.3px;">Pengeluaran Operasional</h5>
+                <p class="text-muted small mb-0" style="font-size: .75rem;">Dana operasional birokrasi & catatan pengeluaran</p>
+            </div>
         </div>
-        <div class="d-flex gap-2 flex-wrap">
-            <button class="btn btn-sm btn-primary rounded-pill px-3 fw-medium shadow-sm" onclick="showFormPengeluaran()">
-                <i class="bi bi-plus-circle me-1"></i>Catat Pengeluaran
+        <div class="page-header-controls">
+            <button class="btn btn-sm btn-primary fw-semibold shadow-sm" onclick="showFormPengeluaran()">
+                <i class="bi bi-plus-lg me-1"></i> Catat Pengeluaran
             </button>
-            <button class="btn btn-sm btn-outline-info rounded-pill px-3" onclick="showKategoriManager()">
-                <i class="bi bi-tags me-1"></i>Kelola Kategori
+            <button class="btn btn-sm btn-outline-info fw-semibold" onclick="showKategoriManager()">
+                <i class="bi bi-tags me-1"></i> Kategori
             </button>
-            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="exportPengeluaran()">
-                <i class="bi bi-download me-1"></i>Export CSV
+            <button class="btn btn-sm btn-outline-secondary fw-semibold" onclick="exportPengeluaran()">
+                <i class="bi bi-download me-1"></i> Export CSV
             </button>
-            <a href="<?= API_URL ?>/job-desk/keuangan" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-medium">
-                <i class="bi bi-arrow-left me-1"></i>Ke Operasional Birokrasi
+            <a href="<?= API_URL ?>/job-desk/keuangan" class="btn btn-sm btn-outline-secondary fw-semibold">
+                <i class="bi bi-arrow-left me-1"></i> Keuangan
             </a>
         </div>
     </div>
 
-    <!-- === FINANCIAL OVERVIEW CARDS === -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden card-keuangan" style="background: linear-gradient(135deg, #198754 0%, #146c43 100%); color:white;">
-                <div class="card-body p-3 position-relative">
-                    <div class="mb-1 opacity-75 fw-semibold small text-uppercase" style="letter-spacing:.06em; font-size:.65rem;">Pemasukan Operasional</div>
-                    <h4 class="fw-bolder mb-1" style="font-size:1.2rem;"><?= $formatRupiah($totalPemasukan) ?></h4>
-                    <div class="small opacity-75" style="font-size:.65rem;"><i class="bi bi-info-circle me-1"></i>Dari selisih tarif Job Desk (lunas)</div>
-                    <i class="bi bi-wallet2 position-absolute opacity-10" style="font-size:4.5rem;right:-10px;bottom:-15px;"></i>
+    <!-- === FINANCIAL OVERVIEW CARDS (COMPACT) === -->
+    <div class="row g-2 mb-3">
+        <div class="col-12 col-md-4">
+            <div class="card border-0 shadow-sm overflow-hidden card-keuangan h-100" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color:white;">
+                <div class="card-body p-2.5 p-md-3 position-relative d-flex flex-column justify-content-between">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="opacity-80 fw-semibold text-uppercase" style="letter-spacing:.05em; font-size:.65rem;">Pemasukan Operasional</span>
+                        <span class="badge bg-white bg-opacity-25 rounded-pill px-2 py-0.5" style="font-size: .65rem;"><i class="bi bi-wallet2"></i></span>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0 text-truncate" style="font-size:1.2rem;"><?= $formatRupiah($totalPemasukan) ?></h4>
+                    </div>
+                    <div class="small opacity-80 mt-1 text-truncate" style="font-size:.68rem;"><i class="bi bi-info-circle me-1"></i>Selisih Job Desk (lunas)</div>
+                    <i class="bi bi-wallet2 position-absolute opacity-10" style="font-size:3.5rem;right:8px;bottom:-6px;pointer-events:none;"></i>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden card-keuangan" style="background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%); color:white;">
-                <div class="card-body p-3 position-relative">
-                    <div class="mb-1 opacity-75 fw-semibold small text-uppercase" style="letter-spacing:.06em; font-size:.65rem;">Total Pengeluaran</div>
-                    <h4 class="fw-bolder mb-1" style="font-size:1.2rem;"><?= $formatRupiah($totalPengeluaran) ?></h4>
-                    <div class="small opacity-75" style="font-size:.65rem;"><i class="bi bi-info-circle me-1"></i><?= count($pengeluaranList) ?> transaksi tercatat</div>
-                    <i class="bi bi-receipt position-absolute opacity-10" style="font-size:4.5rem;right:-10px;bottom:-15px;"></i>
+        <div class="col-12 col-md-4">
+            <div class="card border-0 shadow-sm overflow-hidden card-keuangan h-100" style="background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color:white;">
+                <div class="card-body p-2.5 p-md-3 position-relative d-flex flex-column justify-content-between">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="opacity-80 fw-semibold text-uppercase" style="letter-spacing:.05em; font-size:.65rem;">Total Pengeluaran</span>
+                        <span class="badge bg-white bg-opacity-25 rounded-pill px-2 py-0.5" style="font-size: .65rem;"><i class="bi bi-receipt"></i></span>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0 text-truncate" style="font-size:1.2rem;"><?= $formatRupiah($totalPengeluaran) ?></h4>
+                    </div>
+                    <div class="small opacity-80 mt-1 text-truncate" style="font-size:.68rem;"><i class="bi bi-check2-circle me-1"></i><?= count($pengeluaranList) ?> transaksi tercatat</div>
+                    <i class="bi bi-receipt position-absolute opacity-10" style="font-size:3.5rem;right:8px;bottom:-6px;pointer-events:none;"></i>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden card-keuangan" style="background: linear-gradient(135deg, <?= $saldoOperasional >= 0 ? '#0d6efd, #0a58ca' : '#dc3545, #b02a37' ?>); color:white;">
-                <div class="card-body p-3 position-relative">
-                    <div class="mb-1 opacity-75 fw-semibold small text-uppercase" style="letter-spacing:.06em; font-size:.65rem;">Saldo Operasional</div>
-                    <h4 class="fw-bolder mb-1" style="font-size:1.2rem;"><?= $formatRupiah($saldoOperasional) ?></h4>
-                    <div class="small opacity-75" style="font-size:.65rem;"><i class="bi bi-info-circle me-1"></i>Pemasukan âˆ’ Pengeluaran</div>
-                    <i class="bi bi-safe position-absolute opacity-10" style="font-size:4.5rem;right:-10px;bottom:-15px;"></i>
+        <div class="col-12 col-md-4">
+            <div class="card border-0 shadow-sm overflow-hidden card-keuangan h-100" style="background: linear-gradient(135deg, <?= $saldoOperasional >= 0 ? '#3b82f6 0%, #1d4ed8 100%' : '#ef4444 0%, #b91c1c 100%' ?>); color:white;">
+                <div class="card-body p-2.5 p-md-3 position-relative d-flex flex-column justify-content-between">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="opacity-80 fw-semibold text-uppercase" style="letter-spacing:.05em; font-size:.65rem;">Saldo Operasional</span>
+                        <span class="badge bg-white bg-opacity-25 rounded-pill px-2 py-0.5" style="font-size: .65rem;"><i class="bi bi-safe"></i></span>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0 text-truncate" style="font-size:1.2rem;"><?= $formatRupiah($saldoOperasional) ?></h4>
+                    </div>
+                    <div class="small opacity-80 mt-1 text-truncate" style="font-size:.68rem;"><i class="bi bi-calculator me-1"></i>Pemasukan &minus; Pengeluaran</div>
+                    <i class="bi bi-safe position-absolute opacity-10" style="font-size:3.5rem;right:8px;bottom:-6px;pointer-events:none;"></i>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- === BREAKDOWN PER KATEGORI === -->
-    <div class="card border-0 shadow-sm rounded-4 mb-4">
-        <div class="card-body p-4">
-            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-pie-chart text-primary me-2"></i>Breakdown per Kategori</h6>
-            <div class="d-flex flex-wrap gap-2">
+    <!-- === BREAKDOWN PER KATEGORI (COMPACT) === -->
+    <div class="card border-0 shadow-sm rounded-3 mb-3">
+        <div class="card-body p-2.5 p-md-3">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="fw-bold text-dark small d-flex align-items-center gap-1.5" style="font-size:.8rem;">
+                    <i class="bi bi-pie-chart-fill text-primary"></i> Breakdown Kategori
+                </span>
+                <span class="badge bg-light text-muted border" style="font-size:.68rem;"><?= count($pengeluaranPerKategori) ?> Kategori</span>
+            </div>
+            <div class="d-flex flex-wrap gap-1.5">
                 <?php if (empty($pengeluaranPerKategori)): ?>
-                    <span class="text-muted small"><em>Belum ada pengeluaran tercatat</em></span>
+                    <span class="text-muted small" style="font-size:.75rem;"><em>Belum ada transaksi pengeluaran tercatat</em></span>
                 <?php else: ?>
                     <?php foreach ($pengeluaranPerKategori as $pk): ?>
                         <div class="kategori-chip" style="background: <?= $kategoriColors[$pk['kategori']] ?? '#6c757d' ?>;">
                             <i class="bi <?= $kategoriIcons[$pk['kategori']] ?? 'bi-tag' ?>"></i>
-                            <?= htmlspecialchars($pk['kategori']) ?>: <?= $formatRupiah((float)$pk['total']) ?> (<?= $pk['jumlah'] ?>x)
+                            <?= htmlspecialchars($pk['kategori']) ?>: <?= $formatRupiah((float)$pk['total']) ?> <span class="badge bg-white bg-opacity-25 rounded-pill ms-0.5"><?= $pk['jumlah'] ?>x</span>
                         </div>
                     <?php endforeach; ?>
                 <?php endif; ?>
@@ -126,63 +300,70 @@ $formatRupiah = function($num) {
         </div>
     </div>
 
-    <!-- === CHART TREND BULANAN === -->
+    <!-- === CHART TREND BULANAN (COMPACT) === -->
     <?php if (!empty($pengeluaranBulanan)): ?>
-    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
-        <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4">
-            <h6 class="fw-bold text-dark mb-0"><i class="bi bi-bar-chart-line-fill text-primary me-2"></i>Tren Pengeluaran Bulanan</h6>
-            <div class="text-muted small mt-1">12 bulan terakhir</div>
+    <div class="card border-0 shadow-sm rounded-3 mb-3 overflow-hidden">
+        <div class="card-header bg-white border-bottom-0 pt-3 pb-1 px-3 d-flex justify-content-between align-items-center">
+            <span class="fw-bold text-dark small d-flex align-items-center gap-1.5" style="font-size:.8rem;">
+                <i class="bi bi-bar-chart-line-fill text-primary"></i> Tren Pengeluaran Bulanan
+            </span>
+            <span class="text-muted" style="font-size:.7rem;">12 bulan terakhir</span>
         </div>
-        <div class="card-body px-4 pb-4 pt-2">
-            <canvas id="pengeluaranChart" height="60"></canvas>
+        <div class="card-body px-2 px-md-3 pb-3 pt-1">
+            <div style="position: relative; height: 150px; width: 100%;">
+                <canvas id="pengeluaranChart"></canvas>
+            </div>
         </div>
     </div>
     <?php endif; ?>
 
     <!-- === TABLE PENGELUARAN === -->
-    <div class="card border-0 shadow-sm rounded-4 mb-5">
-        <div class="card-header bg-white border-bottom px-4 py-3">
-            <h6 class="fw-bold text-dark mb-0"><i class="bi bi-table text-primary me-2"></i>Riwayat Pengeluaran</h6>
+    <div class="card border-0 shadow-sm rounded-3 mb-4 overflow-hidden">
+        <div class="card-header bg-white border-bottom px-3 py-2.5 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span class="fw-bold text-dark small d-flex align-items-center gap-1.5" style="font-size:.82rem;">
+                <i class="bi bi-table text-primary"></i> Riwayat Pengeluaran
+            </span>
+            <span class="badge bg-light text-muted border" style="font-size:.7rem;">Total: <?= count($pengeluaranList) ?> Transaksi</span>
         </div>
-        <div class="card-body p-4">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" id="pengeluaranTable" style="width:100%">
-                    <thead class="table-light">
+        <div class="card-body p-2.5 p-md-3">
+            <div class="pengeluaran-table-wrapper border rounded-3">
+                <table class="table table-hover align-middle mb-0" id="pengeluaranTable">
+                    <thead>
                         <tr>
-                            <th class="ps-3 border-0" style="width:40px;">No</th>
-                            <th class="border-0">Tanggal</th>
-                            <th class="border-0">Keterangan</th>
-                            <th class="border-0">Kategori</th>
-                            <th class="border-0">Nominal</th>
-                            <th class="border-0">Nota</th>
-                            <th class="border-0">Dicatat Oleh</th>
-                            <th class="pe-3 border-0 text-end" style="width:90px;">Aksi</th>
+                            <th class="ps-3" style="width:40px;">No</th>
+                            <th style="min-width: 110px;">Tanggal</th>
+                            <th style="min-width: 220px;">Keterangan</th>
+                            <th style="min-width: 130px;">Kategori</th>
+                            <th style="min-width: 130px;">Nominal</th>
+                            <th style="min-width: 70px;">Nota</th>
+                            <th style="min-width: 120px;">Dicatat Oleh</th>
+                            <th class="pe-3 text-center pengeluaran-sticky-action" style="width: 100px;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($pengeluaranList)): ?>
                             <tr><td colspan="8" class="text-center text-muted py-5">
                                 <i class="bi bi-inbox display-4 d-block mb-2 opacity-25"></i>
-                                Belum ada pencatatan pengeluaran.
+                                Belum ada pencatatan pengeluaran operasional.
                             </td></tr>
                         <?php else: ?>
                             <?php foreach ($pengeluaranList as $idx => $pg): ?>
                             <tr>
-                                <td class="ps-3 text-muted small"><?= $idx + 1 ?></td>
+                                <td class="ps-3 text-muted small fw-semibold"><?= $idx + 1 ?></td>
                                 <td>
-                                    <div class="fw-semibold" style="font-size:.8rem;"><?= date('d M Y', strtotime($pg['tanggal'])) ?></div>
-                                    <div class="text-muted" style="font-size:.65rem;"><?= date('H:i', strtotime($pg['created_at'])) ?></div>
+                                    <div class="fw-semibold text-dark" style="font-size:.82rem;"><?= date('d M Y', strtotime($pg['tanggal'])) ?></div>
+                                    <div class="text-muted" style="font-size:.68rem;"><?= date('H:i', strtotime($pg['created_at'])) ?></div>
                                 </td>
                                 <td>
-                                    <div class="fw-medium text-dark" style="font-size:.82rem; max-width:300px; white-space:pre-wrap;"><?= htmlspecialchars($pg['keterangan']) ?></div>
+                                    <div class="fw-medium text-dark" style="font-size:.85rem; max-width:320px; white-space:pre-wrap;"><?= htmlspecialchars($pg['keterangan']) ?></div>
                                 </td>
                                 <td>
-                                    <span class="badge rounded-pill px-2 py-1 text-white" style="font-size:.68rem; background:<?= $kategoriColors[$pg['kategori']] ?? '#6c757d' ?>;">
+                                    <span class="badge rounded-pill px-2 py-1 text-white" style="font-size:.7rem; background:<?= $kategoriColors[$pg['kategori']] ?? '#6c757d' ?>;">
                                         <i class="bi <?= $kategoriIcons[$pg['kategori']] ?? 'bi-tag' ?> me-1"></i><?= htmlspecialchars($pg['kategori']) ?>
                                     </span>
                                 </td>
                                 <td>
-                                    <div class="fw-bold text-danger" style="font-size:.85rem;">-<?= $formatRupiah((float)$pg['nominal']) ?></div>
+                                    <div class="fw-bold text-danger font-monospace" style="font-size:.88rem;">-<?= $formatRupiah((float)$pg['nominal']) ?></div>
                                 </td>
                                 <td>
                                     <?php if (!empty($pg['foto_nota'])): ?>
@@ -192,27 +373,27 @@ $formatRupiah = function($num) {
                                         ?>
                                         <?php if ($isImg): ?>
                                             <img src="<?= htmlspecialchars($notaUrl) ?>" alt="Nota" 
-                                                 style="width:45px;height:45px;object-fit:cover;border-radius:8px;border:2px solid #e9ecef;cursor:pointer;transition:transform .2s;"
-                                                 onmouseover="this.style.transform='scale(1.5)'" 
+                                                 style="width:42px;height:42px;object-fit:cover;border-radius:8px;border:2px solid #e9ecef;cursor:pointer;transition:transform .2s;"
+                                                 onmouseover="this.style.transform='scale(1.2)'" 
                                                  onmouseout="this.style.transform='scale(1)'"
                                                  onclick="showNotaPreview('<?= htmlspecialchars($notaUrl) ?>')">
                                         <?php else: ?>
-                                            <a href="<?= htmlspecialchars($notaUrl) ?>" target="_blank" class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-0">
-                                                <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+                                            <a href="<?= htmlspecialchars($notaUrl) ?>" target="_blank" class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-1" style="font-size:0.72rem;">
+                                                <i class="bi bi-file-earmark-pdf me-1 text-danger"></i>PDF
                                             </a>
                                         <?php endif; ?>
                                     <?php else: ?>
-                                        <span class="text-muted small"><i class="bi bi-dash-circle"></i></span>
+                                        <span class="text-muted small">-</span>
                                     <?php endif; ?>
                                 </td>
                                 <td><div class="text-muted small"><?= htmlspecialchars($pg['created_by'] ?? '-') ?></div></td>
-                                <td class="pe-3 text-end">
-                                    <div class="d-flex gap-1 justify-content-end">
-                                        <button class="btn btn-sm btn-outline-warning py-0 px-2" title="Edit" 
+                                <td class="pe-3 text-center pengeluaran-sticky-action">
+                                    <div class="d-flex gap-1 justify-content-center">
+                                        <button class="btn btn-sm btn-outline-warning rounded-pill py-1 px-2 shadow-sm" title="Edit Pengeluaran" 
                                                 onclick="editPengeluaran(<?= $pg['id'] ?>, '<?= htmlspecialchars(addslashes($pg['keterangan']), ENT_QUOTES) ?>', <?= (float)$pg['nominal'] ?>, '<?= htmlspecialchars($pg['kategori']) ?>', '<?= $pg['tanggal'] ?>', '<?= htmlspecialchars($pg['foto_nota'] ?? '') ?>')">
                                             <i class="bi bi-pencil-square"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-outline-danger py-0 px-2" title="Hapus" onclick="hapusPengeluaran(<?= $pg['id'] ?>)">
+                                        <button class="btn btn-sm btn-outline-danger rounded-pill py-1 px-2 shadow-sm" title="Hapus Pengeluaran" onclick="hapusPengeluaran(<?= $pg['id'] ?>)">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </div>
@@ -231,16 +412,17 @@ $formatRupiah = function($num) {
 <div class="modal fade" id="notaPreviewModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden bg-dark">
-            <div class="modal-header border-0 bg-dark text-white py-2">
-                <h6 class="modal-title fw-bold"><i class="bi bi-image me-2"></i>Preview Nota</h6>
+            <div class="modal-header border-0 bg-dark text-white py-3 px-4">
+                <h6 class="modal-title fw-bold mb-0"><i class="bi bi-image me-2 text-warning"></i>Preview Nota Transaksi</h6>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-0 text-center bg-dark">
-                <img id="notaPreviewImg" src="" alt="Nota" style="max-width:100%; max-height:75vh; object-fit:contain;">
+            <div class="modal-body p-2 text-center bg-dark">
+                <img id="notaPreviewImg" src="" alt="Nota" style="max-width:100%; max-height:75vh; object-fit:contain; border-radius: 8px;">
             </div>
-            <div class="modal-footer border-0 bg-dark py-2">
-                <a id="notaPreviewDownload" href="" target="_blank" class="btn btn-sm btn-outline-light rounded-pill px-3">
-                    <i class="bi bi-download me-1"></i>Unduh
+            <div class="modal-footer border-0 bg-dark py-3 px-4 d-flex justify-content-between">
+                <button type="button" class="btn btn-sm btn-outline-light rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
+                <a id="notaPreviewDownload" href="" target="_blank" class="btn btn-sm btn-primary rounded-pill px-4 fw-medium shadow-sm">
+                    <i class="bi bi-download me-1"></i>Unduh Berkas
                 </a>
             </div>
         </div>
@@ -250,49 +432,49 @@ $formatRupiah = function($num) {
 <!-- ===== MODAL FORM PENGELUARAN ===== -->
 <div class="modal fade" id="formPengeluaranModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header bg-primary text-white border-0 rounded-top-4">
-                <h5 class="modal-title fw-bold" id="formPengeluaranTitle"><i class="bi bi-plus-circle me-2"></i>Catat Pengeluaran Baru</h5>
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header bg-primary text-white border-0 py-3 px-4">
+                <h5 class="modal-title fw-bold mb-0" id="formPengeluaranTitle"><i class="bi bi-plus-circle me-2"></i>Catat Pengeluaran Baru</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="formPengeluaran" enctype="multipart/form-data">
-                <div class="modal-body p-4">
+                <div class="modal-body p-3 p-md-4 bg-white" style="max-height: calc(85vh - 120px); overflow-y: auto;">
                     <input type="hidden" id="pg_edit_id" value="">
                     <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted">Tanggal Transaksi <span class="text-danger">*</span></label>
-                        <input type="date" class="form-control" id="pg_tanggal" required value="<?= date('Y-m-d') ?>">
+                        <label class="form-label small fw-bold text-muted">TANGGAL TRANSAKSI <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control rounded-3" id="pg_tanggal" required value="<?= date('Y-m-d') ?>">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted">Kategori <span class="text-danger">*</span></label>
-                        <select class="form-select" id="pg_kategori" required>
+                        <label class="form-label small fw-bold text-muted">KATEGORI <span class="text-danger">*</span></label>
+                        <select class="form-select rounded-3" id="pg_kategori" required>
                             <?php foreach ($kategoris as $kat): ?>
                             <option value="<?= htmlspecialchars($kat['nama']) ?>"><?= htmlspecialchars($kat['nama']) ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted">Nominal (Rp) <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="pg_nominal" required placeholder="Contoh: 150000"
+                        <label class="form-label small fw-bold text-muted">NOMINAL (RP) <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control rounded-3 font-monospace" id="pg_nominal" required placeholder="Contoh: 150000"
                                oninput="this.value = this.value.replace(/[^0-9]/g, ''); formatNominalPreview(this);">
-                        <div id="pg_nominal_preview" class="small text-primary mt-1 fw-semibold"></div>
+                        <div id="pg_nominal_preview" class="small text-primary mt-1 fw-bold"></div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted">Keterangan <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="pg_keterangan" rows="3" required placeholder="Contoh: Beli kertas HVS 2 rim, tinta printer..."></textarea>
+                        <label class="form-label small fw-bold text-muted">KETERANGAN <span class="text-danger">*</span></label>
+                        <textarea class="form-control rounded-3" id="pg_keterangan" rows="3" required placeholder="Contoh: Beli kertas HVS 2 rim, konsumsi dinas..."></textarea>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted">Foto Nota / Struk (Opsional)</label>
-                        <input type="file" class="form-control" id="pg_foto_nota" accept="image/*,.pdf">
-                        <div class="small text-muted mt-1"><i class="bi bi-info-circle me-1"></i>JPG, PNG, WebP, PDF (maks 5MB)</div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-bold text-muted">FOTO NOTA / STRUK (OPSIONAL)</label>
+                        <input type="file" class="form-control rounded-3" id="pg_foto_nota" accept="image/*,.pdf">
+                        <div class="small text-muted mt-1" style="font-size:0.75rem;"><i class="bi bi-info-circle me-1"></i>JPG, PNG, WebP, PDF (maksimal 5MB)</div>
                         <div id="pg_foto_preview" class="mt-2" style="display:none;">
                             <img id="pg_foto_preview_img" src="" style="max-height:120px; border-radius:8px; border:2px solid #e9ecef;">
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer border-top-0 pt-0 bg-light rounded-bottom-4">
-                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-medium shadow-sm" id="btnSimpanPengeluaran">
-                        <i class="bi bi-save me-1"></i>Simpan
+                <div class="modal-footer border-top-0 bg-light p-3 d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold shadow-sm" id="btnSimpanPengeluaran">
+                        <i class="bi bi-save me-1"></i> Simpan Transaksi
                     </button>
                 </div>
             </form>
@@ -303,38 +485,41 @@ $formatRupiah = function($num) {
 <!-- ===== MODAL KELOLA KATEGORI ===== -->
 <div class="modal fade" id="kategoriModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header bg-info text-white border-0 rounded-top-4">
-                <h5 class="modal-title fw-bold"><i class="bi bi-tags me-2"></i>Kelola Kategori Pengeluaran</h5>
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header bg-info text-white border-0 py-3 px-4">
+                <h5 class="modal-title fw-bold mb-0"><i class="bi bi-tags me-2"></i>Kelola Kategori Pengeluaran</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-4">
+            <div class="modal-body p-3 p-md-4 bg-white" style="max-height: calc(85vh - 120px); overflow-y: auto;">
                 <div id="kategoriList">
                     <?php foreach ($kategoris as $k): ?>
                     <div class="kategori-manage-item" data-id="<?= $k['id'] ?>">
                         <div class="color-dot" style="background: <?= htmlspecialchars($k['warna']) ?>;"></div>
                         <i class="bi <?= htmlspecialchars($k['icon']) ?> text-muted"></i>
-                        <span class="fw-medium flex-grow-1"><?= htmlspecialchars($k['nama']) ?></span>
-                        <button class="btn btn-sm btn-outline-danger py-0 px-1 border-0" title="Hapus" onclick="hapusKategori(<?= $k['id'] ?>, '<?= htmlspecialchars(addslashes($k['nama'])) ?>')">
+                        <span class="fw-semibold flex-grow-1 text-dark small"><?= htmlspecialchars($k['nama']) ?></span>
+                        <button class="btn btn-sm btn-outline-danger py-0 px-2 rounded-pill border-0" title="Hapus Kategori" onclick="hapusKategori(<?= $k['id'] ?>, '<?= htmlspecialchars(addslashes($k['nama'])) ?>')">
                             <i class="bi bi-x-lg"></i>
                         </button>
                     </div>
                     <?php endforeach; ?>
                 </div>
-                <hr>
-                <div class="d-flex gap-2 align-items-end">
-                    <div class="flex-grow-1">
+                <hr class="my-3 opacity-25">
+                <div class="d-flex gap-2 align-items-end flex-wrap">
+                    <div class="flex-grow-1" style="min-width: 160px;">
                         <label class="form-label small fw-bold text-muted mb-1">Tambah Kategori Baru</label>
-                        <input type="text" class="form-control form-control-sm" id="newKategoriNama" placeholder="Nama kategori...">
+                        <input type="text" class="form-control form-control-sm rounded-3" id="newKategoriNama" placeholder="Nama kategori...">
                     </div>
                     <div style="width: 50px;">
                         <label class="form-label small fw-bold text-muted mb-1">Warna</label>
-                        <input type="color" class="form-control form-control-sm form-control-color p-0 border-0" id="newKategoriWarna" value="#0d6efd" style="height:31px;">
+                        <input type="color" class="form-control form-control-sm form-control-color p-0 border-0 rounded-3" id="newKategoriWarna" value="#0d6efd" style="height:31px;">
                     </div>
-                    <button class="btn btn-sm btn-info text-white rounded-pill px-3" onclick="tambahKategori()">
+                    <button class="btn btn-sm btn-info text-white rounded-pill px-3 py-1 fw-semibold" onclick="tambahKategori()">
                         <i class="bi bi-plus me-1"></i>Tambah
                     </button>
                 </div>
+            </div>
+            <div class="modal-footer border-top-0 bg-light p-3">
+                <button type="button" class="btn btn-secondary rounded-pill px-4 w-100" data-bs-dismiss="modal">Tutup</button>
             </div>
         </div>
     </div>
@@ -359,15 +544,16 @@ document.addEventListener('DOMContentLoaded', function() {
             datasets: [{
                 label: 'Pengeluaran',
                 data: <?= $bulananData ?>,
-                backgroundColor: 'rgba(111, 66, 193, 0.15)',
+                backgroundColor: 'rgba(111, 66, 193, 0.18)',
                 borderColor: '#6f42c1',
                 borderWidth: 2,
                 borderRadius: 6,
-                hoverBackgroundColor: 'rgba(111, 66, 193, 0.3)',
+                hoverBackgroundColor: 'rgba(111, 66, 193, 0.35)',
             }]
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: { display: false },
                 tooltip: {

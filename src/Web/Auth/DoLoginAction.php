@@ -179,12 +179,13 @@ final class DoLoginAction
      */
     private function loginViaMySQL(string $username, string $password, ConnectionInterface $db): ResponseInterface
     {
+        $cleanUsername = str_contains($username, '@') ? explode('@', $username)[0] : $username;
         $user = $db->createCommand("
             SELECT u.*, i.nama_instansi, i.def_kepengurusan, i.def_pondok 
             FROM users u
             LEFT JOIN master_instansi i ON u.instansi_id = i.kode
-            WHERE u.username = :username
-        ", [':username' => $username])->queryOne();
+            WHERE u.username = :username OR u.username = :cleanUsername
+        ", [':username' => $username, ':cleanUsername' => $cleanUsername])->queryOne();
 
         if ($user && password_verify($password, $user['password_hash'])) {
             // Cek apakah akun masih aktif

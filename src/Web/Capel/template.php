@@ -5,43 +5,241 @@ use Yiisoft\View\WebView;
 $this->setTitle('Pendaftaran CAPEL | Sistem Informasi');
 ?>
 <style>
+/* Modern Responsive Styling for Pendaftaran CAPEL */
+:root {
+    --capel-primary: #3b82f6;
+    --capel-primary-dark: #2563eb;
+    --capel-success: #10b981;
+    --capel-warning: #f59e0b;
+    --capel-danger: #ef4444;
+}
+
+.capel-stat-card {
+    border-radius: 16px;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    background: #ffffff;
+}
+.capel-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.04) !important;
+}
+.capel-stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+
+/* Segmented Navigation Tabs */
+.capel-nav-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 8px;
+    padding: 6px;
+    background: #f1f5f9;
+    border-radius: 14px;
+    border: none;
+}
+.capel-nav-tabs::-webkit-scrollbar {
+    height: 3px;
+}
+.capel-nav-tabs::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+.capel-nav-tabs .nav-link {
+    white-space: nowrap;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.88rem;
+    padding: 8px 16px;
+    color: #64748b;
+    border: none !important;
+    background: transparent;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.capel-nav-tabs .nav-link:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.6);
+    color: #1e293b;
+}
+.capel-nav-tabs .nav-link.active {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+.capel-nav-tabs .nav-link#pending-tab.active {
+    color: #2563eb !important;
+}
+.capel-nav-tabs .nav-link#approved-tab.active {
+    color: #059669 !important;
+}
+.capel-nav-tabs .nav-link#rejected-tab.active {
+    color: #dc2626 !important;
+}
+
+/* Table Wrapper & Sticky Columns */
 .capel-table-wrapper {
-    max-height: 65vh;
+    max-height: 62vh;
     overflow: auto;
+    border-radius: 12px;
+    position: relative;
+    -webkit-overflow-scrolling: touch;
+}
+.capel-table-wrapper::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+.capel-table-wrapper::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+.capel-table-wrapper table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+    margin-bottom: 0;
+}
+.capel-table-wrapper thead th {
+    background: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0;
+    color: #475569;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 10px 12px;
 }
 .capel-table-wrapper thead tr:nth-child(1) th {
     position: sticky;
     top: 0;
-    z-index: 5;
-    background-color: #f8f9fa !important;
-    border-bottom: 1px solid #dee2e6;
+    z-index: 10;
 }
 .capel-table-wrapper thead tr:nth-child(2) th {
     position: sticky;
-    top: 41px; /* approx height of first row */
-    z-index: 5;
-    background-color: #f8f9fa !important;
-    border-bottom: 1px solid #dee2e6;
+    top: 41px;
+    z-index: 10;
+    padding: 6px 8px;
+    background: #f1f5f9 !important;
 }
-.sticky-right {
+.capel-sticky-action {
     position: sticky;
     right: 0;
-    z-index: 4;
-    background-color: white !important;
-    box-shadow: -3px 0 5px rgba(0,0,0,0.05);
+    z-index: 8;
+    background-color: #ffffff !important;
+    box-shadow: -4px 0 8px -2px rgba(0,0,0,0.06);
 }
-.capel-table-wrapper thead th.sticky-right {
-    z-index: 6;
-    background-color: #f8f9fa !important;
+.capel-table-wrapper thead th.capel-sticky-action {
+    z-index: 12;
+    background-color: #f8fafc !important;
+    box-shadow: -4px 0 8px -2px rgba(0,0,0,0.06);
+}
+.capel-table-wrapper tbody td {
+    padding: 12px;
+    font-size: 0.85rem;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+}
+.capel-table-wrapper tbody tr:hover td {
+    background-color: #f8fafc;
+}
+
+/* Search Row Inputs */
+.column-search {
+    border-radius: 8px !important;
+    border: 1px solid #cbd5e1 !important;
+    padding: 4px 8px !important;
+    font-size: 0.78rem !important;
+    background: #ffffff !important;
+    min-width: 90px;
+    transition: all 0.2s ease;
+}
+.column-search:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
+}
+
+/* Action button tags */
+.capel-action-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+}
+
+/* Responsive Overrides */
+@media (max-width: 991.98px) {
+    .page-header-responsive {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px;
+    }
+    .page-header-controls {
+        flex-direction: column;
+        width: 100%;
+        gap: 8px;
+    }
+    .page-header-controls .btn, 
+    .page-header-controls .form-select {
+        width: 100% !important;
+    }
+    .capel-stat-card .card-body {
+        padding: 0.85rem !important;
+    }
+    .capel-stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.15rem;
+    }
+    .capel-stat-number {
+        font-size: 1.4rem !important;
+    }
+    .capel-table-wrapper {
+        max-height: 52vh;
+    }
+    .capel-tab-action-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 10px;
+    }
+    .capel-tab-action-buttons {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    .capel-tab-action-buttons .btn {
+        flex: 1 1 auto;
+    }
+    .preview-iframe-berkas {
+        height: 320px !important;
+    }
+}
+@media (min-width: 992px) {
+    .preview-iframe-berkas {
+        height: 460px;
+    }
 }
 </style>
 
+<!-- Page Header -->
 <div class="d-flex justify-content-between align-items-center mb-4 page-header-responsive">
     <div>
-        <h3 class="fw-bold text-dark mb-1">Review Pendaftaran CAPEL</h3>
-        <p class="text-muted small mb-0">Menunggu Persetujuan dari Pendaftaran</p>
+        <h3 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+            <i class="bi bi-person-lines-fill text-primary"></i> Review Pendaftaran CAPEL
+        </h3>
+        <p class="text-muted small mb-0">Verifikasi, persetujuan, dan sinkronisasi data calon pelajar baru</p>
     </div>
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 page-header-controls flex-wrap">
         <?php if ($isSuperAdmin): ?>
         <select class="form-select fw-semibold rounded-pill px-3 shadow-sm" style="width: auto; min-width: 200px;" id="superAdminInstansi" onchange="window.location.href='?instansi_id=' + this.value;">
             <option value="">Semua Instansi (Statis)</option>
@@ -52,13 +250,59 @@ $this->setTitle('Pendaftaran CAPEL | Sistem Informasi');
         <?php endif; ?>
 
         <?php if (!$isSuperAdmin || $selectedInstansiId): ?>
-        <button class="btn btn-outline-secondary fw-semibold rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalAturTabel">
-            <i class="bi bi-layout-text-window-reverse me-2"></i>Atur Tampilan Tabel
+        <button class="btn btn-outline-secondary fw-semibold rounded-pill px-3 py-2 shadow-sm d-flex align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#modalAturTabel">
+            <i class="bi bi-layout-text-window-reverse me-2"></i>Atur Kolom Tabel
         </button>
-        <button class="btn btn-primary fw-semibold rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalSync">
+        <button class="btn btn-primary fw-semibold rounded-pill px-4 py-2 shadow-sm d-flex align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#modalSync">
             <i class="bi bi-cloud-download me-2"></i>Tarik Data Baru
         </button>
         <?php endif; ?>
+    </div>
+</div>
+
+<!-- Summary Metric Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-4">
+        <div class="card capel-stat-card shadow-sm h-100 border-0">
+            <div class="card-body p-3 p-md-4 d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted text-uppercase fw-bold" style="font-size:0.7rem;letter-spacing:0.8px;">Menunggu Review</span>
+                    <h3 class="fw-bold text-primary capel-stat-number mb-0 mt-1" id="statCardPending">0</h3>
+                    <small class="text-muted" style="font-size:0.72rem;">Pendaftar baru</small>
+                </div>
+                <div class="capel-stat-icon bg-primary bg-opacity-10 text-primary">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-4">
+        <div class="card capel-stat-card shadow-sm h-100 border-0">
+            <div class="card-body p-3 p-md-4 d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted text-uppercase fw-bold" style="font-size:0.7rem;letter-spacing:0.8px;">Disetujui</span>
+                    <h3 class="fw-bold text-success capel-stat-number mb-0 mt-1" id="statCardApproved">0</h3>
+                    <small class="text-muted" style="font-size:0.72rem;">Diterima sebagai santri</small>
+                </div>
+                <div class="capel-stat-icon bg-success bg-opacity-10 text-success">
+                    <i class="bi bi-check2-circle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-4">
+        <div class="card capel-stat-card shadow-sm h-100 border-0">
+            <div class="card-body p-3 p-md-4 d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted text-uppercase fw-bold" style="font-size:0.7rem;letter-spacing:0.8px;">Ditolak</span>
+                    <h3 class="fw-bold text-danger capel-stat-number mb-0 mt-1" id="statCardRejected">0</h3>
+                    <small class="text-muted" style="font-size:0.72rem;">Tidak memenuhi syarat</small>
+                </div>
+                <div class="capel-stat-icon bg-danger bg-opacity-10 text-danger">
+                    <i class="bi bi-x-circle"></i>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -181,34 +425,48 @@ $this->setTitle('Pendaftaran CAPEL | Sistem Informasi');
 </div>
 
 <div class="card border-0 shadow-sm rounded-4">
-    <div class="card-body">
-        <ul class="nav nav-tabs mb-3" id="capelTabs" role="tablist">
+    <div class="card-body p-3 p-md-4">
+        <ul class="nav capel-nav-tabs mb-4" id="capelTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active fw-bold" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab" aria-controls="pending" aria-selected="true" onclick="loadData('Pending')">Pending <span class="badge bg-danger rounded-pill ms-1" id="badgePending">0</span></button>
+                <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab" aria-controls="pending" aria-selected="true" onclick="loadData('Pending')">
+                    <i class="bi bi-hourglass-split"></i> Pending 
+                    <span class="badge bg-danger rounded-pill ms-1" id="badgePending">0</span>
+                </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link fw-bold" id="approved-tab" data-bs-toggle="tab" data-bs-target="#approved" type="button" role="tab" aria-controls="approved" aria-selected="false" onclick="loadData('Approved')">Disetujui</button>
+                <button class="nav-link" id="approved-tab" data-bs-toggle="tab" data-bs-target="#approved" type="button" role="tab" aria-controls="approved" aria-selected="false" onclick="loadData('Approved')">
+                    <i class="bi bi-check2-circle"></i> Disetujui 
+                    <span class="badge bg-success rounded-pill ms-1" id="badgeApproved">0</span>
+                </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link fw-bold" id="rejected-tab" data-bs-toggle="tab" data-bs-target="#rejected" type="button" role="tab" aria-controls="rejected" aria-selected="false" onclick="loadData('Rejected')">Ditolak</button>
+                <button class="nav-link" id="rejected-tab" data-bs-toggle="tab" data-bs-target="#rejected" type="button" role="tab" aria-controls="rejected" aria-selected="false" onclick="loadData('Rejected')">
+                    <i class="bi bi-x-circle"></i> Ditolak 
+                    <span class="badge bg-secondary rounded-pill ms-1" id="badgeRejected">0</span>
+                </button>
             </li>
         </ul>
         <div class="tab-content" id="myTabContent">
             <div class="tab-pane fade show active" id="pending" role="tabpanel" aria-labelledby="pending-tab">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0">Daftar Pendaftaran Baru</h5>
+                <div class="d-flex justify-content-between align-items-center mb-3 capel-tab-action-header">
                     <div>
-                        <button class="btn btn-sm btn-danger fw-semibold shadow-sm d-none me-2" id="btnBulkDeletePending" onclick="bulkDelete('Pending')">
+                        <h5 class="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
+                            <i class="bi bi-person-plus text-primary"></i> Daftar Pendaftaran Baru
+                        </h5>
+                        <small class="text-muted">Data pendaftar masuk yang belum diverifikasi</small>
+                    </div>
+                    <div class="capel-tab-action-buttons">
+                        <button class="btn btn-sm btn-outline-danger fw-semibold rounded-pill shadow-sm d-none" id="btnBulkDeletePending" onclick="bulkDelete('Pending')">
                             <i class="bi bi-trash me-1"></i>Hapus Terpilih (<span id="countSelectedPendingDel">0</span>)
                         </button>
-                        <button class="btn btn-sm btn-success fw-semibold shadow-sm d-none" id="btnBulkApprove" onclick="bukaModalTerimaBulk()">
+                        <button class="btn btn-sm btn-success fw-semibold rounded-pill shadow-sm d-none" id="btnBulkApprove" onclick="bukaModalTerimaBulk()">
                             <i class="bi bi-check-all me-1"></i>Terima Terpilih (<span id="countSelected">0</span>)
                         </button>
                     </div>
                 </div>
                 <div class="table-responsive capel-table-wrapper">
                     <table class="table table-hover align-middle">
-                        <thead class="table-light" id="theadPending">
+                        <thead id="theadPending">
                             <!-- Populated via JS -->
                         </thead>
                         <tbody id="tbodyPending">
@@ -219,20 +477,28 @@ $this->setTitle('Pendaftaran CAPEL | Sistem Informasi');
             </div>
             
             <div class="tab-pane fade" id="approved" role="tabpanel" aria-labelledby="approved-tab">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0">Daftar Disetujui</h5>
+                <div class="d-flex justify-content-between align-items-center mb-3 capel-tab-action-header">
                     <div>
-                        <button class="btn btn-sm btn-warning fw-semibold shadow-sm d-none me-2" id="btnBulkCancel" onclick="bulkCancel()">
+                        <h5 class="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
+                            <i class="bi bi-person-check text-success"></i> Daftar Disetujui
+                        </h5>
+                        <small class="text-muted">Pendaftar yang telah diterima sebagai santri</small>
+                    </div>
+                    <div class="capel-tab-action-buttons">
+                        <button class="btn btn-sm btn-primary fw-semibold rounded-pill shadow-sm d-none" id="btnBulkReunduh" onclick="bulkReunduh()">
+                            <i class="bi bi-cloud-arrow-down me-1"></i>Re-unduh Berkas (<span id="countSelectedApprovedReunduh">0</span>)
+                        </button>
+                        <button class="btn btn-sm btn-warning text-dark fw-semibold rounded-pill shadow-sm d-none" id="btnBulkCancel" onclick="bulkCancel()">
                             <i class="bi bi-arrow-counterclockwise me-1"></i>Batalkan (<span id="countSelectedApprovedCancel">0</span>)
                         </button>
-                        <button class="btn btn-sm btn-danger fw-semibold shadow-sm d-none" id="btnBulkDeleteApproved" onclick="bulkDelete('Approved')">
+                        <button class="btn btn-sm btn-outline-danger fw-semibold rounded-pill shadow-sm d-none" id="btnBulkDeleteApproved" onclick="bulkDelete('Approved')">
                             <i class="bi bi-trash me-1"></i>Hapus (<span id="countSelectedApprovedDel">0</span>)
                         </button>
                     </div>
                 </div>
                 <div class="table-responsive capel-table-wrapper">
                     <table class="table table-hover align-middle">
-                        <thead class="table-light" id="theadApproved">
+                        <thead id="theadApproved">
                             <!-- Populated via JS -->
                         </thead>
                         <tbody id="tbodyApproved"></tbody>
@@ -241,15 +507,22 @@ $this->setTitle('Pendaftaran CAPEL | Sistem Informasi');
             </div>
 
             <div class="tab-pane fade" id="rejected" role="tabpanel" aria-labelledby="rejected-tab">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0">Daftar Ditolak</h5>
-                    <button class="btn btn-sm btn-danger fw-semibold shadow-sm d-none" id="btnBulkDeleteRejected" onclick="bulkDelete('Rejected')">
-                        <i class="bi bi-trash me-1"></i>Hapus (<span id="countSelectedRejectedDel">0</span>)
-                    </button>
+                <div class="d-flex justify-content-between align-items-center mb-3 capel-tab-action-header">
+                    <div>
+                        <h5 class="mb-0 fw-bold text-dark d-flex align-items-center gap-2">
+                            <i class="bi bi-person-x text-danger"></i> Daftar Ditolak
+                        </h5>
+                        <small class="text-muted">Pendaftar yang tidak memenuhi persyaratan</small>
+                    </div>
+                    <div class="capel-tab-action-buttons">
+                        <button class="btn btn-sm btn-outline-danger fw-semibold rounded-pill shadow-sm d-none" id="btnBulkDeleteRejected" onclick="bulkDelete('Rejected')">
+                            <i class="bi bi-trash me-1"></i>Hapus (<span id="countSelectedRejectedDel">0</span>)
+                        </button>
+                    </div>
                 </div>
                 <div class="table-responsive capel-table-wrapper">
                     <table class="table table-hover align-middle">
-                        <thead class="table-light" id="theadRejected">
+                        <thead id="theadRejected">
                             <!-- Populated via JS -->
                         </thead>
                         <tbody id="tbodyRejected"></tbody>
@@ -335,19 +608,24 @@ function extractDriveId(url) {
 }
 
 const expectedFiles = [
-    { name: 'Scan ID Paspor', keywords: ['scan id paspor', 'passport'] },
-    { name: 'Scan IC Santri', keywords: ['scan ic (kartu identitas) santri', 'scan ic santri', 'kartu identitas santri', 'scan of id card'] },
-    { name: 'Scan IC Ayah', keywords: ['scan ic ayah', 'father\'s scan'] },
-    { name: 'Scan IC Ibu', keywords: ['scan ic ibu', 'mother\'s scan'] },
-    { name: 'Surat Beranak', keywords: ['surat beranak', 'surat kelahiran', 'birth certificate'] },
-    { name: 'Pas Foto', keywords: ['pas foto', 'pasfoto', 'photograph'] },
-    { name: 'Curriculum Vitae', keywords: ['curriculum vitae', 'cv'] },
-    { name: 'Sertifikat Vaksin', keywords: ['scan sertifikat vaksin', 'vaccine'] },
-    { name: 'Ijazah / Rapor', keywords: ['scan ijazah', 'rapor', 'diploma', 'report card'] },
-    { name: 'Surat Sehat', keywords: ['kesanggupan sehat', 'bebas penyakit menular', 'certificate of health'] },
-    { name: 'Kesanggupan Biaya', keywords: ['kesanggupan biaya', 'financial capability'] },
-    { name: 'Affidavit', keywords: ['affidavit'] },
-    { name: 'Surat Pelajar Asing', keywords: ['pelajar asing'] }
+    { name: 'Scan ID Paspor', keywords: ['scan id paspor', 'paspor', 'passport'] },
+    { name: 'Scan IC Santri', keywords: ['scan ic (kartu identitas) santri', 'scan ic santri', 'kartu identitas santri', 'scan of id card', 'ktp santri', 'ic santri', 'kartu identitas', 'identity card'] },
+    { name: 'Scan IC Ayah', keywords: ['scan ic ayah', 'father\'s scan of id card', 'father\'s scan', 'ktp ayah', 'ic ayah', 'identitas ayah'] },
+    { name: 'Scan IC Ibu', keywords: ['scan ic ibu', 'mother\'s scan of id card', 'mother\'s scan', 'ktp ibu', 'ic ibu', 'identitas ibu'] },
+    { name: 'Surat Beranak', keywords: ['surat beranak', 'surat kelahiran', 'birth certificate', 'akta lahir', 'akta kelahiran'] },
+    { name: 'Pas Foto', keywords: ['pas foto', 'pasfoto', 'recent photograph', 'photograph', 'foto', 'photo'] },
+    { name: 'Curriculum Vitae', keywords: ['curriculum vitae', 'cv', 'riwayat hidup'] },
+    { name: 'Sertifikat Vaksin', keywords: ['scan sertifikat vaksin', 'sertifikat vaksin', 'kartu vaksin', 'vaccine', 'vaksin'] },
+    { name: 'Asuransi Kesehatan', keywords: ['asuransi kesehatan', 'health insurance', 'asuransi', 'medical insurance'] },
+    { name: 'Ijazah / Rapor', keywords: ['scan ijazah', 'rapor terakhir', 'diploma', 'report card', 'ijazah', 'rapor', 'transkrip', 'skl', 'skhun', 'certificate of education'] },
+    { name: 'Surat Sehat', keywords: ['kesanggupan sehat', 'surat sehat', 'bebas penyakit menular', 'certificate of health', 'surat keterangan sehat', 'medical check up'] },
+    { name: 'Kesanggupan Biaya', keywords: ['kesanggupan biaya', 'financial capability', 'surat kesanggupan', 'financial statement', 'pernyataan biaya'] },
+    { name: 'Affidavit', keywords: ['affidavit', 'kewarganegaraan ganda'] },
+    { name: 'Surat Pelajar Asing', keywords: ['pelajar asing', 'izin belajar', 'rekomendasi kementerian'] },
+    { name: 'Kartu Keluarga', keywords: ['kartu keluarga', 'kk', 'family card'] },
+    { name: 'Surat Rekomendasi', keywords: ['rekomendasi', 'surat rekomendasi', 'recommendation letter'] },
+    { name: 'Surat Pernyataan', keywords: ['pernyataan', 'surat pernyataan', 'statement letter'] },
+    { name: 'ITAS / Visa', keywords: ['itas', 'visa', 'izin tinggal', 'kitas'] }
 ];
 
 function lihatBerkas(id) {
@@ -379,26 +657,33 @@ function lihatBerkas(id) {
         }
         
         if (foundLinks.length > 0) {
-            presentHtml += `<div class="mb-4 bg-white p-3 rounded shadow-sm border border-success border-opacity-50">
-                        <h6 class="fw-bold text-success mb-3"><i class="bi bi-check-circle-fill me-2"></i>${expected.name}</h6>`;
+            presentHtml += `<div class="mb-3 bg-white p-3 rounded-4 shadow-sm border border-success border-opacity-25">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold text-success mb-0"><i class="bi bi-check-circle-fill me-2"></i>${expected.name}</h6>
+                        </div>`;
             foundLinks.forEach(link => {
                 const fileId = extractDriveId(link.trim());
                 if (fileId) {
-                    presentHtml += `<iframe src="https://drive.google.com/file/d/${fileId}/preview" width="100%" height="450" class="border rounded mb-2" allow="autoplay"></iframe>`;
+                    presentHtml += `<div class="position-relative mb-2">
+                        <div class="d-flex justify-content-end mb-1">
+                            <a href="https://drive.google.com/file/d/${fileId}/view" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-2 py-0" style="font-size:0.75rem;"><i class="bi bi-box-arrow-up-right me-1"></i>Tab Baru</a>
+                        </div>
+                        <iframe src="https://drive.google.com/file/d/${fileId}/preview" width="100%" class="preview-iframe-berkas border rounded-3 w-100 shadow-sm" allow="autoplay"></iframe>
+                    </div>`;
                 } else {
-                    presentHtml += `<a href="${link.trim()}" target="_blank" class="btn btn-sm btn-outline-primary mb-2"><i class="bi bi-box-arrow-up-right me-1"></i> Buka File</a>`;
+                    presentHtml += `<a href="${link.trim()}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill mb-2"><i class="bi bi-box-arrow-up-right me-1"></i> Buka File</a>`;
                 }
             });
             presentHtml += `</div>`;
         } else {
-            missingHtml += `<span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-50 me-2 mb-2 px-3 py-2"><i class="bi bi-x-circle-fill me-1"></i> ${expected.name}</span>`;
+            missingHtml += `<span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 me-2 mb-2 px-3 py-2 rounded-pill"><i class="bi bi-x-circle-fill me-1"></i> ${expected.name}</span>`;
         }
     });
 
     if (missingHtml !== '') {
-        missingHtml = `<div class="mb-4 p-3 rounded shadow-sm border border-danger border-opacity-50 bg-white">
-                        <h6 class="fw-bold text-danger mb-3"><i class="bi bi-exclamation-triangle-fill me-2"></i>Berkas Kosong / Belum Dilampirkan:</h6>
-                        <div>${missingHtml}</div>
+        missingHtml = `<div class="mb-3 p-3 rounded-4 shadow-sm border border-danger border-opacity-25 bg-white">
+                        <h6 class="fw-bold text-danger mb-2"><i class="bi bi-exclamation-triangle-fill me-2"></i>Berkas Kosong / Belum Dilampirkan:</h6>
+                        <div class="d-flex flex-wrap">${missingHtml}</div>
                        </div>`;
     }
 
@@ -418,21 +703,26 @@ function lihatBerkas(id) {
         
         if (!isExpected && typeof item.val === 'string' && item.val.includes('drive.google.com')) {
             const links = item.val.split(',');
-            html += `<div class="mb-4 bg-white p-3 rounded shadow-sm border border-info border-opacity-50">
-                        <h6 class="fw-bold text-info mb-3"><i class="bi bi-info-circle-fill me-2"></i>Dokumen Tambahan: ${item.key}</h6>`;
+            html += `<div class="mb-3 bg-white p-3 rounded-4 shadow-sm border border-info border-opacity-25">
+                        <h6 class="fw-bold text-info mb-2"><i class="bi bi-info-circle-fill me-2"></i>Dokumen Tambahan: ${item.key}</h6>`;
             links.forEach(link => {
                 const fileId = extractDriveId(link.trim());
                 if (fileId) {
-                    html += `<iframe src="https://drive.google.com/file/d/${fileId}/preview" width="100%" height="450" class="border rounded mb-2" allow="autoplay"></iframe>`;
+                    html += `<div class="position-relative mb-2">
+                        <div class="d-flex justify-content-end mb-1">
+                            <a href="https://drive.google.com/file/d/${fileId}/view" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-2 py-0" style="font-size:0.75rem;"><i class="bi bi-box-arrow-up-right me-1"></i>Tab Baru</a>
+                        </div>
+                        <iframe src="https://drive.google.com/file/d/${fileId}/preview" width="100%" class="preview-iframe-berkas border rounded-3 w-100 shadow-sm" allow="autoplay"></iframe>
+                    </div>`;
                 } else {
-                    html += `<a href="${link.trim()}" target="_blank" class="btn btn-sm btn-outline-primary mb-2"><i class="bi bi-box-arrow-up-right me-1"></i> Buka File</a>`;
+                    html += `<a href="${link.trim()}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill mb-2"><i class="bi bi-box-arrow-up-right me-1"></i> Buka File</a>`;
                 }
             });
             html += `</div>`;
         }
     }
     
-    document.getElementById('berkasContainer').innerHTML = `<div class="bg-light p-3 rounded border">${html}</div>`;
+    document.getElementById('berkasContainer').innerHTML = `<div class="p-2">${html}</div>`;
     document.getElementById('namaSantriBerkas').textContent = data.nama_lengkap;
     new bootstrap.Modal(document.getElementById('modalLihatBerkas')).show();
 }
@@ -442,26 +732,43 @@ function buildThead(status) {
     let onchange = `toggleAll('${status}', this)`;
     
     let tr1 = `<tr>
-        <th class="bg-light" style="width: 40px; position: sticky; left: 0; z-index: 2;"><input type="checkbox" class="form-check-input" id="${checkId}" onchange="${onchange}"></th>
-        <th class="bg-light text-nowrap">Tanggal Submit</th>
-        <th class="bg-light text-nowrap" style="position: sticky; left: 40px; z-index: 2;">Nama Lengkap</th>`;
+        <th style="width: 40px;" class="text-center"><input type="checkbox" class="form-check-input" id="${checkId}" onchange="${onchange}"></th>
+        <th class="text-nowrap">Tanggal Submit</th>
+        <th class="text-nowrap">Nama Lengkap</th>`;
         
-    let tr2 = `<tr class="search-row bg-light">
-        <th class="bg-light" style="position: sticky; left: 0; z-index: 2;"></th>
-        <th class="bg-light"><input type="text" class="form-control form-control-sm column-search" data-col="1" placeholder="Cari..."></th>
-        <th class="bg-light" style="position: sticky; left: 40px; z-index: 2;"><input type="text" class="form-control form-control-sm column-search" data-col="2" placeholder="Cari..."></th>`;
+    let tr2 = `<tr class="search-row">
+        <th></th>
+        <th><input type="text" class="form-control form-control-sm column-search" data-col="1" placeholder="Cari..."></th>
+        <th><input type="text" class="form-control form-control-sm column-search" data-col="2" placeholder="Cari..."></th>`;
         
     let colIndex = 3;
     displayColumns.forEach(col => {
-        tr1 += `<th class="bg-light text-nowrap">${col}</th>`;
-        tr2 += `<th class="bg-light"><input type="text" class="form-control form-control-sm column-search" data-col="${colIndex}" placeholder="Cari..."></th>`;
+        tr1 += `<th class="text-nowrap">${col}</th>`;
+        tr2 += `<th><input type="text" class="form-control form-control-sm column-search" data-col="${colIndex}" placeholder="Cari..."></th>`;
         colIndex++;
     });
     
-    tr1 += `<th class="bg-light text-nowrap sticky-right">${status === 'Pending' ? 'Aksi' : 'Status'}</th></tr>`;
-    tr2 += `<th class="bg-light sticky-right"></th></tr>`;
+    tr1 += `<th class="text-nowrap capel-sticky-action">${status === 'Pending' ? 'Aksi' : 'Status & Aksi'}</th></tr>`;
+    tr2 += `<th class="capel-sticky-action"></th></tr>`;
     
     return tr1 + tr2;
+}
+
+function refreshAllMetrics() {
+    ['Pending', 'Approved', 'Rejected'].forEach(st => {
+        let u = '<?= API_URL ?>/api/capel/list?status=' + st;
+        <?php if ($isSuperAdmin && $selectedInstansiId): ?>
+        u += '&instansi_id=<?= $selectedInstansiId ?>';
+        <?php endif; ?>
+        fetch(u, { headers: { 'Accept': 'application/json' } })
+            .then(r => r.json())
+            .then(d => {
+                const b = document.getElementById('badge' + st);
+                const s = document.getElementById('statCard' + st);
+                if (b) b.textContent = Array.isArray(d) ? d.length : 0;
+                if (s) s.textContent = Array.isArray(d) ? d.length : 0;
+            }).catch(()=>{});
+    });
 }
 
 function loadData(status) {
@@ -483,10 +790,20 @@ function loadData(status) {
     })
     .then(r => r.json())
     .then(data => {
-        if (status === 'Pending') document.getElementById('badgePending').textContent = data.length;
+        const count = Array.isArray(data) ? data.length : 0;
+        if (status === 'Pending') {
+            document.getElementById('badgePending').textContent = count;
+            document.getElementById('statCardPending').textContent = count;
+        } else if (status === 'Approved') {
+            document.getElementById('badgeApproved').textContent = count;
+            document.getElementById('statCardApproved').textContent = count;
+        } else if (status === 'Rejected') {
+            document.getElementById('badgeRejected').textContent = count;
+            document.getElementById('statCardRejected').textContent = count;
+        }
         
-        if (data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${displayColumns.length + 4}" class="text-center text-muted py-5"><i class="bi bi-inbox fs-1 d-block mb-2"></i>Tidak ada data pendaftaran</td></tr>`;
+        if (count === 0) {
+            tbody.innerHTML = `<tr><td colspan="${displayColumns.length + 4}" class="text-center text-muted py-5"><i class="bi bi-inbox fs-1 d-block mb-2 text-secondary opacity-50"></i>Tidak ada data pendaftaran ${status}</td></tr>`;
             return;
         }
         
@@ -494,9 +811,9 @@ function loadData(status) {
 
         let html = '';
         data.forEach(d => {
-            let dupBadge = '<span class="badge bg-success-subtle text-success">Aman</span>';
+            let dupBadge = '<span class="badge bg-success-subtle text-success border border-success border-opacity-25 rounded-pill px-2 py-1"><i class="bi bi-shield-check me-1"></i>Aman</span>';
             if (d.potential_duplicates && d.potential_duplicates.length > 0) {
-                dupBadge = `<span class="badge bg-danger" title="Ada ${d.potential_duplicates.length} data mirip di master santri"><i class="bi bi-exclamation-triangle"></i> Mirip</span>`;
+                dupBadge = `<span class="badge bg-danger rounded-pill px-2 py-1" title="Ada ${d.potential_duplicates.length} data mirip di master santri"><i class="bi bi-exclamation-triangle"></i> Mirip (${d.potential_duplicates.length})</span>`;
             }
 
             let parsedData = {};
@@ -520,30 +837,27 @@ function loadData(status) {
                             : findVal(['calon pelajar', 'program capel', 'pilihan program']);
                             
             if (rawProgram.toLowerCase().includes('program penerimaan') || rawProgram.toLowerCase().includes('syawwal')) {
-                programBadge = '<span class="badge bg-primary mt-1">Program Penerimaan</span>';
+                programBadge = '<span class="badge bg-primary rounded-pill mt-1">Program Penerimaan</span>';
             } else if (rawProgram.toLowerCase().includes('program persiapan') || rawProgram.toLowerCase().includes('penampungan')) {
-                programBadge = '<span class="badge bg-warning text-dark mt-1">Program Persiapan</span>';
+                programBadge = '<span class="badge bg-warning text-dark rounded-pill mt-1">Program Persiapan</span>';
             } else if (rawProgram !== '-' && rawProgram.trim() !== '') {
-                programBadge = `<span class="badge bg-secondary mt-1">${rawProgram}</span>`;
+                programBadge = `<span class="badge bg-secondary rounded-pill mt-1">${rawProgram}</span>`;
             } else {
-                programBadge = `<span class="badge bg-light text-secondary border mt-1">Program Tidak Disebutkan</span>`;
+                programBadge = `<span class="badge bg-light text-secondary border rounded-pill mt-1">Program Belum Diatur</span>`;
             }
 
             // Instansi Badge (only for super admin)
             let instansiBadge = '';
             if (d.nama_instansi && <?= $isSuperAdmin ? 'true' : 'false' ?>) {
-                instansiBadge = `<br><span class="badge bg-info text-dark mt-1 border border-info border-opacity-50"><i class="bi bi-building"></i> ${d.nama_instansi}</span>`;
+                instansiBadge = `<br><span class="badge bg-info text-dark mt-1 border border-info border-opacity-50 rounded-pill"><i class="bi bi-building me-1"></i>${d.nama_instansi}</span>`;
             }
 
             let rowHtml = `<tr>
-                <td class="bg-white" style="position: sticky; left: 0; z-index: 1;"><input type="checkbox" class="form-check-input chk-${status} row-cb" value="${d.id}" data-nama="${d.nama_lengkap}"></td>
-                <td class="text-nowrap">${d.timestamp}</td>
-                <td class="fw-bold bg-white text-nowrap" style="position: sticky; left: 40px; z-index: 1;">${d.nama_lengkap}<br>${programBadge}${instansiBadge}</td>`;
+                <td class="text-center"><input type="checkbox" class="form-check-input chk-${status} row-cb" value="${d.id}" data-nama="${d.nama_lengkap}"></td>
+                <td class="text-nowrap text-muted" style="font-size:0.8rem;">${d.timestamp}</td>
+                <td class="fw-bold text-nowrap">${d.nama_lengkap}<br>${programBadge}${instansiBadge}</td>`;
 
             displayColumns.forEach(col => {
-                // If the user selected a default column like "Kewarganegaraan", we try to render the default smart extraction if the raw header is not found.
-                // But wait, the displayColumns are EXACT headers from spreadsheetHeaders.
-                // So we just fetch parsedData[col]
                 let val = parsedData[col] !== undefined ? parsedData[col] : '';
                 
                 // Keep backward compatibility for the fallback default set
@@ -559,7 +873,7 @@ function loadData(status) {
                 } else if (col === 'Kontak' && val === '') {
                     const e = (defaultMapping && defaultMapping.col_email && parsedData[defaultMapping.col_email]) ? parsedData[defaultMapping.col_email] : findVal(['email address', 'email']);
                     const h = (defaultMapping && defaultMapping.col_nohp && parsedData[defaultMapping.col_nohp]) ? parsedData[defaultMapping.col_nohp] : findVal(['nomor hp wali', 'nomor hp', 'wa aktif', 'phone', 'telepon']);
-                    val = `<i class="bi bi-whatsapp"></i> ${h}<br><i class="bi bi-envelope"></i> ${e}`;
+                    val = `<i class="bi bi-whatsapp text-success"></i> ${h}<br><i class="bi bi-envelope text-primary"></i> ${e}`;
                 } else if (col === 'Info Paspor' && val === '') {
                     const p = findVal(['nomor id paspor', 'identity number']).toUpperCase();
                     const exp = findVal(['tanggal berakhir paspor', 'date of expiry']);
@@ -582,24 +896,36 @@ function loadData(status) {
                         cleanNo = cleanNo.replace('+', '');
                         if (cleanNo.length >= 9) {
                             let label = matches.length > 1 ? ` WA ${idx + 1}` : ` WA`;
-                            waLink += `<a href="https://wa.me/${cleanNo}" target="_blank" class="btn btn-sm btn-outline-success rounded-pill px-2 py-1 mt-1 ms-1" title="Chat WhatsApp ${cleanNo}"><i class="bi bi-whatsapp"></i>${label}</a>`;
+                            waLink += `<a href="https://wa.me/${cleanNo}" target="_blank" class="btn btn-sm btn-outline-success rounded-pill px-2 py-1 shadow-sm" title="Chat WhatsApp ${cleanNo}"><i class="bi bi-whatsapp"></i>${label}</a>`;
                         }
                     });
                 }
             }
 
             if (status === 'Pending') {
-                rowHtml += `<td class="text-nowrap sticky-right bg-white">
-                        ${dupBadge}<br>
-                        <button class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 mt-1" onclick="lihatBerkas(${d.id})"><i class="bi bi-folder-symlink"></i> Berkas</button>${waLink}
-                        <button class="btn btn-sm btn-success rounded-pill px-3 py-1 mt-1 ms-1" onclick="bukaModalTerima(${d.id}, '${d.nama_lengkap.replace(/'/g, "\\'")}')">Terima</button>
-                        <button class="btn btn-sm btn-outline-danger rounded-pill px-3 py-1 mt-1 ms-1" onclick="tolak(${d.id})">Tolak</button>
+                rowHtml += `<td class="text-nowrap capel-sticky-action">
+                        <div class="mb-1">${dupBadge}</div>
+                        <div class="capel-action-group">
+                            <button class="btn btn-sm btn-outline-primary rounded-pill px-2 py-1 shadow-sm" onclick="lihatBerkas(${d.id})"><i class="bi bi-folder2-open me-1"></i>Berkas</button>
+                            ${waLink}
+                            <button class="btn btn-sm btn-success rounded-pill px-3 py-1 shadow-sm" onclick="bukaModalTerima(${d.id}, '${d.nama_lengkap.replace(/'/g, "\\'")}')"><i class="bi bi-check-lg me-1"></i>Terima</button>
+                            <button class="btn btn-sm btn-outline-danger rounded-pill px-2 py-1 shadow-sm" onclick="tolak(${d.id})"><i class="bi bi-x-lg me-1"></i>Tolak</button>
+                        </div>
+                    </td>
+                </tr>`;
+            } else if (status === 'Approved') {
+                rowHtml += `<td class="text-nowrap capel-sticky-action">
+                        <span class="badge bg-success mb-1 px-2 py-1 rounded-pill"><i class="bi bi-check-circle me-1"></i>${d.status_approval}</span><br>
+                        ${d.final_status_santri ? `<span class="badge bg-info text-dark mb-1 px-2 py-1 rounded-pill">${d.final_status_santri}</span><br>` : ''}
+                        <div class="capel-action-group mt-1">
+                            <button class="btn btn-sm btn-outline-primary rounded-pill px-2 py-1 shadow-sm" onclick="reunduhBerkas(${d.id})" title="Re-unduh Berkas"><i class="bi bi-cloud-arrow-down me-1"></i>Re-unduh</button>
+                        </div>
                     </td>
                 </tr>`;
             } else {
-                rowHtml += `<td class="text-nowrap sticky-right bg-white">
-                        <span class="badge bg-secondary mb-1">${d.status_approval}</span><br>
-                        ${d.final_status_santri ? `<span class="badge bg-info text-dark">${d.final_status_santri}</span>` : ''}
+                rowHtml += `<td class="text-nowrap capel-sticky-action">
+                        <span class="badge bg-secondary mb-1 px-2 py-1 rounded-pill">${d.status_approval}</span><br>
+                        ${d.final_status_santri ? `<span class="badge bg-info text-dark px-2 py-1 rounded-pill">${d.final_status_santri}</span>` : ''}
                     </td>
                 </tr>`;
             }
@@ -610,7 +936,7 @@ function loadData(status) {
         if (status === 'Pending') {
             attachCheckboxListeners('Pending', 'btnBulkApprove', 'countSelected', 'btnBulkDeletePending', 'countSelectedPendingDel');
         } else if (status === 'Approved') {
-            attachCheckboxListeners('Approved', 'btnBulkCancel', 'countSelectedApprovedCancel', 'btnBulkDeleteApproved', 'countSelectedApprovedDel');
+            attachCheckboxListeners('Approved', 'btnBulkReunduh', 'countSelectedApprovedReunduh', 'btnBulkCancel', 'countSelectedApprovedCancel', 'btnBulkDeleteApproved', 'countSelectedApprovedDel');
         } else if (status === 'Rejected') {
             attachCheckboxListeners('Rejected', 'btnBulkDeleteRejected', 'countSelectedRejectedDel');
         }
@@ -623,24 +949,24 @@ function loadData(status) {
     });
 }
 
-function attachCheckboxListeners(status, btnId1, countId1, btnId2, countId2) {
+function attachCheckboxListeners(status, ...btnPairs) {
     const chkAll = document.getElementById('chkAll' + status);
     const chks = document.querySelectorAll('.chk-' + status);
-    const btn1 = document.getElementById(btnId1);
-    const count1 = document.getElementById(countId1);
-    const btn2 = btnId2 ? document.getElementById(btnId2) : null;
-    const count2 = countId2 ? document.getElementById(countId2) : null;
 
     const updateBtn = () => {
         const checked = document.querySelectorAll('.chk-' + status + ':checked');
-        if (checked.length > 0) {
-            if(btn1) btn1.classList.remove('d-none');
-            if(btn2) btn2.classList.remove('d-none');
-            if(count1) count1.textContent = checked.length;
-            if(count2) count2.textContent = checked.length;
-        } else {
-            if(btn1) btn1.classList.add('d-none');
-            if(btn2) btn2.classList.add('d-none');
+        const count = checked.length;
+        for (let i = 0; i < btnPairs.length; i += 2) {
+            const btn = btnPairs[i] ? document.getElementById(btnPairs[i]) : null;
+            const cnt = btnPairs[i+1] ? document.getElementById(btnPairs[i+1]) : null;
+            if (btn) {
+                if (count > 0) {
+                    btn.classList.remove('d-none');
+                    if (cnt) cnt.textContent = count;
+                } else {
+                    btn.classList.add('d-none');
+                }
+            }
         }
     };
 
@@ -758,12 +1084,102 @@ function executeBulkAction(url, ids, currentStatus, successTitle, reloadStatus =
             Swal.fire(successTitle, res.message, 'success');
             loadData(currentStatus);
             if (reloadStatus) loadData(reloadStatus);
+            refreshAllMetrics();
         } else {
             Swal.fire('Error', res.message, 'error');
         }
     })
     .catch(err => {
         Swal.fire('Error', 'Gagal mengeksekusi aksi.', 'error');
+    });
+}
+
+function reunduhBerkas(id) {
+    Swal.fire({
+        title: 'Re-unduh Berkas?',
+        text: "Sistem akan mengunduh ulang foto, paspor, itas, dan berkas pendaftaran calon santri ini langsung ke penyimpanan server.",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#0d6efd',
+        confirmButtonText: '<i class="bi bi-cloud-arrow-down me-1"></i>Ya, Re-unduh Sekarang',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Memproses...',
+                text: 'Mendaftarkan berkas ke antrean unduhan',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            fetch('<?= API_URL ?>/api/capel/reunduh', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
+                },
+                body: JSON.stringify({ ids: [id] })
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.success) {
+                    Swal.fire('Berhasil!', res.message || 'Antrean re-unduh telah dibuat. Pengunduhan berjalan di latar belakang.', 'success');
+                } else {
+                    Swal.fire('Error', res.message || 'Gagal memulai re-unduh.', 'error');
+                }
+            })
+            .catch(err => {
+                Swal.fire('Error', 'Gagal memproses re-unduh berkas.', 'error');
+            });
+        }
+    });
+}
+
+function bulkReunduh() {
+    const checked = document.querySelectorAll('.chk-Approved:checked');
+    if (checked.length === 0) return;
+
+    const ids = Array.from(checked).map(c => c.value);
+
+    Swal.fire({
+        title: 'Re-unduh ' + ids.length + ' Santri Terpilih?',
+        text: "Sistem akan mengunduh ulang seluruh berkas santri terpilih ke folder penyimpanan server.",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#0d6efd',
+        confirmButtonText: '<i class="bi bi-cloud-arrow-down me-1"></i>Ya, Re-unduh Semua',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Memproses...',
+                text: 'Mendaftarkan berkas ke antrean unduhan',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            fetch('<?= API_URL ?>/api/capel/reunduh', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
+                },
+                body: JSON.stringify({ ids: ids })
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.success) {
+                    Swal.fire('Berhasil!', res.message || 'Antrean re-unduh telah dibuat. Pengunduhan berjalan di latar belakang.', 'success');
+                } else {
+                    Swal.fire('Error', res.message || 'Gagal memulai re-unduh.', 'error');
+                }
+            })
+            .catch(err => {
+                Swal.fire('Error', 'Gagal memproses re-unduh berkas.', 'error');
+            });
+        }
     });
 }
 
@@ -851,6 +1267,7 @@ document.getElementById('btnProsesTerima').addEventListener('click', function() 
         if(res.success) {
             Swal.fire('Berhasil!', res.message || 'Pendaftaran diterima.', 'success');
             loadData('Pending');
+            refreshAllMetrics();
         } else {
             Swal.fire('Error', res.message, 'error');
         }
@@ -887,13 +1304,17 @@ function tolak(id) {
                 if(res.success) {
                     Swal.fire('Ditolak!', 'Pendaftaran berhasil ditolak.', 'success');
                     loadData('Pending');
+                    refreshAllMetrics();
                 }
             });
         }
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => loadData('Pending'));
+document.addEventListener('DOMContentLoaded', () => {
+    loadData('Pending');
+    refreshAllMetrics();
+});
 
 let defaultMapping = <?= $defaultMappingData ? $defaultMappingData : 'null' ?>;
 let spreadsheetHeaders = <?= $spreadsheetHeaders ? $spreadsheetHeaders : '[]' ?>;
@@ -1172,6 +1593,7 @@ document.getElementById('btnProsesSync').addEventListener('click', function() {
         if (res.success) {
             Swal.fire('Selesai!', res.message, 'success');
             loadData('Pending');
+            refreshAllMetrics();
         } else {
             Swal.fire('Gagal', res.message || 'Terjadi kesalahan saat menarik data', 'error');
         }

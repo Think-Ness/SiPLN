@@ -9,87 +9,132 @@ use Yiisoft\Db\Connection\ConnectionInterface;
 /**
  * Centralized upload path resolver per instansi/kepengurusan.
  * 
- * Semua file upload WAJIB menggunakan class ini sebagai acuan base directory.
- * Jika path_folder instansi belum diatur, akan return null agar caller bisa
- * menolak request dan mengarahkan user untuk setting path_folder dulu.
+ * Standar penyimpanan berkas:
+ * {ROOT}/public/uploads/{Nama_Instansi}/{subfolder}
+ * Contoh:
+ *   /public/uploads/Ponorogo/foto santri/
+ *   /public/uploads/Ponorogo/paspor/
+ *   /public/uploads/Ponorogo/itas/
+ *   /public/uploads/Ponorogo/berkas penting/
+ *   /public/uploads/Ponorogo/Surat_Menyurat/
+ *   /public/uploads/Ponorogo/nota/
+ *   /public/uploads/Ponorogo/profil_staf/
  */
 final class UploadPath
 {
     /**
-     * Ambil base upload directory untuk instansi saat ini.
+     * Ambil base upload directory untuk instansi.
+     * Otomatis mengarah ke public/uploads/{Nama_Instansi} jika belum diset atau path lama tidak ada.
      * 
-     * Prioritas:
-     * 1. path_folder dari master_instansi (absolute path yang sudah dikonfigurasi admin)
-     * 2. null — artinya belum diatur, caller harus menolak dan arahkan user ke Profil Instansi
-     * 
-     * @return string|null  Absolute path tanpa trailing slash, atau null jika belum diatur
+     * @return string Absolute path tanpa trailing slash
      */
-    public static function getBase(ConnectionInterface $db, ?int $instansiId = null): ?string
+    public static function getBase(ConnectionInterface $db, int|string|null $instansiId = null): string
     {
         AutoMigrate::checkAndMigrate($db);
 
-        if (!$instansiId) {
+        $id = ($instansiId !== null && $instansiId !== '') ? (int)$instansiId : 0;
+        if ($id <= 0) {
             if (session_status() === PHP_SESSION_NONE) {
                 @session_start();
             }
-            $instansiId = (int)($_SESSION['instansi_id'] ?? 0);
+            $id = (int)($_SESSION['instansi_id'] ?? 0);
         }
 
-        if (!$instansiId) {
-            return null;
+        $instansi = null;
+        if ($id > 0) {
+            try {
+                $instansi = $db->createCommand(
+                    "SELECT kode, nama_instansi, kepengurusan, def_kepengurusan, path_folder FROM master_instansi WHERE kode = :kode",
+                    [':kode' => $id]
+                )->queryOne();
+            } catch (\Throwable $e) {}
         }
 
-        try {
-            $instansi = $db->createCommand(
-                "SELECT path_folder FROM master_instansi WHERE kode = :kode",
-                [':kode' => $instansiId]
-            )->queryOne();
+        // Fallback jika tidak ditemukan instansi dari ID
+        if (!$instansi) {
+            try {
+                $instansi = $db->createCommand(
+                    "SELECT kode, nama_instansi, kepengurusan, def_kepengurusan, path_folder FROM master_instansi WHERE def_kepengurusan LIKE '%Ponorogo%' OR kepengurusan LIKE '%Ponorogo%' ORDER BY kode ASC LIMIT 1"
+                )->queryOne();
+            } catch (\Throwable $e) {}
+        }
 
-            if ($instansi && !empty(trim((string)($instansi['path_folder'] ?? '')))) {
-                return rtrim(str_replace('\\', '/', trim($instansi['path_folder'])), '/');
+        // Tentukan nama folder instansi (contoh: Ponorogo, Mantingan, Kediri)
+        $folderName = 'Ponorogo';
+        if ($instansi) {
+            $raw = !empty($instansi['def_kepengurusan']) ? $instansi['def_kepengurusan'] : (!empty($instansi['kepengurusan']) ? $instansi['kepengurusan'] : ($instansi['nama_instansi'] ?? 'Ponorogo'));
+            $clean = trim(preg_replace('/[^a-zA-Z0-9_\-]/', '_', (string)$raw));
+            if ($clean !== '') {
+                $folderName = $clean;
             }
-        } catch (\Throwable $e) {
-            // Fallback gracefully if database column is being migrated
-            return null;
         }
 
-        return null;
+        $defaultUploadsRoot = str_replace('\\', '/', dirname(__DIR__, 2) . '/public/uploads');
+
+        // Cek apakah ada konfigurasi custom path_folder dari database
+        $configuredPath = !empty($instansi['path_folder']) ? trim(str_replace('\\', '/', (string)$instansi['path_folder'])) : '';
+        if ($configuredPath !== '') {
+            $configuredPath = rtrim($configuredPath, '/');
+            // Jika path folder diisi tapi tidak berakhiran nama instansi, tambahkan nama instansi
+            $baseName = basename($configuredPath);
+            if (strcasecmp($baseName, $folderName) !== 0) {
+                $target = $configuredPath . '/' . $folderName;
+            } else {
+                $target = $configuredPath;
+            }
+
+            // Pastikan direktori ada atau bisa dibuat
+            if (is_dir($target) || @mkdir($target, 0777, true)) {
+                return $target;
+            }
+        }
+
+        // Default standar: {webapp}/public/uploads/{folderName}
+        $finalBase = $defaultUploadsRoot . '/' . $folderName;
+        if (!is_dir($finalBase)) {
+            @mkdir($finalBase, 0777, true);
+        }
+
+        return $finalBase;
     }
 
     /**
-     * Ambil base upload directory, WAJIB sudah diatur.
-     * Jika belum diatur, throw exception agar bisa ditangkap caller untuk response error.
-     * 
-     * @throws \RuntimeException jika path_folder belum dikonfigurasi
+     * Ambil subfolder di dalam base instansi dan pastikan foldernya sudah dibuat.
      */
-    public static function requireBase(ConnectionInterface $db, ?int $instansiId = null): string
+    public static function getFolder(ConnectionInterface $db, string $subfolder, int|string|null $instansiId = null): string
     {
         $base = self::getBase($db, $instansiId);
-        if ($base === null) {
-            throw new \RuntimeException(
-                'Path Folder Instansi belum diatur. Silakan atur terlebih dahulu di menu Profil Instansi → Path Folder sebelum melakukan upload.'
-            );
+        $cleanSub = trim(str_replace(['../', '..\\'], '', $subfolder), '/\\');
+        $target = $base . '/' . $cleanSub;
+        if (!is_dir($target)) {
+            @mkdir($target, 0777, true);
         }
-        return $base;
+        return $target;
     }
 
     /**
-     * Pesan error standar ketika path_folder belum diatur.
+     * Selalu mengembalikan base path yang valid.
+     */
+    public static function requireBase(ConnectionInterface $db, int|string|null $instansiId = null): string
+    {
+        return self::getBase($db, $instansiId);
+    }
+
+    /**
+     * Pesan peringatan opsional jika diperlukan.
      */
     public static function notConfiguredMessage(): string
     {
-        return 'Path Folder Instansi belum diatur. Silakan atur terlebih dahulu di menu Profil Instansi → Path Folder sebelum melakukan upload/unduh file.';
+        return 'Path Folder Instansi belum diatur. Silakan periksa di menu Profil Instansi.';
     }
 
     /**
      * Cek apakah sebuah path merupakan absolute path (Windows atau Linux).
-     * Path URL legacy seperti '/uploads/...' dianggap relative.
      */
     public static function isAbsolutePath(string $path): bool
     {
         $normalized = str_replace('\\', '/', $path);
         
-        // Jika path adalah legacy URL path, maka bukan absolute path system
         if (str_starts_with($normalized, '/uploads/') || str_starts_with($normalized, 'uploads/')) {
             return false;
         }
@@ -97,3 +142,4 @@ final class UploadPath
         return (bool)preg_match('/^[a-zA-Z]:\//', $normalized) || str_starts_with($normalized, '/');
     }
 }
+

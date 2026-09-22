@@ -12,13 +12,13 @@ final class ViewKopAction
         $kode = $request->getQueryParams()['kode'] ?? null;
         $instansi = null;
         if ($kode) {
-            $instansi = $db->createCommand("SELECT kop_surat FROM master_instansi WHERE kode = :k", [':k' => $kode])->queryOne();
+            $instansi = $db->createCommand("SELECT kop_surat, nama_instansi, pondok FROM master_instansi WHERE kode = :k OR pondok = :k OR kode_instansi = :k OR def_pondok = :k", [':k' => $kode])->queryOne();
         } else {
             $myInstansi = $_SESSION['instansi_id'] ?? null;
             if ($myInstansi) {
-                $instansi = $db->createCommand("SELECT kop_surat FROM master_instansi WHERE kode = :k", [':k' => $myInstansi])->queryOne();
+                $instansi = $db->createCommand("SELECT kop_surat, nama_instansi, pondok FROM master_instansi WHERE kode = :k OR pondok = :k OR kode_instansi = :k OR def_pondok = :k", [':k' => $myInstansi])->queryOne();
             } else {
-                $instansi = $db->createCommand("SELECT kop_surat FROM master_instansi WHERE kode = :kode")
+                $instansi = $db->createCommand("SELECT kop_surat, nama_instansi, pondok FROM master_instansi WHERE kode = :kode")
                     ->bindValue(':kode', $_SESSION['instansi_id'] ?? 0)
                     ->queryOne();
             }
@@ -26,7 +26,7 @@ final class ViewKopAction
         
         if (!$instansi || empty($instansi['kop_surat'])) {
             $r = new Response(404);
-            $r->getBody()->write("Photo not found.");
+            $r->getBody()->write("Kop surat not configured.");
             return $r;
         }
 
@@ -34,6 +34,25 @@ final class ViewKopAction
         if (str_starts_with($path, '/') && !file_exists($path)) {
             // Coba cek path relatif (kasus lama)
             $path = dirname(__DIR__, 4) . '/public' . $path;
+        }
+
+        if (!file_exists($path) || !is_file($path)) {
+            $basename = basename(str_replace('\\', '/', $path));
+            $candidates = [
+                dirname(__DIR__, 4) . '/public/uploads/instansi/' . $basename,
+                dirname(__DIR__, 4) . '/public/uploads/' . $basename,
+                'd:/XAMPP/htdocs/webapp/public/uploads/instansi/' . $basename,
+                'd:/XAMPP/htdocs/webapp/public/uploads/' . $basename,
+                'D:/01. Project/04. Website/pln/berkas/' . $basename,
+                'D:/01. Project/04. Website/pln/webapp/public/uploads/instansi/' . $basename,
+                '\\\\192.168.1.10\\foreign-pc1\\02. Aplikasi\\XAMPP\\htdocs\\webapp\\public\\uploads\\instansi\\' . $basename,
+            ];
+            foreach ($candidates as $cand) {
+                if (file_exists($cand) && is_file($cand)) {
+                    $path = $cand;
+                    break;
+                }
+            }
         }
 
         if (!file_exists($path) || !is_file($path)) {

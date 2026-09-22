@@ -42,7 +42,7 @@ final class ApiListAction
         }
         
         $sql = "
-            SELECT s.kds, s.stambuk, s.nama, s.kelas, s.rayon, s.negara, s.kewarganegaraan, s.pondok, s.kepengurusan, s.daerah, s.aktif, s.status_santri,
+            SELECT s.kds, s.stambuk, s.nama, s.kelas, s.rayon, s.negara, s.kewarganegaraan, s.pondok, s.kepengurusan, s.negara AS daerah, s.aktif, s.status_santri,
                    p.no_paspor, p.exp_paspor, i.no_itas, i.exp_itas, i.level_itas as lvl
             FROM master_santri s
             LEFT JOIN (SELECT kds, no_paspor, exp_paspor FROM mtb_paspor WHERE id IN (SELECT MAX(id) FROM mtb_paspor GROUP BY kds)) p ON s.kds = p.kds

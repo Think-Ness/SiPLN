@@ -44,63 +44,228 @@ $formatRupiah = function($num) {
 }
 
 /* ===== CARD HOVER ===== */
-.card-keuangan { transition: transform .2s, box-shadow .2s; cursor: default; }
-.card-keuangan:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,.12) !important; }
-.card-keuangan.clickable { cursor: pointer; }
+.card-keuangan {
+    transition: transform .2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow .2s ease;
+    cursor: default;
+    border-radius: 14px;
+}
+.card-keuangan:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(0,0,0,.1) !important;
+}
+.card-keuangan.clickable {
+    cursor: pointer;
+}
+.card-keuangan.clickable:active {
+    transform: scale(0.98);
+}
 
-/* ===== FILTER SUMMARY - MATCH EXISTING UI STYLE ===== */
+/* ===== FILTER & REKAP SECTION ===== */
 .filter-jobdesk-section {
     background: white;
-    border: 1px solid #e8ecf0;
-    border-radius: 16px;
-    padding: 24px;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,.05);
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,.03);
 }
 .filter-jobdesk-section .section-title {
-    font-size: .7rem;
+    font-size: .8rem;
     font-weight: 700;
-    letter-spacing: .08em;
+    letter-spacing: .04em;
     text-transform: uppercase;
-    color: #6c757d;
-    margin-bottom: 16px;
+    color: #334155;
     display: flex;
     align-items: center;
     gap: 8px;
 }
-.summary-stat-card {
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
+
+/* ===== MICRO SUMMARY CARDS (NO OVERLAP) ===== */
+.micro-stat-card {
     border-radius: 12px;
-    padding: 14px 16px;
-    transition: all .2s;
+    padding: 10px 12px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-align: left;
+    transition: transform .15s ease, box-shadow .15s ease;
+    min-height: 80px;
     position: relative;
     overflow: hidden;
 }
-.summary-stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0;
-    width: 4px; height: 100%;
-    border-radius: 2px 0 0 2px;
+.micro-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,.12);
 }
-.summary-stat-card.accent-blue::before { background: #0d6efd; }
-.summary-stat-card.accent-orange::before { background: #fd7e14; }
-.summary-stat-card.accent-danger::before { background: #dc3545; }
-.summary-stat-card.accent-teal::before { background: #20c997; }
-.summary-stat-card.accent-red::before { background: #dc3545; }
-.summary-stat-card.accent-green::before { background: #198754; }
-.summary-stat-card:hover { background: #f0f4ff; border-color: #c9d4f7; }
-.summary-stat-label { font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #9fa8b3; margin-bottom: 4px; }
-.summary-stat-value { font-size: .95rem; font-weight: 700; color: #1a2035; }
-.summary-stat-sub { font-size: .65rem; color: #9fa8b3; margin-top: 3px; }
+.micro-stat-card .card-top-label {
+    font-size: .65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    opacity: .88;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.micro-stat-card .card-main-val {
+    font-size: .95rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin: 4px 0 2px 0;
+    word-break: break-word;
+}
+.micro-stat-card .card-sub-note {
+    font-size: .63rem;
+    opacity: .82;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ===== CHART CONTAINER ===== */
+.chart-container-responsive {
+    position: relative;
+    height: 260px;
+    width: 100%;
+}
+
+/* ===== TABLE & STICKY ACTION ===== */
+.keuangan-table-wrapper {
+    max-height: calc(100vh - 280px);
+    min-height: 280px;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    position: relative;
+    border-radius: 12px;
+}
+.keuangan-table-wrapper::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+.keuangan-table-wrapper::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+.keuangan-table-wrapper table {
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 820px;
+    width: 100%;
+    margin-bottom: 0;
+}
+.keuangan-table-wrapper thead th {
+    background: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0;
+    color: #475569;
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 10px 12px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+/* Sticky Action Column on the right */
+.keuangan-sticky-action {
+    position: sticky;
+    right: 0;
+    z-index: 8;
+    background-color: #ffffff !important;
+    box-shadow: -4px 0 8px -2px rgba(0,0,0,0.06);
+}
+.keuangan-table-wrapper thead th.keuangan-sticky-action {
+    position: sticky;
+    top: 0;
+    right: 0;
+    z-index: 12;
+    background-color: #f8fafc !important;
+    box-shadow: -4px 0 8px -2px rgba(0,0,0,0.06);
+}
+.keuangan-table-wrapper tbody td {
+    padding: 10px 12px;
+    font-size: 0.82rem;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+}
+.keuangan-table-wrapper tbody tr:hover td {
+    background-color: #f8fafc;
+}
+.keuangan-table-wrapper tbody tr:hover td.keuangan-sticky-action {
+    background-color: #f8fafc !important;
+}
+
+/* Page Header Controls */
+.page-header-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+.page-header-controls .btn {
+    font-size: 0.78rem;
+    padding: 6px 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    border-radius: 20px;
+}
 
 /* ===== CICILAN PROGRESS ===== */
-.progress-cicilan { height: 7px; border-radius: 4px; background: #e9ecef; }
+.progress-cicilan { height: 6px; border-radius: 4px; background: #e9ecef; }
 .badge-cicil { font-size: .63rem; }
 
 /* ===== DRAG SELECT HINT ===== */
 .drag-select-hint { font-size: .68rem; color: #9fa8b3; font-style: italic; }
+
+/* ===== RESPONSIVE OVERRIDES ===== */
+@media (max-width: 991.98px) {
+    .page-header-responsive {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px;
+    }
+    .page-header-controls {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+    }
+    .page-header-controls .btn {
+        width: 100%;
+        padding: 6px 10px;
+        font-size: 0.75rem;
+    }
+    .card-keuangan {
+        border-radius: 12px;
+    }
+    .filter-jobdesk-section {
+        padding: 14px 16px;
+    }
+    .chart-container-responsive {
+        height: 220px;
+    }
+    .keuangan-table-wrapper {
+        max-height: 52vh;
+    }
+}
+@media (max-width: 575.98px) {
+    .filter-jobdesk-section {
+        padding: 12px;
+    }
+    .micro-stat-card {
+        min-height: 74px;
+        padding: 8px 10px;
+    }
+    .micro-stat-card .card-main-val {
+        font-size: .88rem;
+    }
+}
 </style>
 
 <!-- Hidden Print Areas -->
@@ -110,83 +275,99 @@ $formatRupiah = function($num) {
 <div class="container-fluid px-0">
 
     <!-- === HEADER === -->
-    <div class="d-flex align-items-center justify-content-between mb-4">
-        <div>
-            <h4 class="fw-bold text-dark mb-1"><i class="bi bi-graph-up-arrow text-primary me-2"></i>Dashboard Operasional Birokrasi</h4>
-            <p class="text-muted small mb-0">Analitik finansial terpadu dari pengajuan proses Job Desk</p>
-        </div>
-        <a href="<?= API_URL ?>/job-desk" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-medium shadow-sm">
-            <i class="bi bi-arrow-left me-1"></i>Ke Job Desk
-        </a>
-    </div>
-
-    <!-- === FINANCIAL CARDS === -->
-    <div class="row g-3 mb-4">
-        <div class="col-lg col-md-4 col-12">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden card-keuangan" style="background: linear-gradient(135deg, #198754 0%, #146c43 100%); color:white;">
-                <div class="card-body p-3 position-relative">
-                    <div class="mb-1 opacity-75 fw-semibold small text-uppercase" style="letter-spacing:.06em; font-size:.65rem;">Pemasukan Operasional</div>
-                    <h4 class="fw-bolder mb-1" style="font-size:1.15rem;"><?= $formatRupiah($totalSurplus) ?></h4>
-                    <div class="small opacity-75" style="font-size:.65rem;"><i class="bi bi-info-circle me-1"></i>Dari transaksi lunas</div>
-                    <i class="bi bi-wallet2 position-absolute opacity-10" style="font-size:4.5rem;right:-10px;bottom:-15px;"></i>
-                </div>
+    <div class="d-flex align-items-center justify-content-between mb-3 page-header-responsive">
+        <div class="d-flex align-items-center gap-2">
+            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 shadow-sm" style="width: 38px; height: 38px; background: rgba(13, 110, 253, 0.1);">
+                <i class="bi bi-graph-up-arrow text-primary fs-5"></i>
+            </div>
+            <div>
+                <h5 class="fw-bold text-dark mb-0" style="letter-spacing: -.3px;">Dashboard Operasional Birokrasi</h5>
+                <p class="text-muted small mb-0" style="font-size: .75rem;">Analitik finansial &amp; rekap transaksi Job Desk</p>
             </div>
         </div>
-        <div class="col-lg col-md-4 col-6">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden card-keuangan clickable"
-                 style="background: linear-gradient(135deg, #fd7e14 0%, #d9640b 100%); color:white;"
-                 onclick="new bootstrap.Modal(document.getElementById('piutangModal')).show()">
-                <div class="card-body p-3 position-relative">
-                    <div class="mb-1 opacity-75 fw-semibold small text-uppercase" style="letter-spacing:.06em; font-size:.65rem;">Piutang Santri <i class="bi bi-box-arrow-up-right ms-1"></i></div>
-                    <h4 class="fw-bolder mb-1" style="font-size:1.15rem;"><?= $formatRupiah($piutangSantri) ?></h4>
-                    <div class="small opacity-75" style="font-size:.65rem;"><i class="bi bi-info-circle me-1"></i>Klik untuk bayar / cicil</div>
-                    <i class="bi bi-person-down position-absolute opacity-10" style="font-size:4.5rem;right:-10px;bottom:-15px;"></i>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg col-md-4 col-6">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden card-keuangan clickable"
-                 style="background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%); color:white;"
-                 onclick="new bootstrap.Modal(document.getElementById('hutangInstansiModal')).show()">
-                <div class="card-body p-3 position-relative">
-                    <div class="mb-1 opacity-75 fw-semibold small text-uppercase" style="letter-spacing:.06em; font-size:.65rem;">Hutang Instansi <i class="bi bi-box-arrow-up-right ms-1"></i></div>
-                    <h4 class="fw-bolder mb-1" style="font-size:1.15rem;"><?= $formatRupiah($hutangInstansi) ?></h4>
-                    <div class="small opacity-75" style="font-size:.65rem;"><i class="bi bi-info-circle me-1"></i>Klik untuk bayar</div>
-                    <i class="bi bi-bank2 position-absolute opacity-10" style="font-size:4.5rem;right:-10px;bottom:-15px;"></i>
-                </div>
-            </div>
+        <div class="page-header-controls">
+            <a href="<?= API_URL ?>/job-desk/pengeluaran-operasional" class="btn btn-sm btn-outline-primary fw-semibold">
+                <i class="bi bi-receipt-cutoff me-1"></i> Pengeluaran
+            </a>
+            <a href="<?= API_URL ?>/job-desk" class="btn btn-sm btn-outline-secondary fw-semibold">
+                <i class="bi bi-arrow-left me-1"></i> Ke Job Desk
+            </a>
         </div>
     </div>
 
-    <!-- === FILTER KUMULATIF PER JOBDESK (UI matching existing style) === -->
-    <div class="filter-jobdesk-section mb-4">
-        <div class="d-flex align-items-center justify-content-between mb-3">
+    <!-- === FINANCIAL CARDS (COMPACT) === -->
+    <div class="row g-2 mb-3">
+        <div class="col-12 col-md-4">
+            <div class="card border-0 shadow-sm overflow-hidden card-keuangan h-100" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color:white;">
+                <div class="card-body p-2.5 p-md-3 position-relative d-flex flex-column justify-content-between">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="opacity-80 fw-semibold text-uppercase" style="letter-spacing:.05em; font-size:.65rem;">Pemasukan Operasional</span>
+                        <span class="badge bg-white bg-opacity-25 rounded-pill px-2 py-0.5" style="font-size: .65rem;"><i class="bi bi-wallet2"></i></span>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0 text-truncate" style="font-size:1.2rem;"><?= $formatRupiah($totalSurplus) ?></h4>
+                    </div>
+                    <div class="small opacity-80 mt-1 text-truncate" style="font-size:.68rem;"><i class="bi bi-check2-circle me-1"></i>Dari transaksi lunas</div>
+                    <i class="bi bi-wallet2 position-absolute opacity-10" style="font-size:3.5rem;right:8px;bottom:-6px;pointer-events:none;"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4">
+            <div class="card border-0 shadow-sm overflow-hidden card-keuangan clickable h-100"
+                 style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color:white;"
+                 onclick="new bootstrap.Modal(document.getElementById('piutangModal')).show()"
+                 title="Klik untuk melihat / bayar cicilan">
+                <div class="card-body p-2.5 p-md-3 position-relative d-flex flex-column justify-content-between">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="opacity-80 fw-semibold text-uppercase text-truncate" style="letter-spacing:.05em; font-size:.65rem;">Piutang Santri</span>
+                        <span class="badge bg-white bg-opacity-25 rounded-pill px-1.5 py-0.5" style="font-size: .62rem;"><i class="bi bi-box-arrow-up-right"></i></span>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0 text-truncate" style="font-size:1.2rem;"><?= $formatRupiah($piutangSantri) ?></h4>
+                    </div>
+                    <div class="small opacity-80 mt-1 text-truncate" style="font-size:.68rem;"><i class="bi bi-hand-index-thumb me-1"></i>Klik bayar/cicil</div>
+                    <i class="bi bi-person-down position-absolute opacity-10" style="font-size:3.5rem;right:8px;bottom:-6px;pointer-events:none;"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4">
+            <div class="card border-0 shadow-sm overflow-hidden card-keuangan clickable h-100"
+                 style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color:white;"
+                 onclick="new bootstrap.Modal(document.getElementById('hutangInstansiModal')).show()"
+                 title="Klik untuk melihat / lunasi instansi">
+                <div class="card-body p-2.5 p-md-3 position-relative d-flex flex-column justify-content-between">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="opacity-80 fw-semibold text-uppercase text-truncate" style="letter-spacing:.05em; font-size:.65rem;">Hutang Instansi</span>
+                        <span class="badge bg-white bg-opacity-25 rounded-pill px-1.5 py-0.5" style="font-size: .62rem;"><i class="bi bi-box-arrow-up-right"></i></span>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0 text-truncate" style="font-size:1.2rem;"><?= $formatRupiah($hutangInstansi) ?></h4>
+                    </div>
+                    <div class="small opacity-80 mt-1 text-truncate" style="font-size:.68rem;"><i class="bi bi-hand-index-thumb me-1"></i>Klik untuk bayar</div>
+                    <i class="bi bi-bank2 position-absolute opacity-10" style="font-size:3.5rem;right:8px;bottom:-6px;pointer-events:none;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- === FILTER KUMULATIF PER JOBDESK (2 COLUMNS PER ROW IN MOBILE, NO OVERLAP) === -->
+    <div class="filter-jobdesk-section mb-3">
+        <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
             <div class="section-title">
                 <i class="bi bi-funnel-fill text-primary"></i>
-                Filter &amp; Summary Per Jenis Jobdesk
+                Filter &amp; Rekap Per Jenis Jobdesk
             </div>
-            <div class="d-flex gap-2 align-items-center">
-                <?php if (!empty($semuaInstansi)): ?>
-                <select id="printInstansiSelect" class="form-select form-select-sm rounded-pill" style="width: auto; font-size:.7rem;">
-                    <option value="">-- Gunakan Kop Default --</option>
-                    <?php foreach ($semuaInstansi as $inst): ?>
-                        <option value="<?= htmlspecialchars(json_encode($inst), ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($inst['nama_instansi']) ?></option>
-                    <?php endforeach; ?>
-                </select>
-                <?php endif; ?>
-                <button class="btn btn-sm btn-primary rounded-pill px-3 fw-bold" onclick="printRekapSantri()">
-                    <i class="bi bi-printer me-1"></i>Print Rekap Piutang
-                </button>
-                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="resetFilterJobdesk()">
+            <div class="d-flex gap-1.5 align-items-center flex-wrap">
+                <button class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-1" style="font-size:.75rem;" onclick="resetFilterJobdesk()">
                     <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Filter
                 </button>
             </div>
         </div>
-        <div class="row g-3 mb-4 align-items-end">
-            <div class="col-md-4">
-                <label class="form-label small fw-bold text-muted mb-1">Pilih Jenis Proses / Jobdesk</label>
-                <select class="form-select" id="filterJobdesk" onchange="applyFilterJobdesk()">
-                    <option value="">— Semua Jenis Proses —</option>
+        <div class="row g-2 mb-3">
+            <div class="col-12 col-md-5">
+                <label class="form-label small fw-semibold text-muted mb-1" style="font-size:.72rem;">Pilih Jenis Job Desk / Proses</label>
+                <select class="form-select form-select-sm rounded-3" id="filterJobdesk" onchange="applyFilterJobdesk()" style="font-size:.8rem;">
+                    <option value="">— Semua Jenis Proses / Jobdesk —</option>
                     <?php foreach ($summaryPerJobdesk as $s): ?>
                         <option value="<?= $s['process_id'] ?>" data-info='<?= htmlspecialchars(json_encode($s), ENT_QUOTES, 'UTF-8') ?>'>
                             <?= htmlspecialchars($s['nama_proses']) ?> (<?= $s['jumlah_kasus'] ?> kasus)
@@ -194,11 +375,25 @@ $formatRupiah = function($num) {
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="col-md-8">
-                <div class="small text-muted"><i class="bi bi-info-circle me-1"></i>Pilih jenis proses untuk melihat rekapitulasi kumulatif dan memfilter tabel transaksi di bawah.</div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold text-muted mb-1" style="font-size:.72rem;">Pilihan Kop Cetak Rekap</label>
+                <select id="printInstansiSelect" class="form-select form-select-sm rounded-3" style="font-size:.8rem;">
+                    <option value="">-- Gunakan Kop Default --</option>
+                    <?php if (!empty($semuaInstansi)): ?>
+                        <?php foreach ($semuaInstansi as $inst): ?>
+                            <option value="<?= htmlspecialchars(json_encode($inst), ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($inst['nama_instansi']) ?></option>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </select>
+            </div>
+            <div class="col-12 col-md-3 d-flex align-items-end">
+                <button class="btn btn-sm btn-primary rounded-3 w-100 py-1.5 fw-bold" style="font-size:.78rem;" onclick="printRekapSantri()">
+                    <i class="bi bi-printer me-1"></i>Print Rekap Piutang
+                </button>
             </div>
         </div>
-        <!-- Summary Cards -->
+
+        <!-- 6 Summary Cards (2 cols per row on mobile, 3 on tablet, 6 on desktop) -->
         <?php
         $allKasus      = array_sum(array_column($summaryPerJobdesk, 'jumlah_kasus'));
         $allSantriTotal= array_sum(array_column($summaryPerJobdesk, 'total_nominal_santri'));
@@ -210,135 +405,157 @@ $formatRupiah = function($num) {
         $allSelisih    = array_sum(array_column($summaryPerJobdesk, 'total_selisih'));
         ?>
         <div class="row g-2" id="summaryJobdeskCards">
-            <div class="col-6 col-md-2">
-                <div class="bg-primary text-white rounded-3 p-2 h-100 d-flex flex-column justify-content-center align-items-center text-center shadow-sm" style="min-height:70px;">
-                    <div class="opacity-75 fw-semibold mb-1" style="font-size:.6rem;text-transform:uppercase;letter-spacing:.5px;">Total Kasus</div>
-                    <div class="fw-bold mb-0 lh-1" id="sv_kasus" style="font-size:1.1rem;"><?= $allKasus ?></div>
-                    <div class="opacity-75 mt-1" style="font-size:.6rem;">job desk</div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="micro-stat-card shadow-sm" style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); color:white;">
+                    <div class="card-top-label">
+                        <span>Total Kasus</span>
+                        <i class="bi bi-folder2-open"></i>
+                    </div>
+                    <div class="card-main-val" id="sv_kasus"><?= $allKasus ?></div>
+                    <div class="card-sub-note">Job Desk Aktif</div>
                 </div>
             </div>
-            <div class="col-6 col-md-2">
-                <div class="bg-info text-white rounded-3 p-2 h-100 d-flex flex-column justify-content-center align-items-center text-center shadow-sm">
-                    <div class="opacity-75 fw-semibold mb-1" style="font-size:.6rem;text-transform:uppercase;letter-spacing:.5px;">Tagihan Santri</div>
-                    <div class="fw-bold mb-0 lh-1" id="sv_santri" style="font-size:.85rem;"><?= $formatRupiah($allSantriTotal) ?></div>
-                    <div class="opacity-75 mt-1" id="sv_lunas_santri" style="font-size:.6rem;">Lunas: <?= $formatRupiah($allLunasSantri) ?></div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="micro-stat-card shadow-sm" style="background: linear-gradient(135deg, #0dcaf0 0%, #0aa2c0 100%); color:white;">
+                    <div class="card-top-label">
+                        <span>Tagihan Santri</span>
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <div class="card-main-val" id="sv_santri"><?= $formatRupiah($allSantriTotal) ?></div>
+                    <div class="card-sub-note" id="sv_lunas_santri">Lunas: <?= $formatRupiah($allLunasSantri) ?></div>
                 </div>
             </div>
-            <div class="col-6 col-md-2">
-                <div class="bg-danger text-white rounded-3 p-2 h-100 d-flex flex-column justify-content-center align-items-center text-center shadow-sm">
-                    <div class="opacity-75 fw-semibold mb-1" style="font-size:.6rem;text-transform:uppercase;letter-spacing:.5px;">Piutang Santri</div>
-                    <div class="fw-bold mb-0 lh-1" id="sv_belum_santri" style="font-size:.85rem;"><?= $formatRupiah($allBelumSantri) ?></div>
-                    <div class="opacity-75 mt-1" style="font-size:.6rem;">belum dibayar</div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="micro-stat-card shadow-sm" style="background: linear-gradient(135deg, #e11d48 0%, #be123c 100%); color:white;">
+                    <div class="card-top-label">
+                        <span>Piutang Santri</span>
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <div class="card-main-val" id="sv_belum_santri"><?= $formatRupiah($allBelumSantri) ?></div>
+                    <div class="card-sub-note">Belum Dibayar</div>
                 </div>
             </div>
-            <div class="col-6 col-md-2">
-                <div class="bg-secondary text-white rounded-3 p-2 h-100 d-flex flex-column justify-content-center align-items-center text-center shadow-sm">
-                    <div class="opacity-75 fw-semibold mb-1" style="font-size:.6rem;text-transform:uppercase;letter-spacing:.5px;">Ke Instansi</div>
-                    <div class="fw-bold mb-0 lh-1" id="sv_instansi" style="font-size:.85rem;"><?= $formatRupiah($allInstansi) ?></div>
-                    <div class="opacity-75 mt-1" id="sv_lunas_instansi" style="font-size:.6rem;">Lunas: <?= $formatRupiah($allLunasInst) ?></div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="micro-stat-card shadow-sm" style="background: linear-gradient(135deg, #64748b 0%, #475569 100%); color:white;">
+                    <div class="card-top-label">
+                        <span>Ke Instansi</span>
+                        <i class="bi bi-building"></i>
+                    </div>
+                    <div class="card-main-val" id="sv_instansi"><?= $formatRupiah($allInstansi) ?></div>
+                    <div class="card-sub-note" id="sv_lunas_instansi">Lunas: <?= $formatRupiah($allLunasInst) ?></div>
                 </div>
             </div>
-            <div class="col-6 col-md-2">
-                <div class="bg-warning text-dark rounded-3 p-2 h-100 d-flex flex-column justify-content-center align-items-center text-center shadow-sm">
-                    <div class="opacity-75 fw-semibold mb-1" style="font-size:.6rem;text-transform:uppercase;letter-spacing:.5px;">Hutang Instansi</div>
-                    <div class="fw-bold mb-0 lh-1" id="sv_belum_instansi" style="font-size:.85rem;"><?= $formatRupiah($allBelumInst) ?></div>
-                    <div class="opacity-75 mt-1" style="font-size:.6rem;">belum disetor</div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="micro-stat-card shadow-sm" style="background: linear-gradient(135deg, #d97706 0%, #b45309 100%); color:white;">
+                    <div class="card-top-label">
+                        <span>Hutang Instansi</span>
+                        <i class="bi bi-exclamation-circle"></i>
+                    </div>
+                    <div class="card-main-val" id="sv_belum_instansi"><?= $formatRupiah($allBelumInst) ?></div>
+                    <div class="card-sub-note">Belum Disetor</div>
                 </div>
             </div>
-            <div class="col-6 col-md-2">
-                <div class="bg-success text-white rounded-3 p-2 h-100 d-flex flex-column justify-content-center align-items-center text-center shadow-sm">
-                    <div class="opacity-75 fw-semibold mb-1" style="font-size:.6rem;text-transform:uppercase;letter-spacing:.5px;">Uang Opr.</div>
-                    <div class="fw-bold mb-0 lh-1" id="sv_selisih" style="font-size:.85rem;"><?= $formatRupiah($allSelisih) ?></div>
-                    <div class="opacity-75 mt-1" style="font-size:.6rem;">masuk kas</div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="micro-stat-card shadow-sm" style="background: linear-gradient(135deg, #10b981 0%, #047857 100%); color:white;">
+                    <div class="card-top-label">
+                        <span>Uang Operasional</span>
+                        <i class="bi bi-cash-stack"></i>
+                    </div>
+                    <div class="card-main-val" id="sv_selisih"><?= $formatRupiah($allSelisih) ?></div>
+                    <div class="card-sub-note">Masuk Kas</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- === CHART (Modern, Light Mode) === -->
-    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
-        <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h6 class="fw-bold text-dark mb-0"><i class="bi bi-bar-chart-line-fill text-primary me-2"></i>Tren Uang Operasional &amp; Penerimaan</h6>
-                    <div class="text-muted small mt-1">12 bulan terakhir — data real-time</div>
-                </div>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 active" id="chartTypeLine" onclick="switchChart('line')">
-                        <i class="bi bi-graph-up me-1"></i>Garis
-                    </button>
-                    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="chartTypeBar" onclick="switchChart('bar')">
-                        <i class="bi bi-bar-chart me-1"></i>Batang
-                    </button>
-                </div>
+    <!-- === CHART (Spacious Responsive Canvas) === -->
+    <div class="card border-0 shadow-sm rounded-3 mb-3 overflow-hidden">
+        <div class="card-header bg-white border-bottom-0 pt-3 pb-1 px-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <span class="fw-bold text-dark small d-flex align-items-center gap-1.5" style="font-size:.82rem;">
+                    <i class="bi bi-bar-chart-line-fill text-primary"></i> Tren Uang Operasional &amp; Penerimaan
+                </span>
+                <span class="text-muted" style="font-size:.7rem;">12 bulan terakhir — data real-time</span>
+            </div>
+            <div class="d-flex gap-1.5">
+                <button class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-0.5 active" id="chartTypeLine" onclick="switchChart('line')" style="font-size:.72rem;">
+                    <i class="bi bi-graph-up me-1"></i>Garis
+                </button>
+                <button class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-0.5" id="chartTypeBar" onclick="switchChart('bar')" style="font-size:.72rem;">
+                    <i class="bi bi-bar-chart me-1"></i>Batang
+                </button>
             </div>
         </div>
-        <div class="card-body px-4 pb-4 pt-2">
-            <canvas id="keuanganChart" height="70"></canvas>
+        <div class="card-body px-2 px-md-3 pb-3 pt-1">
+            <div class="chart-container-responsive">
+                <canvas id="keuanganChart"></canvas>
+            </div>
         </div>
     </div>
 
-    <!-- === TRANSACTION TABLE (with filter from jobdesk) === -->
-    <div class="card border-0 shadow-sm rounded-4 mb-5">
-        <div class="card-header bg-white border-bottom px-4 py-3 d-flex justify-content-between align-items-center">
-            <h6 class="fw-bold text-dark mb-0"><i class="bi bi-table text-primary me-2"></i>Daftar Lengkap Transaksi Job Desk</h6>
-            <div class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2" id="filterActiveLabel" style="display:none;">
+    <!-- === TRANSACTION TABLE (COMPACT WITH STICKY ACTION) === -->
+    <div class="card border-0 shadow-sm rounded-3 mb-4 overflow-hidden">
+        <div class="card-header bg-white border-bottom px-3 py-2.5 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span class="fw-bold text-dark small d-flex align-items-center gap-1.5" style="font-size:.82rem;">
+                <i class="bi bi-table text-primary"></i> Daftar Lengkap Transaksi Job Desk
+            </span>
+            <div class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1" id="filterActiveLabel" style="display:none; font-size:.7rem;">
                 <i class="bi bi-funnel-fill me-1"></i><span id="filterActiveName">Filter aktif</span>
             </div>
         </div>
-        <div class="card-body p-4">
-            <div class="table-responsive">
+        <div class="card-body p-2.5 p-md-3">
+            <div class="keuangan-table-wrapper border rounded-3">
                 <table class="table table-hover align-middle mb-0" id="txTable" style="width:100%">
-                    <thead class="table-light">
+                    <thead>
                         <tr>
-                            <th class="ps-3 border-0">Data Santri</th>
-                            <th class="border-0">Proses Job Desk</th>
-                            <th class="border-0">Pembayaran Santri</th>
-                            <th class="border-0">Pembayaran Instansi</th>
-                            <th class="border-0">Uang Operasional</th>
-                            <th class="border-0">Tanggal Update</th>
-                            <th class="pe-3 border-0 text-end">Aksi</th>
+                            <th class="ps-3" style="min-width: 170px;">Data Santri</th>
+                            <th style="min-width: 150px;">Proses Job Desk</th>
+                            <th style="min-width: 150px;">Pembayaran Santri</th>
+                            <th style="min-width: 150px;">Pembayaran Instansi</th>
+                            <th style="min-width: 130px;">Uang Operasional</th>
+                            <th style="min-width: 120px;">Tanggal Update</th>
+                            <th class="pe-3 text-center keuangan-sticky-action" style="width: 80px;">Aksi</th>
                         </tr>
                         <tr class="search-row bg-light border-bottom">
-                            <th class="ps-3 py-2"><input type="text" class="form-control form-control-sm" placeholder="Cari santri..."></th>
-                            <th class="py-2"><input type="text" class="form-control form-control-sm" placeholder="Cari proses..." id="txFilterProses"></th>
-                            <th class="py-2"><input type="text" class="form-control form-control-sm" placeholder="Cari (cth: lunas)..."></th>
-                            <th class="py-2"><input type="text" class="form-control form-control-sm" placeholder="Cari (cth: belum)..."></th>
-                            <th class="py-2"></th>
-                            <th class="py-2"><input type="text" class="form-control form-control-sm" placeholder="Cari tanggal..."></th>
-                            <th class="pe-3 py-2"></th>
+                            <th class="ps-3 py-1.5"><input type="text" class="form-control form-control-sm" placeholder="Cari santri..." style="font-size:.72rem;"></th>
+                            <th class="py-1.5"><input type="text" class="form-control form-control-sm" placeholder="Cari proses..." id="txFilterProses" style="font-size:.72rem;"></th>
+                            <th class="py-1.5"><input type="text" class="form-control form-control-sm" placeholder="Cari (cth: lunas)..." style="font-size:.72rem;"></th>
+                            <th class="py-1.5"><input type="text" class="form-control form-control-sm" placeholder="Cari (cth: belum)..." style="font-size:.72rem;"></th>
+                            <th class="py-1.5"></th>
+                            <th class="py-1.5"><input type="text" class="form-control form-control-sm" placeholder="Cari tanggal..." style="font-size:.72rem;"></th>
+                            <th class="pe-3 py-1.5 keuangan-sticky-action"></th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($transactions as $tx): ?>
                         <tr class="<?= ($tx['status_bayar_santri'] === 'belum') ? 'table-warning' : '' ?>">
                             <td class="ps-3">
-                                <div class="fw-bold text-dark" style="font-size:.85rem;"><?= htmlspecialchars($tx['nama']) ?></div>
-                                <div class="text-muted small">KDS: <?= htmlspecialchars($tx['kds']) ?></div>
+                                <div class="fw-bold text-dark" style="font-size:.82rem;"><?= htmlspecialchars($tx['nama']) ?></div>
+                                <div class="text-muted" style="font-size:.68rem;">KDS: <?= htmlspecialchars($tx['kds']) ?></div>
                             </td>
                             <td>
-                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-1"><?= htmlspecialchars($tx['nama_proses']) ?></span>
-                                <div class="text-muted mt-1" style="font-size:.7rem;">Case #<?= $tx['case_id'] ?></div>
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-0.5" style="font-size:.68rem;"><?= htmlspecialchars($tx['nama_proses']) ?></span>
+                                <div class="text-muted mt-0.5" style="font-size:.65rem;">Case #<?= $tx['case_id'] ?></div>
                             </td>
                             <td>
                                 <div class="fw-bold text-dark" style="font-size:.8rem;"><?= $formatRupiah((float)$tx['nominal_santri']) ?></div>
                                 <?php if ($tx['status_bayar_santri'] === 'lunas'): ?>
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill mt-1" style="font-size:.62rem;"><i class="bi bi-check2"></i> Lunas <?= $tx['tgl_bayar_santri'] ? '('.date('d/m/y', strtotime($tx['tgl_bayar_santri'])).')' : '' ?></span>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill mt-0.5" style="font-size:.62rem;"><i class="bi bi-check2"></i> Lunas <?= $tx['tgl_bayar_santri'] ? '('.date('d/m/y', strtotime($tx['tgl_bayar_santri'])).')' : '' ?></span>
                                 <?php else: ?>
                                     <?php $totC = (float)($tx['total_cicilan'] ?? 0); $jmlC = (int)($tx['jumlah_cicilan'] ?? 0); ?>
                                     <?php if ($jmlC > 0): ?>
-                                        <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill mt-1 badge-cicil"><i class="bi bi-arrow-repeat me-1"></i>Cicilan <?= $jmlC ?>x (<?= $formatRupiah($totC) ?>)</span>
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill mt-0.5 badge-cicil"><i class="bi bi-arrow-repeat me-1"></i>Cicil <?= $jmlC ?>x (<?= $formatRupiah($totC) ?>)</span>
                                     <?php else: ?>
-                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill mt-1 fw-bold" style="font-size:.62rem;">Belum Bayar</span>
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill mt-0.5 fw-bold" style="font-size:.62rem;">Belum Bayar</span>
                                     <?php endif; ?>
                                 <?php endif; ?>
                             </td>
                             <td>
                                 <div class="fw-bold text-dark" style="font-size:.8rem;"><?= $formatRupiah((float)$tx['nominal_instansi']) ?></div>
                                 <?php if ($tx['status_bayar_instansi'] === 'lunas'): ?>
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill mt-1" style="font-size:.62rem;"><i class="bi bi-check2"></i> Lunas <?= $tx['tgl_bayar_instansi'] ? '('.date('d/m/y', strtotime($tx['tgl_bayar_instansi'])).')' : '' ?></span>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill mt-0.5" style="font-size:.62rem;"><i class="bi bi-check2"></i> Lunas <?= $tx['tgl_bayar_instansi'] ? '('.date('d/m/y', strtotime($tx['tgl_bayar_instansi'])).')' : '' ?></span>
                                 <?php else: ?>
-                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill mt-1" style="font-size:.62rem;">Belum Dibayar</span>
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill mt-0.5" style="font-size:.62rem;">Belum Dibayar</span>
                                 <?php endif; ?>
                             </td>
                             <td>
@@ -346,20 +563,20 @@ $formatRupiah = function($num) {
                                 $isLunasSemua = ($tx['status_bayar_santri']==='lunas' && $tx['status_bayar_instansi']==='lunas');
                                 $surplus = (float)$tx['selisih_operasional'];
                                 ?>
-                                <div class="fw-bold <?= $isLunasSemua ? 'text-success' : 'text-muted' ?>" style="font-size:.85rem;">
+                                <div class="fw-bold <?= $isLunasSemua ? 'text-success' : 'text-muted' ?>" style="font-size:.82rem;">
                                     <?= $isLunasSemua ? '+' : '' ?><?= $formatRupiah($surplus) ?>
                                 </div>
-                                <?php if (!$isLunasSemua): ?><div class="text-muted" style="font-size:.63rem;">(Belum valid)</div><?php endif; ?>
+                                <?php if (!$isLunasSemua): ?><div class="text-muted" style="font-size:.62rem;">(Belum valid)</div><?php endif; ?>
                             </td>
-                            <td class="text-muted" style="font-size:.78rem;"><?= date('d M Y H:i', strtotime($tx['updated_at'])) ?></td>
-                            <td class="pe-3 text-end">
+                            <td class="text-muted" style="font-size:.74rem;"><?= date('d M Y H:i', strtotime($tx['updated_at'])) ?></td>
+                            <td class="pe-3 text-center keuangan-sticky-action">
                                 <div class="dropdown">
-                                    <button class="btn btn-sm btn-light border rounded-pill shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <button class="btn btn-sm btn-light border rounded-pill shadow-sm dropdown-toggle py-0.5 px-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size:.75rem;">
                                         <i class="bi bi-gear"></i> Aksi
                                     </button>
-                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="font-size: .85rem;">
-                                        <li><a class="dropdown-item py-2" href="<?= API_URL ?>/job-desk/<?= $tx['case_id'] ?>"><i class="bi bi-eye text-primary me-2"></i>Lihat Detail</a></li>
-                                        <li><button class="dropdown-item py-2" onclick="printKwitansiRow(<?= $tx['case_id'] ?>, '<?= htmlspecialchars(addslashes($tx['nama'])) ?>', '<?= htmlspecialchars(addslashes($tx['kds'])) ?>', '<?= htmlspecialchars(addslashes($tx['nama_proses'])) ?>', <?= (float)$tx['nominal_santri'] ?>, <?= (float)($tx['total_cicilan'] ?? 0) ?>)"><i class="bi bi-receipt text-secondary me-2"></i>Cetak Kwitansi</button></li>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="font-size: .82rem;">
+                                        <li><a class="dropdown-item py-1.5" href="<?= API_URL ?>/job-desk/<?= $tx['case_id'] ?>"><i class="bi bi-eye text-primary me-2"></i>Lihat Detail</a></li>
+                                        <li><button class="dropdown-item py-1.5" onclick="printKwitansiRow(<?= $tx['case_id'] ?>, '<?= htmlspecialchars(addslashes($tx['nama'])) ?>', '<?= htmlspecialchars(addslashes($tx['kds'])) ?>', '<?= htmlspecialchars(addslashes($tx['nama_proses'])) ?>', <?= (float)$tx['nominal_santri'] ?>, <?= (float)($tx['total_cicilan'] ?? 0) ?>)"><i class="bi bi-receipt text-secondary me-2"></i>Cetak Kwitansi</button></li>
                                     </ul>
                                 </div>
                             </td>
@@ -371,7 +588,7 @@ $formatRupiah = function($num) {
         </div>
     </div>
 
-
+</div>
 
 <!-- ===== MODAL PIUTANG SANTRI ===== -->
 <div class="modal fade" id="piutangModal" tabindex="-1">
@@ -721,6 +938,7 @@ function buildChart(type) {
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
             plugins: {
                 legend: {

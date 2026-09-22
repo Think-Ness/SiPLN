@@ -31,6 +31,7 @@ final class MergeAction
         $itasIds = [];
         $dbIdsVirtual = [];
         $dbIdsSurat = [];
+        $dbIdsSuratDirect = [];
         
         foreach ($berkasIds as $id) {
             if (is_numeric($id)) {
@@ -52,6 +53,13 @@ final class MergeAction
                     $md5 = $parts[2];
                     $dbIdsVirtual[] = ['kds' => $kds, 'md5' => $md5];
                 }
+            } elseif (str_starts_with($id, 'surat_db_')) {
+                $parts = explode('_', $id);
+                if (count($parts) >= 4) {
+                    $suratId = (int)$parts[2];
+                    $kds = (int)$parts[3];
+                    $dbIdsSuratDirect[] = ['surat_id' => $suratId, 'kds' => $kds];
+                }
             } elseif (str_starts_with($id, 'surat_')) {
                 $parts = explode('_', $id);
                 if (count($parts) >= 3) {
@@ -68,8 +76,8 @@ final class MergeAction
         if (!empty($dbIds)) {
             $inList = implode(",", $dbIds);
             
-            // Pisahkan mana dokumen Instansi (Global)
-            $instansiCheck = $db->createCommand("SELECT id FROM mtb_berkas_penting WHERE id IN ($inList) AND (is_public = 1 OR kode IN (SELECT id FROM master_instansi))")->queryColumn();
+            // Pisahkan mana dokumen Instansi (Global maupun Khusus Instansi)
+            $instansiCheck = $db->createCommand("SELECT id FROM mtb_berkas_penting WHERE id IN ($inList) AND (is_public = 1 OR kode IN (SELECT kode FROM master_instansi))")->queryColumn();
             $dbIdsInstansi = array_map('intval', $instansiCheck);
             $dbIdsSantri = array_diff($dbIds, $dbIdsInstansi);
             
@@ -146,7 +154,13 @@ final class MergeAction
         if (!empty($itasIds)) {
             $inList = implode(",", $itasIds);
             // Label nama_berkas akan menyesuaikan dengan level ITAS yang sesungguhnya di database
-            $rows = $db->createCommand("SELECT i.path_file, CONCAT('Scan ITAS Lvl ', i.level_itas) as nama_berkas, 'Riwayat ITAS' as nama_unik, s.kds, s.nama as nama_santri FROM mtb_itas i JOIN master_santri s ON i.kds = s.kds WHERE i.id IN ($inList) AND i.path_file IS NOT NULL")->queryAll();
+            $rows = $db->createCommand("
+                SELECT i.id, i.path_file, CONCAT('Scan ITAS Lvl ', i.level_itas) as nama_berkas, 'Riwayat ITAS' as nama_unik, s.kds, s.nama as nama_santri, i.exp_itas as exp_date
+                FROM mtb_itas i 
+                JOIN master_santri s ON i.kds = s.kds 
+                WHERE i.id IN ($inList) AND i.path_file IS NOT NULL
+                ORDER BY (i.exp_itas IS NULL OR i.exp_itas = '' OR i.exp_itas = '0000-00-00') ASC, i.exp_itas DESC, i.id DESC
+            ")->queryAll();
             $berkas = array_merge($berkas, $rows);
         }
 
@@ -167,10 +181,59 @@ final class MergeAction
             $baseBerkasDir = rtrim(str_replace('\\', '/', $baseBerkasDir), '/');
             
             // Resolve file_
+            $extractDocType = function(string $basename, string $namaSantri = '', string $kodeSantri = ''): string {
+                $rawName = pathinfo($basename, PATHINFO_FILENAME);
+                $rawName = str_replace(['_', '-'], ' ', $rawName);
+
+                if (stripos($rawName, 'Curriculum Vitae') === 0 || stripos($rawName, 'CV') === 0) {
+                    return 'Curriculum Vitae';
+                } elseif (stripos($rawName, 'Scan IC Ayah') === 0 || stripos($rawName, 'IC Ayah') === 0) {
+                    return 'Scan IC Ayah';
+                } elseif (stripos($rawName, 'Scan IC Ibu') === 0 || stripos($rawName, 'IC Ibu') === 0) {
+                    return 'Scan IC Ibu';
+                } elseif (stripos($rawName, 'Scan IC Santri') === 0 || stripos($rawName, 'IC Santri') === 0 || stripos($rawName, 'Scan IC Calon') === 0) {
+                    return 'Scan IC Santri';
+                } elseif (stripos($rawName, 'Ijazah Rapor') === 0 || stripos($rawName, 'Ijazah') === 0 || stripos($rawName, 'Rapor') === 0) {
+                    return 'Ijazah Rapor';
+                } elseif (stripos($rawName, 'Surat Beranak') === 0 || stripos($rawName, 'Akta') === 0 || stripos($rawName, 'Kelahiran') === 0) {
+                    return 'Surat Beranak';
+                } elseif (stripos($rawName, 'Surat Kesanggupan Biaya') === 0 || stripos($rawName, 'Kesanggupan Biaya') === 0) {
+                    return 'Surat Kesanggupan Biaya';
+                } elseif (stripos($rawName, 'Surat Pelajar Asing') === 0 || stripos($rawName, 'Pelajar Asing') === 0) {
+                    return 'Surat Pelajar Asing';
+                } elseif (stripos($rawName, 'Surat Sehat') === 0 || stripos($rawName, 'Kesehatan') === 0) {
+                    return 'Surat Sehat';
+                } elseif (stripos($rawName, 'Surat Permohonan') === 0) {
+                    return 'Surat Permohonan';
+                } elseif (stripos($rawName, 'Surat Jaminan') === 0) {
+                    return 'Surat Jaminan';
+                } elseif (stripos($rawName, 'Surat Keterangan') === 0) {
+                    return 'Surat Keterangan';
+                } elseif (stripos($rawName, 'Surat Tugas') === 0) {
+                    return 'Surat Tugas';
+                }
+
+                $clean = $rawName;
+                if (!empty($kodeSantri)) {
+                    $clean = preg_replace('/\b' . preg_quote($kodeSantri, '/') . '\b/i', '', $clean);
+                }
+                if (!empty($namaSantri)) {
+                    $parts = preg_split('/\s+/', trim($namaSantri));
+                    foreach ($parts as $p) {
+                        if (strlen($p) >= 3) {
+                            $clean = preg_replace('/\b' . preg_quote($p, '/') . '\b/i', '', $clean);
+                        }
+                    }
+                }
+                $clean = preg_replace('/\b\d{6,}\b/', '', $clean);
+                $clean = trim(preg_replace('/\s+/', ' ', $clean));
+                return !empty($clean) ? ucwords(strtolower($clean)) : ucwords(strtolower($rawName));
+            };
+
             foreach ($dbIdsVirtual as $v) {
                 $kds = $v['kds'];
                 $md5 = $v['md5'];
-                $s = $db->createCommand("SELECT nama FROM master_santri WHERE kds = :kds")->bindValue(':kds', $kds)->queryOne();
+                $s = $db->createCommand("SELECT kode, nama FROM master_santri WHERE kds = :kds")->bindValue(':kds', $kds)->queryOne();
                 if ($s) {
                     $santriFolder = @glob($baseBerkasDir . '/berkas/*' . str_replace(' ', '_', $s['nama']) . '*');
                     if (empty($santriFolder)) {
@@ -181,15 +244,15 @@ final class MergeAction
                         foreach ($allFiles as $f) {
                             if (md5(basename($f)) === $md5) {
                                 $basename = basename($f);
-                                $docType = pathinfo($basename, PATHINFO_FILENAME);
-                                $docType = ucwords(str_replace('_', ' ', $docType));
-                                if (str_starts_with($basename, 'Surat_Permohonan')) $docType = "Surat Permohonan";
-                                elseif (str_starts_with($basename, 'Surat_Jaminan')) $docType = "Surat Jaminan";
-                                elseif (str_starts_with($basename, 'Surat_Keterangan')) $docType = "Surat Keterangan";
-                                elseif (str_starts_with($basename, 'Surat_Tugas')) $docType = "Surat Tugas";
+                                $docType = $extractDocType($basename, $s['nama'], $s['kode'] ?? '');
                                 
-                                $namaUnik = $docType . ' (Dokumen Tambahan)';
-                                $berkas[] = ['path_file' => '/serve.php?path=' . urlencode($f), 'nama_berkas' => $docType, 'nama_unik' => $namaUnik, 'kds' => $kds, 'nama_santri' => $s['nama']];
+                                $berkas[] = [
+                                    'path_file' => '/serve.php?path=' . urlencode($f), 
+                                    'nama_berkas' => $docType, 
+                                    'nama_unik' => $docType, 
+                                    'kds' => $kds, 
+                                    'nama_santri' => $s['nama']
+                                ];
                                 break;
                             }
                         }
@@ -284,6 +347,104 @@ final class MergeAction
             }
         }
 
+        // Process Direct DB Generated Surat (surat_db_{surat_id}_{kds})
+        if (!empty($dbIdsSuratDirect)) {
+            $targetInstansiId = !empty($_SESSION['instansi_id']) ? (int)$_SESSION['instansi_id'] : null;
+            if (!$targetInstansiId) {
+                $targetInstansiId = (int) $db->createCommand("SELECT kode FROM master_instansi WHERE def_kepengurusan LIKE '%Ponorogo%' ORDER BY kode ASC LIMIT 1")->queryScalar();
+            }
+
+            $baseBerkasDir = null;
+            if ($targetInstansiId) {
+                $baseBerkasDir = \App\Shared\UploadPath::getBase($db, $targetInstansiId);
+            }
+            if (!$baseBerkasDir) {
+                $baseBerkasDir = dirname(__DIR__, 4) . '/berkas';
+            }
+            $baseBerkasDir = rtrim(str_replace('\\', '/', $baseBerkasDir), '/');
+
+            $tipeLabels = [
+                'SP' => 'Surat Permohonan',
+                'SK' => 'Surat Keterangan',
+                'SJ' => 'Surat Jaminan',
+                'ST' => 'Surat Tugas',
+                'Surat_Permohonan' => 'Surat Permohonan',
+                'Surat_Keterangan' => 'Surat Keterangan',
+                'Surat_Jaminan' => 'Surat Jaminan',
+                'Surat_Tugas' => 'Surat Tugas',
+            ];
+
+            foreach ($dbIdsSuratDirect as $v) {
+                $suratId = $v['surat_id'];
+                $kds = $v['kds'];
+
+                $row = $db->createCommand("
+                    SELECT sg.id, sg.tipe_surat, sg.nomor_surat, sg.tanggal_surat,
+                           s.nama as nama_santri, s.kode as kode_santri,
+                           m.id as mailing_id, m.mode,
+                           COALESCE(jp.jenis_pengajuan, 'Umum') as jenis_pengajuan,
+                           jp.kantor, jp.output_path
+                    FROM surat_generated sg
+                    JOIN surat_mailing m ON sg.mailing_id = m.id
+                    JOIN master_santri s ON s.kds = :kds
+                    LEFT JOIN surat_jenis_pengajuan jp ON m.jenis_pengajuan_id = jp.id
+                    WHERE sg.id = :sid
+                ", [':sid' => $suratId, ':kds' => $kds])->queryOne();
+
+                if ($row) {
+                    $tipeRaw = $row['tipe_surat'];
+                    $docType = $tipeLabels[$tipeRaw] ?? ucwords(str_replace('_', ' ', $tipeRaw));
+                    $kategori = trim($row['jenis_pengajuan'] ?? '');
+                    if (empty($kategori)) $kategori = 'Surat Generator';
+                    $namaUnik = $docType . ' (' . $kategori . ')';
+
+                    $safeJenis = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $kategori);
+                    $safeTipeSurat = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $tipeRaw);
+                    if (isset($tipeLabels[$tipeRaw])) {
+                        $safeTipeSurat = str_replace(' ', '_', $tipeLabels[$tipeRaw]);
+                    }
+                    $safeName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $row['nama_santri']);
+                    $kantor = $row['kantor'] ?: 'Kemenag';
+
+                    $tahunSurat = !empty($row['tanggal_surat']) ? date('Y', strtotime($row['tanggal_surat'])) : date('Y');
+                    $bulanSurat = !empty($row['tanggal_surat']) ? date('m', strtotime($row['tanggal_surat'])) : date('m');
+
+                    $publicSuratDir = $baseBerkasDir . '/Surat_Menyurat/' . $kantor;
+                    $candidatePaths = [
+                        $publicSuratDir . '/Output/' . $safeJenis . '/' . $safeTipeSurat . '/' . $tahunSurat . '/' . $bulanSurat . '/' . $safeTipeSurat . '_' . $safeName . '.pdf',
+                        $publicSuratDir . '/Output/' . $safeJenis . '/' . $safeTipeSurat . '/' . $tahunSurat . '/' . $bulanSurat . '/Sekaligus/' . $safeTipeSurat . '_Sekaligus_' . $safeJenis . '.pdf',
+                        $baseBerkasDir . '/Export Data/' . $safeJenis . '/' . $safeTipeSurat . '_' . $safeName . '.pdf',
+                    ];
+                    if (!empty($row['output_path'])) {
+                        $up = str_replace('\\', '/', trim($row['output_path']));
+                        if (preg_match('/^[a-zA-Z]:/', $up)) {
+                            $candidatePaths[] = rtrim($up, '/') . '/' . $safeJenis . '/' . $safeTipeSurat . '/' . $tahunSurat . '/' . $bulanSurat . '/' . $safeTipeSurat . '_' . $safeName . '.pdf';
+                        } else {
+                            $candidatePaths[] = $baseBerkasDir . '/' . ltrim($up, '/') . '/' . $safeJenis . '/' . $safeTipeSurat . '/' . $tahunSurat . '/' . $bulanSurat . '/' . $safeTipeSurat . '_' . $safeName . '.pdf';
+                        }
+                    }
+
+                    $foundPath = null;
+                    foreach ($candidatePaths as $cp) {
+                        if (file_exists($cp)) {
+                            $foundPath = $cp;
+                            break;
+                        }
+                    }
+
+                    if ($foundPath) {
+                        $berkas[] = [
+                            'path_file' => '/serve.php?path=' . urlencode(str_replace('\\', '/', $foundPath)),
+                            'nama_berkas' => $docType,
+                            'nama_unik' => $namaUnik,
+                            'kds' => $kds,
+                            'nama_santri' => $row['nama_santri']
+                        ];
+                    }
+                }
+            }
+        }
+
         if (empty($berkas)) {
             $response = new Response(404);
             $response->getBody()->write('Berkas tidak ditemukan.');
@@ -306,13 +467,94 @@ final class MergeAction
                     if ($posB === false) $posB = 999;
                     
                     if ($posA === $posB) {
-                        return ($a['kds'] ?? 0) <=> ($b['kds'] ?? 0);
+                        if (($a['kds'] ?? 0) !== ($b['kds'] ?? 0)) {
+                            return ($a['kds'] ?? 0) <=> ($b['kds'] ?? 0);
+                        }
+                        if (isset($a['exp_date']) || isset($b['exp_date'])) {
+                            $dateA = !empty($a['exp_date']) ? strtotime((string)$a['exp_date']) : 0;
+                            $dateB = !empty($b['exp_date']) ? strtotime((string)$b['exp_date']) : 0;
+                            if ($dateA !== $dateB) {
+                                return $dateB <=> $dateA; // Exp date paling baru di atas
+                            }
+                        }
+                        return ($b['id'] ?? 0) <=> ($a['id'] ?? 0);
                     }
                     return $posA <=> $posB;
                 });
             }
 
-            $buildPdfContent = function($berkasList) {
+            $resolveFilePath = function(?string $pathUrl) {
+                if (empty($pathUrl)) return null;
+
+                $path = $pathUrl;
+                if (str_starts_with($path, '/serve.php') || str_starts_with($path, 'serve.php')) {
+                    $parsed = parse_url($path);
+                    if (isset($parsed['query'])) {
+                        parse_str($parsed['query'], $queryData);
+                        if (isset($queryData['path'])) {
+                            $path = $queryData['path'];
+                        }
+                    }
+                }
+
+                $normalized = str_replace('\\', '/', $path);
+
+                if (file_exists($normalized) && is_file($normalized)) {
+                    return $normalized;
+                }
+
+                $publicDirs = [
+                    dirname(__DIR__, 3) . '/public',
+                    '//sipln/FOREIGN-PC1/02. Aplikasi/XAMPP/htdocs/webapp/public',
+                    'd:/XAMPP/htdocs/webapp/public'
+                ];
+
+                foreach ($publicDirs as $publicDir) {
+                    // 1. Cek relatif terhadap folder public/
+                    $candidate1 = $publicDir . '/' . ltrim($normalized, '/');
+                    if (file_exists($candidate1) && is_file($candidate1)) {
+                        return $candidate1;
+                    }
+
+                    // 2. Cek jika mengandung /public/uploads/
+                    $uploadsPos = strpos($normalized, '/public/uploads/');
+                    if ($uploadsPos !== false) {
+                        $relUpload = substr($normalized, $uploadsPos + strlen('/public/uploads/'));
+                        $candidate2 = $publicDir . '/uploads/' . $relUpload;
+                        if (file_exists($candidate2) && is_file($candidate2)) {
+                            return $candidate2;
+                        }
+                    }
+
+                    // 3. Cek jika mengandung /uploads/
+                    $uploadsPos2 = strpos($normalized, '/uploads/');
+                    if ($uploadsPos2 !== false) {
+                        $relUpload = substr($normalized, $uploadsPos2 + strlen('/uploads/'));
+                        $candidate3 = $publicDir . '/uploads/' . $relUpload;
+                        if (file_exists($candidate3) && is_file($candidate3)) {
+                            return $candidate3;
+                        }
+                    }
+
+                    // 4. Fallback pencarian nama file di public/uploads
+                    $baseUploads = $publicDir . '/uploads';
+                    $filename = basename($normalized);
+                    if (!empty($filename) && is_dir($baseUploads)) {
+                        $matches = @glob($baseUploads . '/*/*/' . $filename) ?: [];
+                        if (!empty($matches) && file_exists($matches[0])) {
+                            return $matches[0];
+                        }
+                        $matches2 = @glob($baseUploads . '/*/' . $filename) ?: [];
+                        if (!empty($matches2) && file_exists($matches2[0])) {
+                            return $matches2[0];
+                        }
+                    }
+                }
+
+                return null;
+            };
+
+            $buildPdfContent = function($berkasList) use ($resolveFilePath) {
                 $pdf = new Fpdi();
                 $pdf->SetAutoPageBreak(false);
                 $tempFiles = [];
@@ -321,21 +563,8 @@ final class MergeAction
                     $pathUrl = $b['path_file'];
                     if (empty($pathUrl)) continue;
 
-                    $physicalPath = '';
-                    if (str_starts_with($pathUrl, '/serve.php') || str_starts_with($pathUrl, 'serve.php')) {
-                        $parsed = parse_url($pathUrl);
-                        if (isset($parsed['query'])) {
-                            parse_str($parsed['query'], $queryData);
-                            if (isset($queryData['path'])) {
-                                $physicalPath = $queryData['path'];
-                            }
-                        }
-                    } else {
-                        $physicalPath = $pathUrl;
-                    }
-                    if (empty($physicalPath)) continue;
-
-                    if (!file_exists($physicalPath)) continue;
+                    $physicalPath = $resolveFilePath($pathUrl);
+                    if (empty($physicalPath) || !file_exists($physicalPath)) continue;
 
                     $ext = strtolower(pathinfo($physicalPath, PATHINFO_EXTENSION));
 
@@ -446,54 +675,98 @@ final class MergeAction
                     file_put_contents($saveDir . "Gabungan_Berkas_{$safeNama}.pdf", $pdfContent);
                 }
 
-                // Return HTML success response
+                // List of generated files for download/preview
+                $fileListHtml = '';
+                $savedFiles = @glob($saveDir . '*.pdf') ?: [];
+                foreach ($savedFiles as $sf) {
+                    $sfName = basename($sf);
+                    $sfUrl = API_URL . '/serve.php?path=' . urlencode(str_replace('\\', '/', $sf));
+                    $fileListHtml .= "<li style='margin-bottom: 6px;'><a href='{$sfUrl}' target='_blank' style='color: #0d6efd; text-decoration: none; font-weight: 500;'>📄 {$sfName}</a></li>";
+                }
+
+                $winSaveDir = str_replace('/', '\\', $saveDir);
                 $safeDirJs = json_encode($saveDir);
+                $winDirJs = json_encode($winSaveDir);
                 $apiUrl = API_URL;
                 $html = <<<HTML
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Berhasil Disimpan</title>
+    <meta charset="UTF-8">
+    <title>Berhasil Disimpan | SIPLN</title>
     <style>
-        body { font-family: system-ui, -apple-system, sans-serif; background: #f8f9fa; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; max-width: 500px; }
-        .success-icon { color: #198754; font-size: 64px; margin-bottom: 20px; line-height: 1; }
-        h2 { margin: 0 0 10px; color: #212529; }
-        p { color: #6c757d; margin-bottom: 20px; line-height: 1.5; }
-        .path-box { background: #e9ecef; padding: 12px; border-radius: 6px; font-family: monospace; word-break: break-all; margin-bottom: 24px; color: #495057; border: 1px solid #ced4da; text-align: left; font-size: 14px;}
-        .btn { display: inline-block; padding: 10px 24px; background: #0d6efd; color: white; text-decoration: none; border-radius: 6px; font-weight: 500; transition: background 0.2s; }
-        .btn:hover { background: #0b5ed7; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f1f5f9; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+        .card { background: white; padding: 36px 32px; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); text-align: center; max-width: 540px; width: 100%; border: 1px solid #e2e8f0; }
+        .success-icon { width: 64px; height: 64px; background: #dcfce7; color: #16a34a; font-size: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px; font-weight: bold; }
+        h2 { margin: 0 0 8px; color: #0f172a; font-size: 22px; font-weight: 700; }
+        p { color: #64748b; margin-bottom: 16px; line-height: 1.5; font-size: 14px; }
+        .path-box { background: #f8fafc; padding: 12px 14px; border-radius: 10px; font-family: monospace; word-break: break-all; margin-bottom: 16px; color: #334155; border: 1px solid #cbd5e1; text-align: left; font-size: 13px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 18px; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 13px; transition: all 0.2s; cursor: pointer; border: none; }
+        .btn-success { background: #16a34a; }
+        .btn-success:hover { background: #15803d; }
+        .btn-secondary { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+        .btn-secondary:hover { background: #e2e8f0; }
+        .btn-primary { background: #2563eb; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .file-list-box { max-height: 140px; overflow-y: auto; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; text-align: left; font-size: 13px; margin-bottom: 20px; }
+        .file-list-box ul { margin: 0; padding-left: 18px; }
+        .toast-msg { display: none; margin-top: 10px; font-size: 12px; color: #16a34a; font-weight: 600; }
     </style>
 </head>
 <body>
     <div class="card">
-        <div class="success-icon">&#10004;</div>
+        <div class="success-icon">✓</div>
         <h2>Berhasil Disimpan!</h2>
-        <p>File gabungan PDF individual per santri telah berhasil dibuat dan disimpan langsung ke storage server instansi Anda pada folder:</p>
-        <div class="path-box">{$saveDir}</div>
-        <div style="display: flex; gap: 10px; justify-content: center;">
-            <button onclick="bukaFolder()" class="btn" style="background: #198754; border: none; cursor: pointer;">Buka Folder</button>
-            <a href="javascript:window.close();" class="btn">Tutup Tab Ini</a>
+        <p>File gabungan PDF individual per santri telah berhasil dibuat dan disimpan langsung ke server instansi pada folder:</p>
+        
+        <div class="path-box">
+            <span id="pathText">{$winSaveDir}</span>
+            <button type="button" onclick="salinPath()" class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px; flex-shrink: 0;" title="Salin Path">📋 Salin</button>
         </div>
+        
+        <div class="file-list-box">
+            <div style="font-weight: 600; color: #475569; margin-bottom: 6px; font-size: 12px;">Daftar File PDF Hasil Gabungan:</div>
+            <ul>{$fileListHtml}</ul>
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+            <button onclick="bukaFolder()" class="btn btn-success" id="btnBuka">📂 Buka Folder</button>
+            <button onclick="salinPath()" class="btn btn-secondary">📋 Salin Path</button>
+            <a href="javascript:window.close();" class="btn btn-primary">Tutup Tab Ini</a>
+        </div>
+        <div id="toastMsg" class="toast-msg">✓ Path folder berhasil disalin ke clipboard!</div>
     </div>
     
     <script>
+        function salinPath() {
+            var path = {$winDirJs};
+            navigator.clipboard.writeText(path).then(() => {
+                var toast = document.getElementById('toastMsg');
+                toast.style.display = 'block';
+                setTimeout(() => toast.style.display = 'none', 3000);
+            }).catch(() => {
+                alert('Silakan salin path secara manual: ' + path);
+            });
+        }
+
         function bukaFolder() {
             var path = {$safeDirJs};
+            var btn = document.getElementById('btnBuka');
+            btn.textContent = '⏳ Membuka...';
+            btn.disabled = true;
+
             fetch('{$apiUrl}/api/pemberkasan/open-folder?path=' + encodeURIComponent(path))
-                .then(async res => {
-                    const text = await res.text();
-                    try {
-                        return JSON.parse(text);
-                    } catch (e) {
-                        throw new Error("Invalid JSON: " + text.substring(0, 100));
-                    }
-                })
+                .then(r => r.json())
                 .then(data => {
-                    if(!data.success) alert('Gagal membuka folder. Pastikan folder tersebut belum dihapus.');
+                    btn.textContent = '📂 Buka Folder';
+                    btn.disabled = false;
+                    if (!data.success) {
+                        alert(data.message || 'Gagal membuka folder di server. Anda dapat menggunakan tombol "Salin Path" dan membuka di File Explorer.');
+                    }
                 }).catch(e => {
-                    console.error(e);
-                    alert('Gagal menghubungi server: ' + e.message);
+                    btn.textContent = '📂 Buka Folder';
+                    btn.disabled = false;
+                    salinPath();
                 });
         }
     </script>

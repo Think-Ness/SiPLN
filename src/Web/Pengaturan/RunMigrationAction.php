@@ -57,9 +57,22 @@ final class RunMigrationAction
                 } elseif (!in_array('instansi_tujuan', $cols)) {
                     $db->createCommand('ALTER TABLE surat_template_dinamis ADD COLUMN instansi_tujuan VARCHAR(100) NOT NULL AFTER file_path')->execute();
                     $messages[] = 'Kolom instansi_tujuan berhasil ditambahkan.';
-                } else {
-                    $messages[] = 'Struktur tabel sudah yang terbaru (tidak ada perubahan).';
                 }
+            }
+
+            // Check users table columns
+            $userCols = $db->createCommand('DESCRIBE users')->queryColumn();
+            if (!in_array('bagian', $userCols)) {
+                $db->createCommand('ALTER TABLE users ADD COLUMN `bagian` VARCHAR(100) NULL AFTER `ttl`')->execute();
+                $messages[] = 'Kolom bagian berhasil ditambahkan ke tabel users.';
+            }
+            if (!in_array('no_telepon', $userCols)) {
+                $db->createCommand('ALTER TABLE users ADD COLUMN `no_telepon` VARCHAR(50) NULL AFTER `bagian`')->execute();
+                $messages[] = 'Kolom no_telepon berhasil ditambahkan ke tabel users.';
+            }
+
+            if (empty($messages)) {
+                $messages[] = 'Struktur database sudah yang terbaru (tidak ada perubahan).';
             }
 
             return JsonResponse::create([

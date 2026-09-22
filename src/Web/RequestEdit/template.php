@@ -6,12 +6,16 @@ use Yiisoft\View\WebView;
 /**
  * @var WebView $this
  * @var array $requests
+ * @var array $outgoingRequests
+ * @var array $historyRequests
  * @var string $myKepengurusan
  */
 $this->setTitle('Persetujuan Data | Sistem Informasi');
-?>
 
-<?php
+$countIncoming = count($requests ?? []);
+$countOutgoing = count($outgoingRequests ?? []);
+$countHistory = count($historyRequests ?? []);
+
 function groupChanges($changes, $oldData, $row) {
     $groups = [
         'Biodata' => [],
@@ -45,6 +49,212 @@ function groupChanges($changes, $oldData, $row) {
 }
 ?>
 
+<style>
+/* Modern Responsive Styling for Persetujuan Data */
+:root {
+    --req-warning: #f59e0b;
+    --req-primary: #3b82f6;
+    --req-success: #10b981;
+    --req-danger: #ef4444;
+}
+
+.req-stat-card {
+    border-radius: 16px;
+    border: 1px solid rgba(226, 232, 240, 0.85);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    background: #ffffff;
+}
+.req-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.04) !important;
+}
+.req-stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+
+/* Segmented Navigation Tabs */
+.req-nav-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 8px;
+    padding: 6px;
+    background: #f1f5f9;
+    border-radius: 14px;
+    border: none;
+}
+.req-nav-tabs::-webkit-scrollbar {
+    height: 3px;
+}
+.req-nav-tabs::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+.req-nav-tabs .nav-link {
+    white-space: nowrap;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.88rem;
+    padding: 8px 16px;
+    color: #64748b;
+    border: none !important;
+    background: transparent;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.req-nav-tabs .nav-link:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.6);
+    color: #1e293b;
+}
+.req-nav-tabs .nav-link.active {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+.req-nav-tabs .nav-link#incoming-tab.active {
+    color: #d97706 !important;
+}
+.req-nav-tabs .nav-link#outgoing-tab.active {
+    color: #2563eb !important;
+}
+.req-nav-tabs .nav-link#history-tab.active {
+    color: #475569 !important;
+}
+
+/* Upgraded Modern Mobile Cards */
+.req-modern-card {
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+.req-modern-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px -4px rgba(15, 23, 42, 0.1) !important;
+}
+
+.req-avatar-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.25);
+}
+
+.req-diff-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 12px;
+}
+
+.req-diff-item {
+    background: #ffffff;
+    border: 1px solid #f1f5f9;
+    border-radius: 10px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+}
+.req-diff-item:last-child {
+    margin-bottom: 0;
+}
+
+.req-old-val {
+    background: #fee2e2;
+    color: #991b1b;
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: 0.72rem;
+    text-decoration: line-through;
+    max-width: 45%;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.req-new-val {
+    background: #dcfce7;
+    color: #166534;
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    max-width: 48%;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.req-card-actions {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+}
+
+/* Modal Responsiveness */
+.req-modal-content {
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+/* Responsive Overrides */
+@media (max-width: 991.98px) {
+    .page-header-responsive {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px;
+    }
+    .req-stat-card .card-body {
+        padding: 0.85rem !important;
+    }
+    .req-stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.15rem;
+    }
+    .req-stat-number {
+        font-size: 1.35rem !important;
+    }
+}
+@media (max-width: 575.98px) {
+    .req-nav-tabs .nav-link {
+        font-size: 0.8rem;
+        padding: 7px 12px;
+    }
+    .req-stat-number {
+        font-size: 1.25rem !important;
+    }
+    .req-card-actions {
+        flex-direction: row;
+    }
+    .req-card-actions .btn {
+        flex: 1 1 50%;
+        font-size: 0.82rem;
+        padding: 8px 10px !important;
+    }
+}
+</style>
+
+<!-- Page Header (Clean, Non-Redundant) -->
 <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom page-header-responsive">
     <div class="d-flex align-items-center gap-3">
         <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 shadow-sm" style="width: 48px; height: 48px; background: linear-gradient(135deg, #f59e0b, #d97706);">
@@ -57,31 +267,69 @@ function groupChanges($changes, $oldData, $row) {
             </div>
         </div>
     </div>
-    <div>
-        <span class="badge bg-warning text-dark border border-warning fs-6 px-3 py-2 shadow-sm rounded-pill">
-            <i class="bi bi-hourglass-split me-1"></i> <?= count($requests) ?> Menunggu
-        </span>
+</div>
+
+<!-- Stat Metric Cards (3 Main Tabs Summary) -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-4">
+        <div class="card req-stat-card border-0 shadow-sm h-100" style="cursor: pointer;" onclick="document.getElementById('incoming-tab').click()">
+            <div class="card-body p-3 d-flex align-items-center gap-3">
+                <div class="req-stat-icon bg-warning bg-opacity-10 text-warning">
+                    <i class="bi bi-inbox-fill"></i>
+                </div>
+                <div class="overflow-hidden">
+                    <div class="text-muted small fw-semibold text-truncate">Menunggu Persetujuan</div>
+                    <div class="h4 mb-0 fw-bold text-warning req-stat-number"><?= $countIncoming ?></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-sm-4">
+        <div class="card req-stat-card border-0 shadow-sm h-100" style="cursor: pointer;" onclick="document.getElementById('outgoing-tab').click()">
+            <div class="card-body p-3 d-flex align-items-center gap-3">
+                <div class="req-stat-icon bg-primary bg-opacity-10 text-primary">
+                    <i class="bi bi-send-fill"></i>
+                </div>
+                <div class="overflow-hidden">
+                    <div class="text-muted small fw-semibold text-truncate">Pengajuan Saya</div>
+                    <div class="h4 mb-0 fw-bold text-primary req-stat-number"><?= $countOutgoing ?></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-sm-4">
+        <div class="card req-stat-card border-0 shadow-sm h-100" style="cursor: pointer;" onclick="document.getElementById('history-tab').click()">
+            <div class="card-body p-3 d-flex align-items-center gap-3">
+                <div class="req-stat-icon bg-secondary bg-opacity-10 text-secondary">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <div class="overflow-hidden">
+                    <div class="text-muted small fw-semibold text-truncate">Riwayat Keputusan</div>
+                    <div class="h4 mb-0 fw-bold text-secondary req-stat-number"><?= $countHistory ?></div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- Navigation Tabs -->
-<ul class="nav nav-pills mb-4 gap-2" id="req-tabs" role="tablist">
+<!-- Segmented Navigation Tabs -->
+<ul class="nav req-nav-tabs mb-4" id="req-tabs" role="tablist">
     <li class="nav-item" role="presentation">
-        <button class="nav-link active rounded-pill px-4 fw-bold shadow-sm" id="incoming-tab" data-bs-toggle="tab" data-bs-target="#incoming" type="button" role="tab" aria-controls="incoming" aria-selected="true">
-            <i class="bi bi-inbox-fill me-1"></i> Menunggu Persetujuan Anda 
-            <span class="badge bg-white text-primary ms-2 rounded-pill"><?= count($requests) ?></span>
+        <button class="nav-link active" id="incoming-tab" data-bs-toggle="tab" data-bs-target="#incoming" type="button" role="tab" aria-controls="incoming" aria-selected="true">
+            <i class="bi bi-inbox-fill"></i> Menunggu Persetujuan
+            <span class="badge bg-warning text-dark ms-1 rounded-pill"><?= $countIncoming ?></span>
         </button>
     </li>
     <li class="nav-item" role="presentation">
-        <button class="nav-link text-secondary rounded-pill px-4 fw-bold border-0" style="background-color: transparent;" onmouseover="this.style.backgroundColor='#e9ecef'" onmouseout="this.style.backgroundColor='transparent'" id="outgoing-tab" data-bs-toggle="tab" data-bs-target="#outgoing" type="button" role="tab" aria-controls="outgoing" aria-selected="false">
-            <i class="bi bi-send-fill me-1"></i> Pengajuan Saya
-            <span class="badge bg-secondary ms-2 rounded-pill"><?= count($outgoingRequests) ?></span>
+        <button class="nav-link" id="outgoing-tab" data-bs-toggle="tab" data-bs-target="#outgoing" type="button" role="tab" aria-controls="outgoing" aria-selected="false">
+            <i class="bi bi-send-fill"></i> Pengajuan Saya
+            <span class="badge bg-primary ms-1 rounded-pill text-white"><?= $countOutgoing ?></span>
         </button>
     </li>
     <li class="nav-item" role="presentation">
-        <button class="nav-link text-secondary rounded-pill px-4 fw-bold border-0" style="background-color: transparent;" onmouseover="this.style.backgroundColor='#e9ecef'" onmouseout="this.style.backgroundColor='transparent'" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="false">
-            <i class="bi bi-clock-history me-1"></i> Riwayat Keputusan
-            <span class="badge bg-secondary ms-2 rounded-pill"><?= count($historyRequests) ?></span>
+        <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="false">
+            <i class="bi bi-clock-history"></i> Riwayat Keputusan
+            <span class="badge bg-secondary ms-1 rounded-pill text-white"><?= $countHistory ?></span>
         </button>
     </li>
 </ul>
@@ -109,36 +357,59 @@ function groupChanges($changes, $oldData, $row) {
     <!-- TAB 1: INCOMING REQUESTS -->
     <div class="tab-pane fade show active" id="incoming" role="tabpanel" aria-labelledby="incoming-tab">
         <?php if (empty($requests)): ?>
-            <div class="text-center py-5 my-5 bg-white rounded-4 shadow-sm border border-light">
-                <i class="bi bi-clipboard2-check text-muted" style="font-size: 5rem; opacity: 0.2;"></i>
-                <h4 class="fw-bold mt-4 text-secondary">Semua Bersih!</h4>
-                <p class="text-muted">Tidak ada usulan perubahan data santri yang memerlukan persetujuan Anda saat ini.</p>
+            <div class="text-center py-5 my-4 bg-white rounded-4 shadow-sm border border-light">
+                <i class="bi bi-clipboard2-check text-success" style="font-size: 4.5rem; opacity: 0.3;"></i>
+                <h4 class="fw-bold mt-3 text-secondary">Semua Bersih!</h4>
+                <p class="text-muted small mb-0 px-3">Tidak ada usulan perubahan data santri yang memerlukan persetujuan Anda saat ini.</p>
             </div>
         <?php else: ?>
-            <div class="row g-4">
+            <div class="row g-3 g-lg-4">
                 <?php foreach ($requests as $r): 
                     $changes = json_decode($r['requested_changes'], true) ?? [];
                     $oldData = json_decode($r['old_values'] ?? '', true) ?? [];
+                    $namaInitial = mb_substr(trim($r['nama'] ?? 'S'), 0, 1);
                 ?>
-                    <div class="col-md-6 col-lg-4" id="req-card-<?= $r['id'] ?>">
-                        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="transition: transform 0.2s;">
-                            <div class="card-header bg-white border-bottom p-3 d-flex justify-content-between align-items-center">
+                    <div class="col-12 col-md-6 col-lg-4" id="req-card-<?= $r['id'] ?>">
+                        <div class="req-modern-card h-100">
+                            <!-- Card Header -->
+                            <div class="p-3 bg-white border-bottom d-flex justify-content-between align-items-center">
                                 <div class="d-flex align-items-center gap-2">
-                                    <div class="bg-primary bg-opacity-10 text-primary rounded px-2 py-1 small fw-bold">
-                                        <?= htmlspecialchars((string)($r['stambuk'] ?? '0')) ?>
+                                    <span class="badge bg-light text-dark border font-monospace fw-bold">
+                                        <i class="bi bi-person-badge me-1 text-secondary"></i><?= htmlspecialchars((string)($r['stambuk'] ?? '0')) ?>
+                                    </span>
+                                    <span class="badge bg-warning bg-opacity-25 text-dark border border-warning" style="font-size: 0.65rem;">
+                                        USULAN BARU
+                                    </span>
+                                </div>
+                                <small class="text-muted" style="font-size: 0.72rem;">
+                                    <i class="bi bi-clock me-1"></i><?= date('d M, H:i', strtotime($r['created_at'])) ?>
+                                </small>
+                            </div>
+
+                            <!-- Card Body -->
+                            <div class="p-3 p-md-4 d-flex flex-column flex-grow-1">
+                                <!-- Profile Row -->
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <div class="req-avatar-circle">
+                                        <?= htmlspecialchars($namaInitial) ?>
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <h5 class="fw-bold text-dark mb-0 text-truncate" title="<?= htmlspecialchars($r['nama']) ?>">
+                                            <?= htmlspecialchars($r['nama']) ?>
+                                        </h5>
+                                        <div class="text-muted small text-truncate mt-1">
+                                            <i class="bi bi-box-arrow-in-right text-primary me-1"></i>
+                                            Dari: <strong class="text-dark"><?= htmlspecialchars($r['instansi_pengaju'] ?? 'Pondok Pindahan') ?></strong>
+                                        </div>
                                     </div>
                                 </div>
-                                <small class="text-muted" style="font-size: 0.7rem;"><i class="bi bi-clock me-1"></i><?= date('d M Y, H:i', strtotime($r['created_at'])) ?></small>
-                            </div>
-                            <div class="card-body p-4 bg-light bg-opacity-50">
-                                <h5 class="fw-bold text-dark mb-1 text-truncate" title="<?= htmlspecialchars($r['nama']) ?>"><?= htmlspecialchars($r['nama']) ?></h5>
-                                <div class="d-flex align-items-center text-muted small mb-3">
-                                    <i class="bi bi-box-arrow-in-right me-1 text-primary"></i> 
-                                    Diajukan oleh: <strong class="ms-1 text-dark"><?= htmlspecialchars($r['instansi_pengaju'] ?? 'Unknown') ?> (<?= htmlspecialchars($r['kep_pengaju'] ?? '') ?>)</strong>
-                                </div>
                                 
-                                <div class="rounded-3 border overflow-hidden">
-                                    <div class="bg-white border-bottom px-3 py-2 small fw-bold text-secondary text-center" style="background-color: #f8f9fa !important;">
+                                <!-- Diff Changes Box -->
+                                <div class="req-diff-box mb-3 flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="small fw-bold text-secondary">
+                                            <i class="bi bi-sliders text-primary me-1"></i> Perubahan Kolom
+                                        </span>
                                         <?php 
                                             $visibleCount = 0;
                                             foreach ($changes as $key => $val) {
@@ -146,56 +417,67 @@ function groupChanges($changes, $oldData, $row) {
                                                 $visibleCount++;
                                             }
                                         ?>
-                                        Total <span class="text-primary"><?= $visibleCount ?></span> Kolom Diusulkan
+                                        <span class="badge bg-primary rounded-pill" style="font-size: 0.7rem;">
+                                            <?= $visibleCount ?> Kolom
+                                        </span>
                                     </div>
-                                    <div class="bg-white p-3 position-relative">
-                                        <div class="small fw-bold text-muted mb-2"><i class="bi bi-eye me-1"></i> Sekilas Perubahan:</div>
-                                        <?php 
-                                        $glimpse = 0;
-                                        foreach ($changes as $k => $v) {
-                                            if (str_starts_with($k, '_')) continue;
-                                            if ($glimpse >= 2) break;
-                                            $oKey = $k === 'no_sktt' ? 'nik' : $k;
-                                            $oVal = array_key_exists($k, $oldData) ? $oldData[$k] : ($r[$oKey] ?? '');
-                                        ?>
-                                        <div class="d-flex justify-content-between align-items-center text-muted small mb-2">
-                                            <span class="text-capitalize text-truncate" style="max-width: 35%; font-size: 0.75rem;"><?= htmlspecialchars(str_replace('_', ' ', $k)) ?></span>
-                                            <div class="text-truncate text-end" style="max-width: 60%;">
-                                                <span class="text-decoration-line-through me-1" style="font-size: 0.7rem; opacity: 0.7;"><?= htmlspecialchars((string)$oVal) ?: '-' ?></span>
-                                                <i class="bi bi-arrow-right text-warning mx-1" style="font-size: 0.7rem;"></i>
-                                                <strong class="text-dark" style="font-size: 0.75rem;"><?= htmlspecialchars((string)$v) ?: '-' ?></strong>
-                                            </div>
+
+                                    <?php 
+                                    $glimpse = 0;
+                                    foreach ($changes as $k => $v) {
+                                        if (str_starts_with($k, '_')) continue;
+                                        if ($glimpse >= 2) break;
+                                        $oKey = $k === 'no_sktt' ? 'nik' : $k;
+                                        $oVal = array_key_exists($k, $oldData) ? $oldData[$k] : ($r[$oKey] ?? '');
+                                    ?>
+                                    <div class="req-diff-item shadow-none">
+                                        <div class="text-muted text-capitalize mb-1" style="font-size: 0.72rem; font-weight: 600;">
+                                            <?= htmlspecialchars(str_replace('_', ' ', $k)) ?>
                                         </div>
-                                        <?php $glimpse++; } ?>
-                                        
-                                        <div class="mt-3 text-center position-relative" style="z-index: 2;">
-                                            <button type="button" class="btn btn-sm btn-light border-primary text-primary rounded-pill px-4 shadow-sm fw-bold w-100" data-bs-toggle="modal" data-bs-target="#modalIn-<?= $r['id'] ?>" style="transition: all 0.2s;" onmouseover="this.classList.replace('btn-light','btn-primary'); this.classList.replace('text-primary','text-white');" onmouseout="this.classList.replace('btn-primary','btn-light'); this.classList.replace('text-white','text-primary');">
-                                                Lihat Selengkapnya <i class="bi bi-chevron-right ms-1"></i>
-                                            </button>
+                                        <div class="d-flex align-items-center justify-content-between gap-1">
+                                            <span class="req-old-val text-truncate" title="Nilai Lama">
+                                                <?= htmlspecialchars((string)$oVal) ?: '(Kosong)' ?>
+                                            </span>
+                                            <i class="bi bi-arrow-right text-muted small"></i>
+                                            <span class="req-new-val text-truncate" title="Nilai Usulan Baru">
+                                                <?= htmlspecialchars((string)$v) ?: '(Kosong)' ?>
+                                            </span>
                                         </div>
-                                        <div class="position-absolute bottom-0 start-0 w-100 h-50" style="background: linear-gradient(to bottom, transparent, white); pointer-events: none; z-index: 1;"></div>
                                     </div>
+                                    <?php $glimpse++; } ?>
+                                    
+                                    <button type="button" class="btn btn-sm btn-white bg-white border border-secondary-subtle text-primary rounded-pill px-3 shadow-sm fw-bold w-100 mt-2 py-1" data-bs-toggle="modal" data-bs-target="#modalIn-<?= $r['id'] ?>" style="font-size: 0.78rem;">
+                                        <i class="bi bi-list-check me-1"></i> Tinjau & Pilih Perubahan <i class="bi bi-chevron-right ms-1 small"></i>
+                                    </button>
                                 </div>
                             </div>
-                            <div class="card-footer bg-white border-top-0 p-3 pb-4 d-flex gap-2 justify-content-center">
-                                <button type="button" class="btn btn-outline-danger rounded-pill px-4 fw-medium btn-sm" onclick="rejectReq(<?= $r['id'] ?>)">
-                                    <i class="bi bi-x-circle me-1"></i> Tolak
-                                </button>
-                                <button type="button" class="btn btn-success rounded-pill px-4 fw-medium btn-sm shadow-sm" onclick="approveReq(<?= $r['id'] ?>)">
-                                    <i class="bi bi-check-circle me-1"></i> Setujui
-                                </button>
+
+                            <!-- Card Footer Action Buttons -->
+                            <div class="p-3 bg-light border-top mt-auto">
+                                <div class="req-card-actions">
+                                    <button type="button" class="btn btn-outline-danger rounded-pill fw-semibold btn-sm py-2" onclick="rejectReq(<?= $r['id'] ?>)">
+                                        <i class="bi bi-x-circle me-1"></i> Tolak
+                                    </button>
+                                    <button type="button" class="btn btn-success rounded-pill fw-semibold btn-sm shadow-sm py-2" onclick="approveReq(<?= $r['id'] ?>)">
+                                        <i class="bi bi-check-circle me-1"></i> Setujui Semua
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Modal Detail Incoming -->
                         <div class="modal fade" id="modalIn-<?= $r['id'] ?>" tabindex="-1" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                                <div class="modal-content border-0 shadow rounded-4">
-                                    <div class="modal-header border-bottom-0 bg-light rounded-top-4 pb-2">
-                                        <h5 class="modal-title fw-bold text-dark"><i class="bi bi-info-circle-fill me-2 text-primary"></i> Detail Usulan</h5>
+                                <div class="modal-content border-0 shadow-lg req-modal-content">
+                                    <div class="modal-header border-bottom-0 bg-light py-3 px-4">
+                                        <h5 class="modal-title fw-bold text-dark mb-0"><i class="bi bi-info-circle-fill me-2 text-primary"></i> Detail Usulan Perubahan</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
-                                    <div class="modal-body p-0 bg-white">
+                                    <div class="modal-body p-0 bg-white" style="max-height: calc(80vh - 120px); overflow-y: auto;">
+                                        <div class="p-3 bg-light border-bottom">
+                                            <div class="fw-bold text-dark fs-6"><?= htmlspecialchars($r['nama']) ?></div>
+                                            <div class="text-muted small">Stambuk: <strong class="text-dark"><?= htmlspecialchars((string)($r['stambuk'] ?? '0')) ?></strong> &bull; Dari: <strong><?= htmlspecialchars($r['instansi_pengaju'] ?? '') ?></strong></div>
+                                        </div>
                                         <?php 
                                         $grouped = groupChanges($changes, $oldData, $r);
                                         foreach ($grouped as $groupName => $items): 
@@ -206,7 +488,7 @@ function groupChanges($changes, $oldData, $row) {
                                             elseif ($groupName === 'Dokumen Paspor') { $icon = 'bi-passport'; $isGroupCheck = true; $groupKey = '_paspor_data'; }
                                             elseif ($groupName === 'Dokumen ITAS') { $icon = 'bi-card-heading'; $isGroupCheck = true; $groupKey = '_itas_data'; }
                                         ?>
-                                            <div class="px-3 py-2 small fw-bold text-secondary border-bottom d-flex justify-content-between align-items-center" style="background-color: #fcfcfc;">
+                                            <div class="px-3 py-2 small fw-bold text-secondary border-bottom d-flex justify-content-between align-items-center bg-light">
                                                 <div><i class="bi <?= $icon ?> me-1 text-primary"></i> <?= $groupName ?></div>
                                                 <?php if ($isGroupCheck): ?>
                                                     <div class="form-check form-switch m-0" title="Setujui/Tolak seluruh <?= $groupName ?>">
@@ -216,7 +498,7 @@ function groupChanges($changes, $oldData, $row) {
                                             </div>
                                             <ul class="list-group list-group-flush small border-bottom mb-0">
                                                 <?php foreach ($items as $item): ?>
-                                                    <li class="list-group-item px-3 py-2 bg-transparent d-flex flex-column border-0 border-bottom">
+                                                    <li class="list-group-item px-3 py-2 bg-white d-flex flex-column border-0 border-bottom">
                                                         <div class="d-flex align-items-center justify-content-between w-100 mb-1">
                                                             <span class="text-muted fw-bold text-capitalize" style="font-size: 0.75rem;"><?= htmlspecialchars(str_replace('_', ' ', $item['key'])) ?></span>
                                                             <?php if (!$isGroupCheck): ?>
@@ -226,18 +508,18 @@ function groupChanges($changes, $oldData, $row) {
                                                             <?php endif; ?>
                                                         </div>
                                                         <div class="d-flex align-items-center justify-content-between w-100 <?= $isGroupCheck ? "group-item-{$r['id']}-" . str_replace(' ', '', $groupName) : '' ?>" style="transition: opacity 0.2s;">
-                                                            <div class="text-secondary text-decoration-line-through small" style="max-width: 45%; word-break: break-all;"><?= htmlspecialchars((string)$item['oldVal']) ?: '<em class="text-muted fw-normal">(Kosong)</em>' ?></div>
-                                                            <i class="bi bi-arrow-right text-warning mx-1"></i>
-                                                            <strong class="text-dark text-end" style="max-width: 45%; word-break: break-all;"><?= htmlspecialchars((string)$item['val']) ?: '<em class="text-muted fw-normal">(Kosong)</em>' ?></strong>
+                                                            <div class="req-old-val text-truncate" style="max-width: 45%;"><?= htmlspecialchars((string)$item['oldVal']) ?: '(Kosong)' ?></div>
+                                                            <i class="bi bi-arrow-right text-muted mx-1"></i>
+                                                            <div class="req-new-val text-truncate text-end" style="max-width: 45%;"><?= htmlspecialchars((string)$item['val']) ?: '(Kosong)' ?></div>
                                                         </div>
                                                     </li>
                                                 <?php endforeach; ?>
                                             </ul>
                                         <?php endforeach; ?>
                                     </div>
-                                    <div class="modal-footer border-top-0 bg-light rounded-bottom-4 d-flex justify-content-between">
-                                        <button type="button" class="btn btn-outline-danger rounded-pill px-4" onclick="rejectReq(<?= $r['id'] ?>)">Tolak Semua</button>
-                                        <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold" onclick="approvePartialReq(<?= $r['id'] ?>)">
+                                    <div class="modal-footer border-top-0 bg-light p-3 d-flex justify-content-between flex-wrap gap-2">
+                                        <button type="button" class="btn btn-outline-danger rounded-pill px-3 py-2" onclick="rejectReq(<?= $r['id'] ?>)">Tolak Semua</button>
+                                        <button type="button" class="btn btn-primary rounded-pill px-4 py-2 shadow-sm fw-bold" onclick="approvePartialReq(<?= $r['id'] ?>)">
                                             <i class="bi bi-check-circle me-1"></i> Setujui Pilihan
                                         </button>
                                     </div>
@@ -253,36 +535,56 @@ function groupChanges($changes, $oldData, $row) {
     <!-- TAB 2: OUTGOING REQUESTS -->
     <div class="tab-pane fade" id="outgoing" role="tabpanel" aria-labelledby="outgoing-tab">
         <?php if (empty($outgoingRequests)): ?>
-            <div class="text-center py-5 my-5 bg-white rounded-4 shadow-sm border border-light">
-                <i class="bi bi-send-slash text-muted" style="font-size: 5rem; opacity: 0.2;"></i>
-                <h4 class="fw-bold mt-4 text-secondary">Belum Ada Pengajuan</h4>
-                <p class="text-muted">Anda belum mengajukan usulan perubahan data ke instansi/pondok lain.</p>
+            <div class="text-center py-5 my-4 bg-white rounded-4 shadow-sm border border-light">
+                <i class="bi bi-send-slash text-muted" style="font-size: 4.5rem; opacity: 0.3;"></i>
+                <h4 class="fw-bold mt-3 text-secondary">Belum Ada Pengajuan</h4>
+                <p class="text-muted small mb-0 px-3">Anda belum mengajukan usulan perubahan data ke instansi/pondok lain.</p>
             </div>
         <?php else: ?>
-            <div class="row g-4">
+            <div class="row g-3 g-lg-4">
                 <?php foreach ($outgoingRequests as $o): 
                     $changesOut = json_decode($o['requested_changes'], true) ?? [];
                     $oldData = json_decode($o['old_values'] ?? '', true) ?? [];
+                    $namaInitial = mb_substr(trim($o['nama'] ?? 'S'), 0, 1);
                 ?>
-                    <div class="col-md-6 col-lg-4" id="req-card-<?= $o['id'] ?>">
-                        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
-                            <div class="card-header bg-white border-bottom p-3 d-flex justify-content-between align-items-center">
+                    <div class="col-12 col-md-6 col-lg-4" id="req-card-<?= $o['id'] ?>">
+                        <div class="req-modern-card h-100">
+                            <!-- Card Header -->
+                            <div class="p-3 bg-white border-bottom d-flex justify-content-between align-items-center">
                                 <div class="d-flex align-items-center gap-2">
-                                    <div class="bg-secondary bg-opacity-10 text-secondary rounded px-2 py-1 small fw-bold">
-                                        <?= htmlspecialchars((string)($o['stambuk'] ?? '0')) ?>
+                                    <span class="badge bg-light text-dark border font-monospace fw-bold">
+                                        <i class="bi bi-person-badge me-1 text-secondary"></i><?= htmlspecialchars((string)($o['stambuk'] ?? '0')) ?>
+                                    </span>
+                                </div>
+                                <small class="text-muted" style="font-size: 0.72rem;">
+                                    <i class="bi bi-clock me-1"></i><?= date('d M, H:i', strtotime($o['created_at'])) ?>
+                                </small>
+                            </div>
+
+                            <!-- Card Body -->
+                            <div class="p-3 p-md-4 d-flex flex-column flex-grow-1">
+                                <!-- Profile Row -->
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <div class="req-avatar-circle" style="background: linear-gradient(135deg, #0d9488, #0f766e);">
+                                        <?= htmlspecialchars($namaInitial) ?>
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <h5 class="fw-bold text-dark mb-0 text-truncate" title="<?= htmlspecialchars($o['nama']) ?>">
+                                            <?= htmlspecialchars($o['nama']) ?>
+                                        </h5>
+                                        <div class="text-muted small text-truncate mt-1">
+                                            <i class="bi bi-arrow-right-circle text-primary me-1"></i>
+                                            Tujuan: <strong class="text-dark"><?= htmlspecialchars($o['kep_tujuan'] ?? 'Pondok Tujuan') ?></strong>
+                                        </div>
                                     </div>
                                 </div>
-                                <small class="text-muted" style="font-size: 0.7rem;"><i class="bi bi-clock me-1"></i><?= date('d M Y, H:i', strtotime($o['created_at'])) ?></small>
-                            </div>
-                            <div class="card-body p-4 bg-light bg-opacity-50">
-                                <h5 class="fw-bold text-dark mb-1 text-truncate" title="<?= htmlspecialchars($o['nama']) ?>"><?= htmlspecialchars($o['nama']) ?></h5>
-                                <div class="d-flex align-items-center text-muted small mb-3">
-                                    <i class="bi bi-arrow-right-circle me-1 text-secondary"></i> 
-                                    Tujuan: <strong class="ms-1 text-dark"><?= htmlspecialchars($o['kep_tujuan'] ?? 'Unknown') ?></strong>
-                                </div>
                                 
-                                <div class="rounded-3 border overflow-hidden mb-3">
-                                    <div class="bg-white border-bottom px-3 py-2 small fw-bold text-secondary text-center" style="background-color: #f8f9fa !important;">
+                                <!-- Diff Changes Box -->
+                                <div class="req-diff-box mb-3 flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="small fw-bold text-secondary">
+                                            <i class="bi bi-sliders text-primary me-1"></i> Perubahan Kolom
+                                        </span>
                                         <?php 
                                             $visibleCount = 0;
                                             foreach ($changesOut as $key => $val) {
@@ -290,49 +592,54 @@ function groupChanges($changes, $oldData, $row) {
                                                 $visibleCount++;
                                             }
                                         ?>
-                                        Total <span class="text-primary"><?= $visibleCount ?></span> Kolom Diusulkan
+                                        <span class="badge bg-primary rounded-pill" style="font-size: 0.7rem;">
+                                            <?= $visibleCount ?> Kolom
+                                        </span>
                                     </div>
-                                    <div class="bg-white p-3 position-relative">
-                                        <div class="small fw-bold text-muted mb-2"><i class="bi bi-eye me-1"></i> Sekilas Perubahan:</div>
-                                        <?php 
-                                        $glimpse = 0;
-                                        foreach ($changesOut as $k => $v) {
-                                            if (str_starts_with($k, '_')) continue;
-                                            if ($glimpse >= 2) break;
-                                            $oKey = $k === 'no_sktt' ? 'nik' : $k;
-                                            $oVal = array_key_exists($k, $oldData) ? $oldData[$k] : ($o[$oKey] ?? '');
-                                        ?>
-                                        <div class="d-flex justify-content-between align-items-center text-muted small mb-2">
-                                            <span class="text-capitalize text-truncate" style="max-width: 35%; font-size: 0.75rem;"><?= htmlspecialchars(str_replace('_', ' ', $k)) ?></span>
-                                            <div class="text-truncate text-end" style="max-width: 60%;">
-                                                <span class="text-decoration-line-through me-1" style="font-size: 0.7rem; opacity: 0.7;"><?= htmlspecialchars((string)$oVal) ?: '-' ?></span>
-                                                <i class="bi bi-arrow-right text-warning mx-1" style="font-size: 0.7rem;"></i>
-                                                <strong class="text-dark" style="font-size: 0.75rem;"><?= htmlspecialchars((string)$v) ?: '-' ?></strong>
-                                            </div>
+
+                                    <?php 
+                                    $glimpse = 0;
+                                    foreach ($changesOut as $k => $v) {
+                                        if (str_starts_with($k, '_')) continue;
+                                        if ($glimpse >= 2) break;
+                                        $oKey = $k === 'no_sktt' ? 'nik' : $k;
+                                        $oVal = array_key_exists($k, $oldData) ? $oldData[$k] : ($o[$oKey] ?? '');
+                                    ?>
+                                    <div class="req-diff-item shadow-none">
+                                        <div class="text-muted text-capitalize mb-1" style="font-size: 0.72rem; font-weight: 600;">
+                                            <?= htmlspecialchars(str_replace('_', ' ', $k)) ?>
                                         </div>
-                                        <?php $glimpse++; } ?>
-                                        
-                                        <div class="mt-3 text-center position-relative" style="z-index: 2;">
-                                            <button type="button" class="btn btn-sm btn-light border-primary text-primary rounded-pill px-4 shadow-sm fw-bold w-100" data-bs-toggle="modal" data-bs-target="#modalOut-<?= $o['id'] ?>" style="transition: all 0.2s;" onmouseover="this.classList.replace('btn-light','btn-primary'); this.classList.replace('text-primary','text-white');" onmouseout="this.classList.replace('btn-primary','btn-light'); this.classList.replace('text-white','text-primary');">
-                                                Lihat Selengkapnya <i class="bi bi-chevron-right ms-1"></i>
-                                            </button>
+                                        <div class="d-flex align-items-center justify-content-between gap-1">
+                                            <span class="req-old-val text-truncate" title="Nilai Lama">
+                                                <?= htmlspecialchars((string)$oVal) ?: '(Kosong)' ?>
+                                            </span>
+                                            <i class="bi bi-arrow-right text-muted small"></i>
+                                            <span class="req-new-val text-truncate" title="Nilai Usulan Baru">
+                                                <?= htmlspecialchars((string)$v) ?: '(Kosong)' ?>
+                                            </span>
                                         </div>
-                                        <div class="position-absolute bottom-0 start-0 w-100 h-50" style="background: linear-gradient(to bottom, transparent, white); pointer-events: none; z-index: 1;"></div>
                                     </div>
+                                    <?php $glimpse++; } ?>
+                                    
+                                    <button type="button" class="btn btn-sm btn-white bg-white border border-secondary-subtle text-primary rounded-pill px-3 shadow-sm fw-bold w-100 mt-2 py-1" data-bs-toggle="modal" data-bs-target="#modalOut-<?= $o['id'] ?>" style="font-size: 0.78rem;">
+                                        <i class="bi bi-list-check me-1"></i> Lihat Selengkapnya <i class="bi bi-chevron-right ms-1 small"></i>
+                                    </button>
                                 </div>
                             </div>
-                            <div class="card-footer bg-white border-top-0 p-3 text-center">
+
+                            <!-- Card Footer -->
+                            <div class="p-3 bg-light border-top mt-auto text-center">
                                 <?php if ($o['status'] === 'pending'): ?>
                                     <div class="d-flex flex-column gap-2 align-items-center">
-                                        <span class="badge bg-warning text-dark border border-warning fs-6 px-3 py-2 rounded-pill shadow-sm"><i class="bi bi-hourglass-split me-1"></i> Menunggu Persetujuan</span>
-                                        <button type="button" class="btn btn-outline-danger btn-sm rounded-pill fw-bold" onclick="cancelReq(<?= $o['id'] ?>)">
+                                        <span class="badge bg-warning bg-opacity-25 text-dark border border-warning fs-6 px-3 py-2 rounded-pill shadow-sm w-100"><i class="bi bi-hourglass-split me-1 text-warning"></i> Menunggu Persetujuan</span>
+                                        <button type="button" class="btn btn-outline-danger btn-sm rounded-pill fw-medium py-1 px-3 w-100" onclick="cancelReq(<?= $o['id'] ?>)">
                                             <i class="bi bi-trash-fill me-1"></i> Batalkan Pengajuan
                                         </button>
                                     </div>
                                 <?php elseif ($o['status'] === 'approved'): ?>
-                                    <span class="badge bg-success border border-success fs-6 px-3 py-2 rounded-pill shadow-sm"><i class="bi bi-check-circle me-1"></i> Disetujui</span>
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success fs-6 px-3 py-2 rounded-pill shadow-sm w-100"><i class="bi bi-check-circle me-1"></i> Disetujui</span>
                                 <?php else: ?>
-                                    <span class="badge bg-danger border border-danger fs-6 px-3 py-2 rounded-pill shadow-sm"><i class="bi bi-x-circle me-1"></i> Ditolak</span>
+                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger fs-6 px-3 py-2 rounded-pill shadow-sm w-100"><i class="bi bi-x-circle me-1"></i> Ditolak</span>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -340,39 +647,43 @@ function groupChanges($changes, $oldData, $row) {
                         <!-- Modal Detail Outgoing -->
                         <div class="modal fade" id="modalOut-<?= $o['id'] ?>" tabindex="-1" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                                <div class="modal-content border-0 shadow rounded-4">
-                                    <div class="modal-header border-bottom-0 bg-light rounded-top-4 pb-2">
-                                        <h5 class="modal-title fw-bold text-dark"><i class="bi bi-info-circle-fill me-2 text-primary"></i> Detail Pengajuan</h5>
+                                <div class="modal-content border-0 shadow-lg req-modal-content">
+                                    <div class="modal-header border-bottom-0 bg-light py-3 px-4">
+                                        <h5 class="modal-title fw-bold text-dark mb-0"><i class="bi bi-info-circle-fill me-2 text-primary"></i> Detail Pengajuan Saya</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
-                                    <div class="modal-body p-0 bg-white">
+                                    <div class="modal-body p-0 bg-white" style="max-height: calc(80vh - 120px); overflow-y: auto;">
+                                        <div class="p-3 bg-light border-bottom">
+                                            <div class="fw-bold text-dark fs-6"><?= htmlspecialchars($o['nama']) ?></div>
+                                            <div class="text-muted small">Stambuk: <strong class="text-dark"><?= htmlspecialchars((string)($o['stambuk'] ?? '0')) ?></strong> &bull; Tujuan: <strong><?= htmlspecialchars($o['kep_tujuan'] ?? '') ?></strong></div>
+                                        </div>
                                         <?php 
                                         $groupedOut = groupChanges($changesOut, $oldData, $o);
                                         foreach ($groupedOut as $groupName => $items): 
                                             $icon = 'bi-record-circle';
                                             if ($groupName === 'Biodata') $icon = 'bi-person-vcard';
-                                            elseif ($groupName === 'Dokumen Paspor') $icon = 'bi-passport';
-                                            elseif ($groupName === 'Dokumen ITAS') $icon = 'bi-card-heading';
+                                            elseif ($groupName === 'Dokumen Paspor') { $icon = 'bi-passport'; }
+                                            elseif ($groupName === 'Dokumen ITAS') { $icon = 'bi-card-heading'; }
                                         ?>
-                                            <div class="px-3 py-2 small fw-bold text-secondary border-bottom" style="background-color: #fcfcfc;">
+                                            <div class="px-3 py-2 small fw-bold text-secondary border-bottom bg-light">
                                                 <i class="bi <?= $icon ?> me-1 text-primary"></i> <?= $groupName ?>
                                             </div>
                                             <ul class="list-group list-group-flush small border-bottom mb-0">
                                                 <?php foreach ($items as $item): ?>
-                                                    <li class="list-group-item px-3 py-2 bg-transparent d-flex flex-column border-0 border-bottom">
+                                                    <li class="list-group-item px-3 py-2 bg-white d-flex flex-column border-0 border-bottom">
                                                         <span class="text-muted fw-bold text-capitalize mb-1" style="font-size: 0.75rem;"><?= htmlspecialchars(str_replace('_', ' ', $item['key'])) ?></span>
                                                         <div class="d-flex align-items-center justify-content-between w-100">
-                                                            <div class="text-secondary text-decoration-line-through small" style="max-width: 45%; word-break: break-all;"><?= htmlspecialchars((string)$item['oldVal']) ?: '<em class="text-muted fw-normal">(Kosong)</em>' ?></div>
-                                                            <i class="bi bi-arrow-right text-warning mx-1"></i>
-                                                            <strong class="text-dark text-end" style="max-width: 45%; word-break: break-all;"><?= htmlspecialchars((string)$item['val']) ?: '<em class="text-muted fw-normal">(Kosong)</em>' ?></strong>
+                                                            <div class="req-old-val text-truncate" style="max-width: 45%;"><?= htmlspecialchars((string)$item['oldVal']) ?: '(Kosong)' ?></div>
+                                                            <i class="bi bi-arrow-right text-muted mx-1"></i>
+                                                            <div class="req-new-val text-truncate text-end" style="max-width: 45%;"><?= htmlspecialchars((string)$item['val']) ?: '(Kosong)' ?></div>
                                                         </div>
                                                     </li>
                                                 <?php endforeach; ?>
                                             </ul>
                                         <?php endforeach; ?>
                                     </div>
-                                    <div class="modal-footer border-top-0 bg-light rounded-bottom-4">
-                                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
+                                    <div class="modal-footer border-top-0 bg-light p-3">
+                                        <button type="button" class="btn btn-secondary rounded-pill px-4 w-100" data-bs-dismiss="modal">Tutup</button>
                                     </div>
                                 </div>
                             </div>
@@ -386,36 +697,56 @@ function groupChanges($changes, $oldData, $row) {
     <!-- TAB 3: HISTORY REQUESTS (Riwayat Keputusan Anda) -->
     <div class="tab-pane fade" id="history" role="tabpanel" aria-labelledby="history-tab">
         <?php if (empty($historyRequests)): ?>
-            <div class="text-center py-5 my-5 bg-white rounded-4 shadow-sm border border-light">
-                <i class="bi bi-clock-history text-muted" style="font-size: 5rem; opacity: 0.2;"></i>
-                <h4 class="fw-bold mt-4 text-secondary">Belum Ada Riwayat</h4>
-                <p class="text-muted">Riwayat persetujuan atau penolakan usulan data santri akan muncul di sini.</p>
+            <div class="text-center py-5 my-4 bg-white rounded-4 shadow-sm border border-light">
+                <i class="bi bi-clock-history text-muted" style="font-size: 4.5rem; opacity: 0.3;"></i>
+                <h4 class="fw-bold mt-3 text-secondary">Belum Ada Riwayat</h4>
+                <p class="text-muted small mb-0 px-3">Riwayat persetujuan atau penolakan usulan data santri akan muncul di sini.</p>
             </div>
         <?php else: ?>
-            <div class="row g-4">
+            <div class="row g-3 g-lg-4">
                 <?php foreach ($historyRequests as $h): 
                     $changesHist = json_decode($h['requested_changes'], true) ?? [];
                     $oldData = json_decode($h['old_values'] ?? '', true) ?? [];
+                    $namaInitial = mb_substr(trim($h['nama'] ?? 'S'), 0, 1);
                 ?>
-                    <div class="col-md-6 col-lg-4">
-                        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden" style="opacity: 0.85;">
-                            <div class="card-header bg-light border-bottom p-3 d-flex justify-content-between align-items-center">
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="req-modern-card h-100" style="opacity: 0.94;">
+                            <!-- Card Header -->
+                            <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
                                 <div class="d-flex align-items-center gap-2">
-                                    <div class="bg-secondary bg-opacity-10 text-secondary rounded px-2 py-1 small fw-bold">
-                                        <?= htmlspecialchars((string)($h['stambuk'] ?? '0')) ?>
+                                    <span class="badge bg-light text-dark border font-monospace fw-bold">
+                                        <i class="bi bi-person-badge me-1 text-secondary"></i><?= htmlspecialchars((string)($h['stambuk'] ?? '0')) ?>
+                                    </span>
+                                </div>
+                                <small class="text-muted" style="font-size: 0.72rem;">
+                                    <i class="bi bi-calendar-check me-1"></i><?= date('d M Y', strtotime($h['created_at'])) ?>
+                                </small>
+                            </div>
+
+                            <!-- Card Body -->
+                            <div class="p-3 p-md-4 d-flex flex-column flex-grow-1">
+                                <!-- Profile Row -->
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <div class="req-avatar-circle" style="background: linear-gradient(135deg, #64748b, #475569);">
+                                        <?= htmlspecialchars($namaInitial) ?>
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <h5 class="fw-bold text-dark mb-0 text-truncate" title="<?= htmlspecialchars($h['nama']) ?>">
+                                            <?= htmlspecialchars($h['nama']) ?>
+                                        </h5>
+                                        <div class="text-muted small text-truncate mt-1">
+                                            <i class="bi bi-building text-secondary me-1"></i>
+                                            Dari: <strong class="text-dark"><?= htmlspecialchars($h['instansi_pengaju'] ?? 'Pondok Asal') ?></strong>
+                                        </div>
                                     </div>
                                 </div>
-                                <small class="text-muted" style="font-size: 0.7rem;"><i class="bi bi-calendar-check me-1"></i><?= date('d M Y', strtotime($h['created_at'])) ?></small>
-                            </div>
-                            <div class="card-body p-4 bg-white">
-                                <h5 class="fw-bold text-dark mb-1 text-truncate" title="<?= htmlspecialchars($h['nama']) ?>"><?= htmlspecialchars($h['nama']) ?></h5>
-                                <div class="d-flex align-items-center text-muted small mb-3">
-                                    <i class="bi bi-building me-1 text-secondary"></i> 
-                                    Dari: <strong class="ms-1 text-dark"><?= htmlspecialchars($h['instansi_pengaju'] ?? 'Unknown') ?> (<?= htmlspecialchars($h['kep_pengaju'] ?? '') ?>)</strong>
-                                </div>
                                 
-                                <div class="rounded-3 border overflow-hidden mb-3">
-                                    <div class="bg-white border-bottom px-3 py-2 small fw-bold text-secondary text-center" style="background-color: #f8f9fa !important;">
+                                <!-- Diff Changes Box -->
+                                <div class="req-diff-box mb-3 flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="small fw-bold text-secondary">
+                                            <i class="bi bi-sliders text-primary me-1"></i> Perubahan Kolom
+                                        </span>
                                         <?php 
                                             $visibleCount = 0;
                                             foreach ($changesHist as $key => $val) {
@@ -423,42 +754,47 @@ function groupChanges($changes, $oldData, $row) {
                                                 $visibleCount++;
                                             }
                                         ?>
-                                        Total <span class="text-primary"><?= $visibleCount ?></span> Kolom Diusulkan
+                                        <span class="badge bg-secondary rounded-pill" style="font-size: 0.7rem;">
+                                            <?= $visibleCount ?> Kolom
+                                        </span>
                                     </div>
-                                    <div class="bg-white p-3 position-relative">
-                                        <div class="small fw-bold text-muted mb-2"><i class="bi bi-eye me-1"></i> Sekilas Perubahan:</div>
-                                        <?php 
-                                        $glimpse = 0;
-                                        foreach ($changesHist as $k => $v) {
-                                            if (str_starts_with($k, '_')) continue;
-                                            if ($glimpse >= 2) break;
-                                            $oKey = $k === 'no_sktt' ? 'nik' : $k;
-                                            $oVal = array_key_exists($k, $oldData) ? $oldData[$k] : ($h[$oKey] ?? '');
-                                        ?>
-                                        <div class="d-flex justify-content-between align-items-center text-muted small mb-2">
-                                            <span class="text-capitalize text-truncate" style="max-width: 35%; font-size: 0.75rem;"><?= htmlspecialchars(str_replace('_', ' ', $k)) ?></span>
-                                            <div class="text-truncate text-end" style="max-width: 60%;">
-                                                <span class="text-decoration-line-through me-1" style="font-size: 0.7rem; opacity: 0.7;"><?= htmlspecialchars((string)$oVal) ?: '-' ?></span>
-                                                <i class="bi bi-arrow-right text-warning mx-1" style="font-size: 0.7rem;"></i>
-                                                <strong class="text-dark" style="font-size: 0.75rem;"><?= htmlspecialchars((string)$v) ?: '-' ?></strong>
-                                            </div>
+
+                                    <?php 
+                                    $glimpse = 0;
+                                    foreach ($changesHist as $k => $v) {
+                                        if (str_starts_with($k, '_')) continue;
+                                        if ($glimpse >= 2) break;
+                                        $oKey = $k === 'no_sktt' ? 'nik' : $k;
+                                        $oVal = array_key_exists($k, $oldData) ? $oldData[$k] : ($h[$oKey] ?? '');
+                                    ?>
+                                    <div class="req-diff-item shadow-none">
+                                        <div class="text-muted text-capitalize mb-1" style="font-size: 0.72rem; font-weight: 600;">
+                                            <?= htmlspecialchars(str_replace('_', ' ', $k)) ?>
                                         </div>
-                                        <?php $glimpse++; } ?>
-                                        
-                                        <div class="mt-3 text-center position-relative" style="z-index: 2;">
-                                            <button type="button" class="btn btn-sm btn-light border-primary text-primary rounded-pill px-4 shadow-sm fw-bold w-100" data-bs-toggle="modal" data-bs-target="#modalHist-<?= $h['id'] ?>" style="transition: all 0.2s;" onmouseover="this.classList.replace('btn-light','btn-primary'); this.classList.replace('text-primary','text-white');" onmouseout="this.classList.replace('btn-primary','btn-light'); this.classList.replace('text-white','text-primary');">
-                                                Lihat Selengkapnya <i class="bi bi-chevron-right ms-1"></i>
-                                            </button>
+                                        <div class="d-flex align-items-center justify-content-between gap-1">
+                                            <span class="req-old-val text-truncate" title="Nilai Lama">
+                                                <?= htmlspecialchars((string)$oVal) ?: '(Kosong)' ?>
+                                            </span>
+                                            <i class="bi bi-arrow-right text-muted small"></i>
+                                            <span class="req-new-val text-truncate" title="Nilai Usulan Baru">
+                                                <?= htmlspecialchars((string)$v) ?: '(Kosong)' ?>
+                                            </span>
                                         </div>
-                                        <div class="position-absolute bottom-0 start-0 w-100 h-50" style="background: linear-gradient(to bottom, transparent, white); pointer-events: none; z-index: 1;"></div>
                                     </div>
+                                    <?php $glimpse++; } ?>
+                                    
+                                    <button type="button" class="btn btn-sm btn-white bg-white border border-secondary-subtle text-primary rounded-pill px-3 shadow-sm fw-bold w-100 mt-2 py-1" data-bs-toggle="modal" data-bs-target="#modalHist-<?= $h['id'] ?>" style="font-size: 0.78rem;">
+                                        <i class="bi bi-list-check me-1"></i> Lihat Selengkapnya <i class="bi bi-chevron-right ms-1 small"></i>
+                                    </button>
                                 </div>
                             </div>
-                            <div class="card-footer bg-light border-top-0 p-3 text-center">
+
+                            <!-- Card Footer -->
+                            <div class="p-3 bg-light border-top mt-auto text-center">
                                 <?php if ($h['status'] === 'approved'): ?>
-                                    <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 rounded-pill fs-6"><i class="bi bi-check-circle me-1"></i> Disetujui</span>
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 rounded-pill fs-6 w-100"><i class="bi bi-check-circle me-1"></i> Disetujui</span>
                                 <?php elseif ($h['status'] === 'rejected'): ?>
-                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger px-3 py-2 rounded-pill fs-6"><i class="bi bi-x-circle me-1"></i> Ditolak</span>
+                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger px-3 py-2 rounded-pill fs-6 w-100"><i class="bi bi-x-circle me-1"></i> Ditolak</span>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -466,12 +802,16 @@ function groupChanges($changes, $oldData, $row) {
                         <!-- Modal Detail History -->
                         <div class="modal fade" id="modalHist-<?= $h['id'] ?>" tabindex="-1" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                                <div class="modal-content border-0 shadow rounded-4">
-                                    <div class="modal-header border-bottom-0 bg-light rounded-top-4 pb-2">
-                                        <h5 class="modal-title fw-bold text-dark"><i class="bi bi-info-circle-fill me-2 text-primary"></i> Detail Riwayat Keputusan</h5>
+                                <div class="modal-content border-0 shadow-lg req-modal-content">
+                                    <div class="modal-header border-bottom-0 bg-light py-3 px-4">
+                                        <h5 class="modal-title fw-bold text-dark mb-0"><i class="bi bi-info-circle-fill me-2 text-primary"></i> Detail Riwayat Keputusan</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
-                                    <div class="modal-body p-0 bg-white">
+                                    <div class="modal-body p-0 bg-white" style="max-height: calc(80vh - 120px); overflow-y: auto;">
+                                        <div class="p-3 bg-light border-bottom">
+                                            <div class="fw-bold text-dark fs-6"><?= htmlspecialchars($h['nama']) ?></div>
+                                            <div class="text-muted small">Stambuk: <strong class="text-dark"><?= htmlspecialchars((string)($h['stambuk'] ?? '0')) ?></strong> &bull; Pengaju: <strong><?= htmlspecialchars($h['instansi_pengaju'] ?? '') ?></strong></div>
+                                        </div>
                                         <?php 
                                         $groupedHist = groupChanges($changesHist, $oldData, $h);
                                         foreach ($groupedHist as $groupName => $items): 
@@ -480,25 +820,25 @@ function groupChanges($changes, $oldData, $row) {
                                             elseif ($groupName === 'Dokumen Paspor') $icon = 'bi-passport';
                                             elseif ($groupName === 'Dokumen ITAS') $icon = 'bi-card-heading';
                                         ?>
-                                            <div class="px-3 py-2 small fw-bold text-secondary border-bottom" style="background-color: #fcfcfc;">
+                                            <div class="px-3 py-2 small fw-bold text-secondary border-bottom bg-light">
                                                 <i class="bi <?= $icon ?> me-1 text-primary"></i> <?= $groupName ?>
                                             </div>
                                             <ul class="list-group list-group-flush small border-bottom mb-0">
                                                 <?php foreach ($items as $item): ?>
-                                                    <li class="list-group-item px-3 py-2 bg-transparent d-flex flex-column border-0 border-bottom">
+                                                    <li class="list-group-item px-3 py-2 bg-white d-flex flex-column border-0 border-bottom">
                                                         <span class="text-muted fw-bold text-capitalize mb-1" style="font-size: 0.75rem;"><?= htmlspecialchars(str_replace('_', ' ', $item['key'])) ?></span>
                                                         <div class="d-flex align-items-center justify-content-between w-100">
-                                                            <div class="text-secondary text-decoration-line-through small" style="max-width: 45%; word-break: break-all;"><?= htmlspecialchars((string)$item['oldVal']) ?: '<em class="text-muted fw-normal">(Kosong)</em>' ?></div>
-                                                            <i class="bi bi-arrow-right text-warning mx-1"></i>
-                                                            <strong class="text-dark text-end" style="max-width: 45%; word-break: break-all;"><?= htmlspecialchars((string)$item['val']) ?: '<em class="text-muted fw-normal">(Kosong)</em>' ?></strong>
+                                                            <div class="req-old-val text-truncate" style="max-width: 45%;"><?= htmlspecialchars((string)$item['oldVal']) ?: '(Kosong)' ?></div>
+                                                            <i class="bi bi-arrow-right text-muted mx-1"></i>
+                                                            <div class="req-new-val text-truncate text-end" style="max-width: 45%;"><?= htmlspecialchars((string)$item['val']) ?: '(Kosong)' ?></div>
                                                         </div>
                                                     </li>
                                                 <?php endforeach; ?>
                                             </ul>
                                         <?php endforeach; ?>
                                     </div>
-                                    <div class="modal-footer border-top-0 bg-light rounded-bottom-4">
-                                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
+                                    <div class="modal-footer border-top-0 bg-light p-3">
+                                        <button type="button" class="btn btn-secondary rounded-pill px-4 w-100" data-bs-dismiss="modal">Tutup</button>
                                     </div>
                                 </div>
                             </div>
@@ -533,13 +873,12 @@ function approvePartialReq(id) {
         text: 'Hanya data yang Anda pilih yang akan diterapkan.',
         icon: 'question',
         showCancelButton: true,
-        confirmButtonColor: '#198754',
+        confirmButtonColor: '#10b981',
         cancelButtonColor: '#6c757d',
         confirmButtonText: 'Ya, Setujui',
         cancelButtonText: 'Batal'
     }).then((result) => {
         if (result.isConfirmed) {
-            // Close the modal
             const modalEl = document.getElementById(`modalIn-${id}`);
             const modalInstance = bootstrap.Modal.getInstance(modalEl);
             if(modalInstance) modalInstance.hide();
@@ -550,8 +889,6 @@ function approvePartialReq(id) {
 }
 
 function approveReq(id) {
-    // Legacy full approve (from the card button)
-    // To make it consistent, we can just grab all checkboxes if they exist, or send nothing (which implies full approve)
     const checkboxes = document.querySelectorAll(`.chk-partial-${id}`);
     const approvedKeys = Array.from(checkboxes).map(cb => cb.value);
     
@@ -560,7 +897,7 @@ function approveReq(id) {
         text: 'Semua usulan perubahan pada kartu ini akan disetujui.',
         icon: 'question',
         showCancelButton: true,
-        confirmButtonColor: '#198754',
+        confirmButtonColor: '#10b981',
         cancelButtonColor: '#6c757d',
         confirmButtonText: 'Ya, Setujui Semua',
         cancelButtonText: 'Batal'
@@ -577,7 +914,7 @@ function rejectReq(id) {
         text: 'Usulan akan dihapus dan data santri tidak akan berubah.',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#dc3545',
+        confirmButtonColor: '#ef4444',
         cancelButtonColor: '#6c757d',
         confirmButtonText: 'Ya, Tolak',
         cancelButtonText: 'Batal'
@@ -594,7 +931,7 @@ function cancelReq(id) {
         text: 'Usulan akan dibatalkan dan dihapus permanen.',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#dc3545',
+        confirmButtonColor: '#ef4444',
         cancelButtonColor: '#6c757d',
         confirmButtonText: 'Ya, Batalkan',
         cancelButtonText: 'Tutup'

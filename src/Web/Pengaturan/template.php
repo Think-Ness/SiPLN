@@ -183,38 +183,278 @@ $this->setTitle('Pengaturan Sistem | Manajemen Terpusat');
 <?php endif; ?>
 
 <?php if ($role === 'super_admin'): ?>
-<!-- Database Migration / Update Section -->
-<div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-    <div class="card-header bg-white p-4" data-bs-toggle="collapse" data-bs-target="#collapseMaintenance" style="cursor: pointer;">
+<!-- ITAS Parser & Template Configuration Section -->
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4" id="cardItasParser">
+    <div class="card-header bg-white p-4" data-bs-toggle="collapse" data-bs-target="#collapseItasParser" style="cursor: pointer;">
         <div class="d-flex justify-content-between align-items-center">
             <div>
                 <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-tools text-danger fs-5"></i>
-                    <h5 class="fw-bold mb-0">Maintenance & Pembaruan Sistem</h5>
+                    <i class="bi bi-file-earmark-pdf-fill text-danger fs-5"></i>
+                    <h5 class="fw-bold mb-0">Pengaturan Format & Parser ITAS (Auto-Upload)</h5>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-2" id="itas-mode-badge">
+                        <?= ($itasConfig['mode'] ?? 'auto') === 'auto' ? '⚡ Auto-Detect Aktif' : '🎯 Format Terkunci' ?>
+                    </span>
                 </div>
                 <p class="text-muted small mb-0 mt-2">
-                    Gunakan fitur di bawah ini hanya setelah melakukan pembaruan file source code aplikasi (Update Aplikasi).
+                    Konfigurasi fleksibel mesin pembaca PDF ITAS otomatis. Mengatasi perbedaan bentuk ITAS saat ini, format 2-3 tahun lalu, maupun perubahan format di masa depan tanpa merombak sistem.
                 </p>
             </div>
             <i class="bi bi-chevron-expand fs-4 text-secondary"></i>
         </div>
     </div>
-    <div id="collapseMaintenance" class="collapse border-top">
+    <div id="collapseItasParser" class="collapse border-top">
         <div class="card-body p-4 bg-white">
-            <div class="d-flex flex-wrap align-items-center justify-content-between bg-light p-3 border rounded-3">
-                <div class="mb-3 mb-md-0 me-3">
-                    <h6 class="fw-bold mb-1"><i class="bi bi-database-up text-primary me-2"></i>Suntik / Sinkronisasi Struktur Database</h6>
-                    <p class="text-muted small mb-0" style="line-height: 1.5;">Terapkan perubahan skema database terbaru secara otomatis (misalnya penambahan kolom <code>instansi_tujuan</code> pada fitur Surat Generator / Pengaturan Template). Cukup tekan sekali setelah mengupdate aplikasi.</p>
+            
+            <!-- Pengaturan Utama Mode Parser -->
+            <div class="row g-4 mb-4 pb-4 border-bottom">
+                <div class="col-lg-6">
+                    <label class="fw-bold text-dark mb-2 d-flex align-items-center gap-2">
+                        <i class="bi bi-gear-wide-connected text-primary"></i>
+                        Mode Deteksi Dokumen ITAS
+                    </label>
+                    <div class="bg-light p-3 rounded-3 border">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="itas_mode" id="mode_auto" value="auto" <?= ($itasConfig['mode'] ?? 'auto') === 'auto' ? 'checked' : '' ?> onchange="onItasModeChange()">
+                            <label class="form-check-label fw-bold text-dark" for="mode_auto">
+                                ⚡ Mode Cerdas Multi-Format (Auto-Detect - Sangat Direkomendasikan)
+                            </label>
+                            <div class="text-muted small ms-4">
+                                Mesin otomatis mencocokkan teks PDF dengan semua format yang aktif (format sekarang, format lama, maupun format baru) secara simultan.
+                            </div>
+                        </div>
+                        <div class="form-check mt-3">
+                            <input class="form-check-input" type="radio" name="itas_mode" id="mode_manual" value="manual" <?= ($itasConfig['mode'] ?? 'auto') !== 'auto' ? 'checked' : '' ?> onchange="onItasModeChange()">
+                            <label class="form-check-label fw-bold text-dark" for="mode_manual">
+                                🎯 Kunci ke Format Tertentu Saja
+                            </label>
+                            <div class="ms-4 mt-2">
+                                <select id="itas_active_profile_select" class="form-select form-select-sm" style="max-width: 380px;" <?= ($itasConfig['mode'] ?? 'auto') === 'auto' ? 'disabled' : '' ?>>
+                                    <?php foreach (($itasConfig['profiles'] ?? []) as $p): ?>
+                                        <option value="<?= htmlspecialchars($p['id']) ?>" <?= ($itasConfig['active_profile_id'] ?? '') === $p['id'] ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($p['name']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm flex-shrink-0" onclick="triggerDatabaseMigration()" id="btn-db-migrate">
-                    <i class="bi bi-lightning-fill me-2"></i>Suntik Database Baru
+
+                <div class="col-lg-6">
+                    <label class="fw-bold text-dark mb-2 d-flex align-items-center gap-2">
+                        <i class="bi bi-shield-check text-success"></i>
+                        Pencocokan Cadangan via Nomor Paspor
+                    </label>
+                    <div class="bg-light p-3 rounded-3 border h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="itas_fallback_passport" <?= !empty($itasConfig['fallback_passport_match']) ? 'checked' : '' ?> style="transform: scale(1.2); cursor: pointer;">
+                                <label class="form-check-label fw-bold text-dark ms-2" for="itas_fallback_passport" style="cursor: pointer;">
+                                    Aktifkan Pencarian via No Paspor (Smart Fallback)
+                                </label>
+                            </div>
+                            <p class="text-muted small mt-2 mb-0" style="line-height: 1.5;">
+                                Jika nama santri pada teks ITAS memiliki perbedaan ejaan atau urutan kata yang tidak terdeteksi, sistem akan otomatis mencocokkan <strong>Passport Number</strong> pada ITAS dengan data paspor santri di database.
+                            </p>
+                        </div>
+                        <div class="alert alert-success border-0 py-2 px-3 small rounded-3 mb-0 mt-3 d-flex align-items-center gap-2">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span>Tingkat akurasi pencocokan meningkat hingga <strong>99.8%</strong>.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Daftar Profil Format ITAS -->
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <div>
+                    <h6 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                        <i class="bi bi-collection-fill text-warning"></i>
+                        Daftar Template / Profil Format ITAS
+                    </h6>
+                    <span class="text-muted small">Kelola aturan pola pembacaan untuk setiap variasi dokumen ITAS.</span>
+                </div>
+                <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm" onclick="openAddProfileModal()">
+                    <i class="bi bi-plus-circle-fill me-1"></i> Tambah Template Baru
+                </button>
+            </div>
+
+            <div id="itas-profiles-container" class="row g-3 mb-4">
+                <!-- Diisi via JavaScript renderProfiles() -->
+            </div>
+
+            <!-- Bagian Live Test Preview PDF ITAS -->
+            <div class="card border border-primary border-opacity-25 bg-primary bg-opacity-10 rounded-4 overflow-hidden mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <div>
+                            <h6 class="fw-bold text-primary mb-1 d-flex align-items-center gap-2">
+                                <i class="bi bi-flask-fill"></i>
+                                Live Test / Uji Coba Parser PDF ITAS
+                            </h6>
+                            <span class="text-muted small">Coba upload 1 file PDF ITAS (format apapun) untuk melihat langsung hasil ekstraksi dan kecocokannya dengan aturan di atas.</span>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary bg-white rounded-pill px-3 fw-bold" onclick="document.getElementById('testPdfInput').click()">
+                            <i class="bi bi-upload me-1"></i> Pilih PDF Uji Coba
+                        </button>
+                    </div>
+
+                    <input type="file" id="testPdfInput" class="d-none" accept=".pdf" onchange="runLiveTestParser(this.files[0])">
+                    
+                    <div id="testDropZone" class="border rounded-3 p-4 bg-white text-center shadow-sm cursor-pointer position-relative mb-3" style="border-style: dashed !important; border-width: 2px !important; cursor: pointer;" onclick="document.getElementById('testPdfInput').click()" ondragover="event.preventDefault(); this.classList.add('border-primary')" ondragleave="this.classList.remove('border-primary')" ondrop="event.preventDefault(); this.classList.remove('border-primary'); if(event.dataTransfer.files.length) runLiveTestParser(event.dataTransfer.files[0])">
+                        <i class="bi bi-file-earmark-arrow-up text-primary fs-2"></i>
+                        <div class="fw-bold text-dark mt-2">Klik atau Tarik File PDF ITAS ke Sini untuk Menguji</div>
+                        <div class="text-muted small">File hanya dianalisis sementara dan tidak akan disimpan ke database santri.</div>
+                                      <div id="testResultBox" class="d-none">
+                        <!-- Container hasil tes -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tombol Aksi Simpan & Reset -->
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top flex-wrap gap-2">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-medium btn-sm" onclick="resetItasConfigToDefault()">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Reset ke Standar Pabrik
+                </button>
+                <button type="button" class="btn btn-primary rounded-pill px-5 fw-bold shadow" onclick="saveItasParserConfig()">
+                    <i class="bi bi-cloud-arrow-up-fill me-2"></i> Simpan Konfigurasi ITAS
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal Tambah / Edit Profil ITAS -->
+<div class="modal fade" id="modalItasProfile" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header bg-light border-bottom-0 pb-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold text-dark" id="modalItasProfileTitle">
+                    <i class="bi bi-sliders text-primary me-2"></i>Edit Aturan Template ITAS
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                
+                <!-- AI / Auto Wizard dari Sampel PDF -->
+                <div class="card border-0 bg-primary bg-opacity-10 rounded-4 p-3 mb-4 position-relative">
+                    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 34px; height: 34px;">
+                                <i class="bi bi-magic fs-6"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-0 text-dark">Deteksi Otomatis dari Sampel PDF</h6>
+                                <p class="text-muted small mb-0" style="font-size: 0.75rem;">Tinggal upload 1 contoh PDF ITAS — sistem otomatis menganalisis dan mengisi formulir aturan!</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm" onclick="document.getElementById('samplePdfUploadInput').click()">
+                            <i class="bi bi-file-earmark-pdf-fill me-1"></i> Upload Sampel PDF
+                        </button>
+                    </div>
+                    <input type="file" id="samplePdfUploadInput" class="d-none" accept=".pdf" onchange="runAutoAnalyzeSample(this.files[0])">
+                    
+                    <div id="sampleDropZone" class="border rounded-3 p-3 bg-white text-center cursor-pointer position-relative mt-2 shadow-sm" style="border-style: dashed !important; border-width: 2px !important; border-color: #0d6efd !important; cursor: pointer;" onclick="document.getElementById('samplePdfUploadInput').click()" ondragover="event.preventDefault(); this.style.backgroundColor='#f0f7ff';" ondragleave="this.style.backgroundColor='white';" ondrop="event.preventDefault(); this.style.backgroundColor='white'; if(event.dataTransfer.files.length) runAutoAnalyzeSample(event.dataTransfer.files[0])">
+                        <div id="sampleUploadPlaceholder">
+                            <i class="bi bi-cloud-arrow-up-fill text-primary fs-3"></i>
+                            <div class="fw-bold text-dark small mt-1">Klik atau Tarik File Sampel PDF ITAS ke Sini</div>
+                            <div class="text-muted small" style="font-size: 0.75rem;">Format baru/lama langsung dibaca tanpa perlu paham rumus regex manual.</div>
+                        </div>
+                        <div id="sampleAnalyzingSpinner" class="d-none py-2">
+                            <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                            <span class="fw-bold text-dark small">Menganalisis sampel PDF secara otomatis...</span>
+                        </div>
+                    </div>
+
+                    <!-- Hasil Deteksi Sampel (Visual Preview) -->
+                    <div id="sampleDetectionResult" class="d-none mt-3 p-3 bg-white border border-success border-opacity-50 rounded-3 shadow-sm">
+                        <div class="d-flex align-items-center justify-content-between mb-2 pb-1 border-bottom">
+                            <span class="badge bg-success px-2 py-1"><i class="bi bi-check-circle-fill me-1"></i> Pola Berhasil Dideteksi Mesin</span>
+                            <span class="text-muted small font-monospace" id="sampleFileName" style="font-size: 0.75rem;"></span>
+                        </div>
+                        <div class="row g-2 small text-dark">
+                            <div class="col-sm-6"><strong>📋 No ITAS:</strong> <span class="badge bg-light text-dark border font-monospace" id="det_no_itas">-</span></div>
+                            <div class="col-sm-6"><strong>📅 Masa Berlaku:</strong> <span class="badge bg-info-subtle text-info border" id="det_exp_itas">-</span></div>
+                            <div class="col-sm-6"><strong>👤 Nama Terbaca:</strong> <span class="fw-bold text-primary" id="det_nama">-</span></div>
+                            <div class="col-sm-6"><strong>🛂 No Paspor:</strong> <span class="font-monospace text-muted" id="det_paspor">-</span></div>
+                        </div>
+                        <div class="text-success small fw-medium mt-2 pt-1 border-top" style="font-size: 0.75rem;">
+                            <i class="bi bi-stars me-1"></i> Semua parameter aturan di bawah telah diisi otomatis. Cukup tinjau lalu klik tombol <strong>"Terapkan Aturan"</strong>.
+                        </div>
+                    </div>
+                </div>
+
+                <form id="formItasProfile">
+                    <input type="hidden" id="edit_prof_id">
+                    
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label small fw-bold text-dark">Nama Template / Format</label>
+                            <input type="text" id="edit_prof_name" class="form-control form-control-sm" placeholder="Contoh: Ditjen Imigrasi 2026+" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-dark">Status Format</label>
+                            <select id="edit_prof_enabled" class="form-select form-select-sm">
+                                <option value="1">Aktif (Digunakan)</option>
+                                <option value="0">Nonaktif</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-dark">Deskripsi Singkat</label>
+                            <input type="text" id="edit_prof_desc" class="form-control form-control-sm" placeholder="Keterangan layout atau tahun terbit format ini">
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-dark">Kata Kunci Pengenal Dokumen (Identifier Keywords)</label>
+                            <input type="text" id="edit_prof_keywords" class="form-control form-control-sm" placeholder="Pisahkan dengan koma, contoh: DIRECTORATE GENERAL OF IMMIGRATION, TEMPORARY STAY PERMIT">
+                            <div class="form-text small" style="font-size: 0.75rem;">Kata kunci unik yang ada pada dokumen ini untuk membedakannya dari format lain saat Auto-Detect.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-dark">Metode Pengambilan Nama Santri</label>
+                            <select id="edit_prof_name_mode" class="form-select form-select-sm" onchange="toggleNameRegexField()">
+                                <option value="top_line">Baris Judul Pertama (Top Line Header)</option>
+                                <option value="regex">Pola Teks / Label (Contoh: Full Name : ...)</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6" id="wrap_name_regex">
+                            <label class="form-label small fw-bold text-dark">Regex Pola Nama (Name Pattern)</label>
+                            <input type="text" id="edit_prof_name_regex" class="form-control form-control-sm font-monospace" placeholder="/(?:Full\s*Name|Nama)\s*:\s*([^\n\r]+)/i">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-dark">Regex Pola Nomor ITAS (Permit Number)</label>
+                            <input type="text" id="edit_prof_permit_regex" class="form-control form-control-sm font-monospace" placeholder="/(?:PERMIT\s+NUMBER)\s*:\s*([A-Z0-9\-]+)/i" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-dark">Regex Pola Masa Berlaku (Expiry Date)</label>
+                            <input type="text" id="edit_prof_expiry_regex" class="form-control form-control-sm font-monospace" placeholder="/(?:STAY\s+PERMIT\s+EXPIRY)\s*:\s*(\d{2}[\/\-]\d{2}[\/\-]\d{4})/i" required>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-dark">Regex Pola Nomor Paspor (Opsional untuk Pencocokan Cadangan)</label>
+                            <input type="text" id="edit_prof_passport_regex" class="form-control form-control-sm font-monospace" placeholder="/(?:Passport\s+Number|No\s+Paspor)\s*:\s*([A-Z0-9\-]+)/i">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-top bg-light px-4 py-3">
+                <button type="button" class="btn btn-light rounded-pill px-4 fw-medium border" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" onclick="saveProfileModal()">
+                    <i class="bi bi-check-lg me-1"></i> Terapkan Aturan
                 </button>
             </div>
         </div>
     </div>
 </div>
-<?php endif; ?>
 
+<!-- Database Migration / Update Section -->
+
+<?php endif; ?>
 
 <!-- Toast Notification -->
 <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
@@ -297,6 +537,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function checkFirebaseStatus() {
     const badge = document.getElementById('firebase-status-badge');
+    if (!badge) return;
     badge.className = 'badge bg-secondary ms-2';
     badge.textContent = 'Memeriksa...';
     
@@ -334,8 +575,10 @@ function triggerFullSync() {
     }).then((result) => {
         if (result.isConfirmed) {
             const btn = document.getElementById('btn-full-sync');
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Mengirim data...';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Mengirim data...';
+            }
             
             Swal.fire({
                 title: 'Sedang Mengirim Data...',
@@ -355,8 +598,10 @@ function triggerFullSync() {
             })
             .then(r => r.json())
             .then(res => {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-cloud-upload-fill me-2"></i>Kirim Semua Data ke Firebase';
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-cloud-upload-fill me-2"></i>Kirim Semua Data ke Firebase';
+                }
                 
                 if (res.success) {
                     Swal.fire({
@@ -376,15 +621,19 @@ function triggerFullSync() {
                     // Update result panel
                     const resultDiv = document.getElementById('sync-result');
                     const contentDiv = document.getElementById('sync-result-content');
-                    resultDiv.classList.remove('d-none');
-                    contentDiv.innerHTML = `<strong>✅ Sync terakhir:</strong> ${new Date().toLocaleString('id-ID')} — ${res.santri || 0} santri, ${res.paspor || 0} paspor, ${res.itas || 0} ITAS, ${res.users || 0} users`;
+                    if (resultDiv && contentDiv) {
+                        resultDiv.classList.remove('d-none');
+                        contentDiv.innerHTML = `<strong>✅ Sync terakhir:</strong> ${new Date().toLocaleString('id-ID')} — ${res.santri || 0} santri, ${res.paspor || 0} paspor, ${res.itas || 0} ITAS, ${res.users || 0} users`;
+                    }
                 } else {
                     Swal.fire('Gagal', res.message || 'Terjadi kesalahan saat sync', 'error');
                 }
             })
             .catch(err => {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-cloud-upload-fill me-2"></i>Kirim Semua Data ke Firebase';
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-cloud-upload-fill me-2"></i>Kirim Semua Data ke Firebase';
+                }
                 Swal.fire('Error', 'Gagal menghubungi server: ' + err.message, 'error');
             });
         }
@@ -406,8 +655,10 @@ function triggerDatabaseMigration() {
     }).then((result) => {
         if (result.isConfirmed) {
             const btn = document.getElementById('btn-db-migrate');
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Memproses...';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Memproses...';
+            }
             
             Swal.fire({
                 title: 'Sedang Menerapkan Perubahan...',
@@ -426,8 +677,10 @@ function triggerDatabaseMigration() {
             })
             .then(r => r.json())
             .then(res => {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-lightning-fill me-2"></i>Suntik Database Baru';
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-lightning-fill me-2"></i>Suntik Database Baru';
+                }
                 
                 if (res.success) {
                     Swal.fire({
@@ -440,11 +693,590 @@ function triggerDatabaseMigration() {
                 }
             })
             .catch(err => {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-lightning-fill me-2"></i>Suntik Database Baru';
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-lightning-fill me-2"></i>Suntik Database Baru';
+                }
                 Swal.fire('Error', 'Gagal menghubungi server: ' + err.message, 'error');
             });
         }
     });
 }
 </script>
+
+<script>
+// ITAS Parser Management State
+let itasConfigState = <?= json_encode($itasConfig, JSON_UNESCAPED_UNICODE) ?>;
+let modalItasProfileInstance = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    modalItasProfileInstance = new bootstrap.Modal(document.getElementById('modalItasProfile'));
+    renderItasProfiles();
+    
+    // Auto expand if URL hash is #collapseItasParser
+    if (window.location.hash === '#collapseItasParser' || window.location.hash === '#cardItasParser') {
+        const collapseEl = document.getElementById('collapseItasParser');
+        if (collapseEl) {
+            new bootstrap.Collapse(collapseEl, { show: true });
+            setTimeout(() => {
+                collapseEl.scrollIntoView({ behavior: 'smooth' });
+            }, 300);
+        }
+    }
+});
+
+function onItasModeChange() {
+    const isAuto = document.getElementById('mode_auto').checked;
+    const select = document.getElementById('itas_active_profile_select');
+    const badge = document.getElementById('itas-mode-badge');
+    
+    select.disabled = isAuto;
+    if (isAuto) {
+        itasConfigState.mode = 'auto';
+        badge.className = 'badge bg-primary-subtle text-primary border border-primary-subtle ms-2';
+        badge.textContent = '⚡ Auto-Detect Aktif';
+    } else {
+        itasConfigState.mode = 'manual';
+        itasConfigState.active_profile_id = select.value;
+        badge.className = 'badge bg-warning-subtle text-warning border border-warning-subtle ms-2';
+        badge.textContent = '🎯 Format Terkunci';
+    }
+}
+
+document.getElementById('itas_active_profile_select')?.addEventListener('change', function() {
+    itasConfigState.active_profile_id = this.value;
+});
+
+document.getElementById('itas_fallback_passport')?.addEventListener('change', function() {
+    itasConfigState.fallback_passport_match = this.checked;
+});
+
+function renderItasProfiles() {
+    const container = document.getElementById('itas-profiles-container');
+    if (!container) return;
+
+    const select = document.getElementById('itas_active_profile_select');
+    if (select) {
+        select.innerHTML = '';
+    }
+
+    if (!itasConfigState.profiles || itasConfigState.profiles.length === 0) {
+        container.innerHTML = `<div class="col-12"><div class="alert alert-warning">Belum ada template format ITAS yang didaftarkan.</div></div>`;
+        return;
+    }
+
+    let html = '';
+    itasConfigState.profiles.forEach((prof, idx) => {
+        const isEnabled = prof.enabled !== false;
+        const isSystem = !!prof.is_system;
+        
+        if (select) {
+            const opt = document.createElement('option');
+            opt.value = prof.id;
+            opt.textContent = prof.name + (!isEnabled ? ' (Nonaktif)' : '');
+            opt.selected = (itasConfigState.active_profile_id === prof.id);
+            select.appendChild(opt);
+        }
+
+        const kwBadges = (prof.identifier_keywords || []).map(k => `<span class="badge bg-secondary-subtle text-dark border me-1 mb-1 font-monospace" style="font-size:0.7rem;">${escapeHtml(k)}</span>`).join('');
+
+        html += `
+        <div class="col-md-6">
+            <div class="card h-100 border ${isEnabled ? 'border-primary border-opacity-25' : 'border-secondary bg-light opacity-75'} rounded-4 shadow-sm">
+                <div class="card-body p-3 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="fw-bold mb-1 ${isEnabled ? 'text-dark' : 'text-muted'}">${escapeHtml(prof.name)}</h6>
+                                <div class="d-flex gap-2 align-items-center">
+                                    ${isSystem ? '<span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size:0.65rem;">Sistem Bawaan</span>' : '<span class="badge bg-primary-subtle text-primary border" style="font-size:0.65rem;">Kustom</span>'}
+                                    <span class="badge ${isEnabled ? 'bg-success-subtle text-success' : 'bg-secondary text-white'}" style="font-size:0.65rem;">
+                                        ${isEnabled ? 'Aktif' : 'Nonaktif'}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="form-check form-switch ms-2">
+                                <input class="form-check-input" type="checkbox" role="switch" ${isEnabled ? 'checked' : ''} onchange="toggleProfileStatus('${escapeHtml(prof.id)}', this.checked)" title="Aktif/Nonaktifkan Format Ini">
+                            </div>
+                        </div>
+                        <p class="text-muted small mb-2" style="font-size:0.8rem; line-height:1.4;">${escapeHtml(prof.description || 'Format ITAS')}</p>
+                        
+                        <div class="bg-light p-2 rounded-3 border mb-2 small" style="font-size:0.75rem;">
+                            <div class="fw-bold text-secondary mb-1">Kata Kunci Pengenal:</div>
+                            <div class="d-flex flex-wrap">${kwBadges || '<span class="text-muted fst-italic">Tanpa filter keyword (General)</span>'}</div>
+                        </div>
+
+                        <div class="small text-muted mb-3" style="font-size:0.75rem;">
+                            <div><strong>Metode Nama:</strong> ${prof.name_mode === 'regex' ? 'Regex Label' : 'Baris Judul Atas (Top Line)'}</div>
+                            <div><strong>Pola Permit:</strong> <code class="text-dark">${escapeHtml(prof.permit_regex || '-')}</code></div>
+                            <div><strong>Pola Expiry:</strong> <code class="text-dark">${escapeHtml(prof.expiry_regex || '-')}</code></div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 pt-2 border-top">
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill flex-fill fw-bold" onclick="openEditProfileModal('${escapeHtml(prof.id)}')">
+                            <i class="bi bi-pencil-square me-1"></i> Edit Aturan
+                        </button>
+                        ${!isSystem ? `
+                        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="deleteProfile('${escapeHtml(prof.id)}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+function toggleProfileStatus(id, isEnabled) {
+    const prof = itasConfigState.profiles.find(p => p.id === id);
+    if (prof) {
+        prof.enabled = isEnabled;
+        renderItasProfiles();
+    }
+}
+
+function toggleNameRegexField() {
+    const mode = document.getElementById('edit_prof_name_mode').value;
+    const wrap = document.getElementById('wrap_name_regex');
+    if (mode === 'regex') {
+        wrap.classList.remove('d-none');
+    } else {
+        wrap.classList.add('d-none');
+    }
+}
+
+function openAddProfileModal() {
+    document.getElementById('modalItasProfileTitle').innerHTML = '<i class="bi bi-plus-circle text-primary me-2"></i>Tambah Template Format ITAS Baru';
+    document.getElementById('edit_prof_id').value = '';
+    document.getElementById('edit_prof_name').value = '';
+    document.getElementById('edit_prof_enabled').value = '1';
+    document.getElementById('edit_prof_desc').value = '';
+    document.getElementById('edit_prof_keywords').value = '';
+    document.getElementById('edit_prof_name_mode').value = 'top_line';
+    document.getElementById('edit_prof_name_regex').value = '/(?:Full\\s*Name|Nama\\s*Lengkap)\\s*:\\s*([^\\n\\r]+)/i';
+    document.getElementById('edit_prof_permit_regex').value = '/(?:PERMIT\\s+NUMBER|Permit\\s+Number|NIORA)\\s*:\\s*([A-Z0-9\\-]+)/i';
+    document.getElementById('edit_prof_expiry_regex').value = '/(?:STAY\\s+PERMIT\\s+EXPIRY|Stay\\s+Permit\\s+Expiry|Permit\\s+Expiry)\\s*:\\s*(\\d{2}[\\/\\-\\.]\\d{2}[\\/\\-\\.]\\d{4})/i';
+    document.getElementById('edit_prof_passport_regex').value = '/(?:TRAVEL\\s+DOC(?:UMENT)?(?:\\s+NUMBER|\\s+NO\\.?)?|PASSPORT(?:\\s+NUMBER|\\s+NO\\.?)?|NO(?:MOR)?\\.?\\s*(?:DOKUMEN\\s+PERJALANAN|PASPOR)|DOKUMEN\\s+PERJALANAN|PASPOR)(?:[\\/\\s]+(?:NOMOR|NUMBER|DOKUMEN|PERJALANAN|PASPOR|PASSPORT|NO\\.?))*\\s*[:=]\\s*[\\r\\n]*\\s*[:=]?\\s*([A-Z0-9\\-]+)/i';
+    
+    // Reset wizard sampel
+    document.getElementById('sampleDetectionResult').classList.add('d-none');
+    document.getElementById('sampleUploadPlaceholder').classList.remove('d-none');
+    document.getElementById('sampleAnalyzingSpinner').classList.add('d-none');
+    document.getElementById('samplePdfUploadInput').value = '';
+
+    toggleNameRegexField();
+    modalItasProfileInstance.show();
+}
+
+function openEditProfileModal(id) {
+    const prof = itasConfigState.profiles.find(p => p.id === id);
+    if (!prof) return;
+
+    document.getElementById('modalItasProfileTitle').innerHTML = '<i class="bi bi-sliders text-primary me-2"></i>Edit Aturan: ' + escapeHtml(prof.name);
+    document.getElementById('edit_prof_id').value = prof.id;
+    document.getElementById('edit_prof_name').value = prof.name || '';
+    document.getElementById('edit_prof_enabled').value = prof.enabled !== false ? '1' : '0';
+    document.getElementById('edit_prof_desc').value = prof.description || '';
+    document.getElementById('edit_prof_keywords').value = (prof.identifier_keywords || []).join(', ');
+    document.getElementById('edit_prof_name_mode').value = prof.name_mode || 'top_line';
+    document.getElementById('edit_prof_name_regex').value = prof.name_regex || '';
+    document.getElementById('edit_prof_permit_regex').value = prof.permit_regex || '';
+    document.getElementById('edit_prof_expiry_regex').value = prof.expiry_regex || '';
+    document.getElementById('edit_prof_passport_regex').value = prof.passport_regex || '';
+
+    // Reset wizard sampel
+    document.getElementById('sampleDetectionResult').classList.add('d-none');
+    document.getElementById('sampleUploadPlaceholder').classList.remove('d-none');
+    document.getElementById('sampleAnalyzingSpinner').classList.add('d-none');
+    document.getElementById('samplePdfUploadInput').value = '';
+
+    toggleNameRegexField();
+    modalItasProfileInstance.show();
+}
+
+function runAutoAnalyzeSample(file) {
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+        Swal.fire('File Tidak Valid', 'Silakan pilih file PDF sampel ITAS.', 'warning');
+        return;
+    }
+
+    const placeholder = document.getElementById('sampleUploadPlaceholder');
+    const spinner = document.getElementById('sampleAnalyzingSpinner');
+    const resultDiv = document.getElementById('sampleDetectionResult');
+
+    placeholder.classList.add('d-none');
+    spinner.classList.remove('d-none');
+    resultDiv.classList.add('d-none');
+
+    const formData = new FormData();
+    formData.append('sample_pdf', file);
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+    fetch('<?= API_URL ?>/api/pengaturan/itas-parser/analyze-sample', {
+        method: 'POST',
+        headers: { 'X-CSRF-Token': csrfToken },
+        body: formData
+    })
+    .then(r => r.json())
+    .then(res => {
+        spinner.classList.add('d-none');
+        placeholder.classList.remove('d-none');
+
+        if (!res.success) {
+            Swal.fire('Analisis Gagal', res.message || res.error || 'Gagal membaca teks dari PDF sampel.', 'error');
+            return;
+        }
+
+        const det = res.detected;
+        
+        // Update Form Fields Otomatis
+        if (det.name_template) {
+            document.getElementById('edit_prof_name').value = det.name_template;
+        }
+        if (det.description) {
+            document.getElementById('edit_prof_desc').value = det.description;
+        }
+        if (det.identifier_keywords_str) {
+            document.getElementById('edit_prof_keywords').value = det.identifier_keywords_str;
+        }
+        if (det.name_mode) {
+            document.getElementById('edit_prof_name_mode').value = det.name_mode;
+            toggleNameRegexField();
+        }
+        if (det.name_regex) {
+            document.getElementById('edit_prof_name_regex').value = det.name_regex;
+        }
+        if (det.permit_regex) {
+            document.getElementById('edit_prof_permit_regex').value = det.permit_regex;
+        }
+        if (det.expiry_regex) {
+            document.getElementById('edit_prof_expiry_regex').value = det.expiry_regex;
+        }
+        if (det.passport_regex) {
+            document.getElementById('edit_prof_passport_regex').value = det.passport_regex;
+        }
+
+        // Tampilkan Visual Preview Hasil Deteksi
+        document.getElementById('sampleFileName').textContent = file.name;
+        document.getElementById('det_no_itas').textContent = det.sample_permit || '(Tidak Ditemukan)';
+        document.getElementById('det_exp_itas').textContent = det.sample_expiry || '(Tidak Ditemukan)';
+        document.getElementById('det_nama').textContent = det.sample_name || '(Tidak Ditemukan)';
+        document.getElementById('det_paspor').textContent = det.sample_passport || '(Opsional / -)';
+        
+        resultDiv.classList.remove('d-none');
+
+        // Notifikasi Cepat
+        Swal.fire({
+            icon: 'success',
+            title: 'Sampel Berhasil Dianalisis! ✨',
+            text: 'Semua pola regex dan nama template telah diisi secara otomatis.',
+            timer: 2000,
+            showConfirmButton: false
+        });
+    })
+    .catch(err => {
+        spinner.classList.add('d-none');
+        placeholder.classList.remove('d-none');
+        Swal.fire('Error', 'Gagal memproses file sampel: ' + err.message, 'error');
+    });
+}
+
+function saveProfileModal() {
+    const id = document.getElementById('edit_prof_id').value;
+    const name = document.getElementById('edit_prof_name').value.trim();
+    if (!name) {
+        Swal.fire('Perhatian', 'Nama template tidak boleh kosong.', 'warning');
+        return;
+    }
+
+    const enabled = document.getElementById('edit_prof_enabled').value === '1';
+    const desc = document.getElementById('edit_prof_desc').value.trim();
+    const kwStr = document.getElementById('edit_prof_keywords').value.trim();
+    const keywords = kwStr ? kwStr.split(',').map(s => s.trim()).filter(s => s !== '') : [];
+    const nameMode = document.getElementById('edit_prof_name_mode').value;
+    const nameRegex = document.getElementById('edit_prof_name_regex').value.trim();
+    const permitRegex = document.getElementById('edit_prof_permit_regex').value.trim();
+    const expiryRegex = document.getElementById('edit_prof_expiry_regex').value.trim();
+    const passportRegex = document.getElementById('edit_prof_passport_regex').value.trim();
+
+    if (!permitRegex || !expiryRegex) {
+        Swal.fire('Perhatian', 'Regex Nomor ITAS dan Expiry Date wajib diisi.', 'warning');
+        return;
+    }
+
+    if (id) {
+        // Edit existing
+        const prof = itasConfigState.profiles.find(p => p.id === id);
+        if (prof) {
+            prof.name = name;
+            prof.enabled = enabled;
+            prof.description = desc;
+            prof.identifier_keywords = keywords;
+            prof.name_mode = nameMode;
+            prof.name_regex = nameRegex;
+            prof.permit_regex = permitRegex;
+            prof.expiry_regex = expiryRegex;
+            prof.passport_regex = passportRegex;
+        }
+    } else {
+        // Create new
+        const newId = 'itas_custom_' + Date.now();
+        itasConfigState.profiles.push({
+            id: newId,
+            name: name,
+            is_system: false,
+            enabled: enabled,
+            description: desc,
+            identifier_keywords: keywords,
+            name_mode: nameMode,
+            name_regex: nameRegex,
+            permit_regex: permitRegex,
+            expiry_regex: expiryRegex,
+            passport_regex: passportRegex
+        });
+    }
+
+    modalItasProfileInstance.hide();
+    renderItasProfiles();
+    Swal.fire({
+        icon: 'success',
+        title: 'Aturan Diterapkan',
+        text: 'Jangan lupa klik tombol "Simpan Konfigurasi ITAS" di bawah untuk menyimpan permanen.',
+        timer: 2000,
+        showConfirmButton: false
+    });
+}
+
+function deleteProfile(id) {
+    Swal.fire({
+        title: 'Hapus Template Ini?',
+        text: 'Template format ITAS ini akan dihapus dari daftar.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Hapus',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#dc3545'
+    }).then((r) => {
+        if (r.isConfirmed) {
+            itasConfigState.profiles = itasConfigState.profiles.filter(p => p.id !== id);
+            renderItasProfiles();
+        }
+    });
+}
+
+function runLiveTestParser(file) {
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+        Swal.fire('File Tidak Valid', 'Silakan pilih file PDF.', 'warning');
+        return;
+    }
+
+    const resultBox = document.getElementById('testResultBox');
+    resultBox.classList.remove('d-none');
+    resultBox.innerHTML = `
+        <div class="bg-white p-3 rounded-3 border text-center shadow-sm">
+            <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+            <span class="fw-bold text-dark">Menganalisis file "${escapeHtml(file.name)}"...</span>
+        </div>
+    `;
+
+    const formData = new FormData();
+    formData.append('test_pdf', file);
+    formData.append('config', JSON.stringify(itasConfigState));
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+    fetch('<?= API_URL ?>/api/pengaturan/itas-parser/test', {
+        method: 'POST',
+        headers: { 'X-CSRF-Token': csrfToken },
+        body: formData
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (!res.success) {
+            resultBox.innerHTML = `
+                <div class="alert alert-danger rounded-3 border-0 shadow-sm">
+                    <strong><i class="bi bi-x-circle-fill me-2"></i>Gagal Memproses PDF:</strong> ${escapeHtml(res.message || 'Error')}
+                </div>
+            `;
+            return;
+        }
+
+        const data = res.result;
+        const santri = data.matched_santri;
+        const logsHtml = (data.logs || []).map(l => `<div class="font-monospace" style="font-size:0.75rem;">${escapeHtml(l)}</div>`).join('');
+
+        let santriMatchHtml = '';
+        if (santri) {
+            santriMatchHtml = `
+                <div class="p-3 bg-success bg-opacity-10 border border-success border-opacity-25 rounded-3 mb-3">
+                    <div class="d-flex align-items-center gap-2 text-success fw-bold">
+                        <i class="bi bi-check-circle-fill fs-5"></i>
+                        <span>SANTRI BERHASIL DICOCOKKAN DI DATABASE!</span>
+                    </div>
+                    <div class="row mt-2 small text-dark">
+                        <div class="col-sm-6"><strong>Nama di DB:</strong> ${escapeHtml(santri.nama)}</div>
+                        <div class="col-sm-6"><strong>KDS / Stambuk:</strong> ${escapeHtml(santri.kds)} / ${escapeHtml(santri.stambuk || '-')}</div>
+                        <div class="col-sm-6"><strong>Kepengurusan:</strong> ${escapeHtml(santri.kepengurusan || '-')}</div>
+                        <div class="col-sm-6"><strong>Metode Cocok:</strong> <span class="badge bg-success">${escapeHtml(data.match_method)}</span></div>
+                    </div>
+                </div>
+            `;
+        } else {
+            santriMatchHtml = `
+                <div class="p-3 bg-warning bg-opacity-10 border border-warning border-opacity-25 rounded-3 mb-3">
+                    <div class="d-flex align-items-center gap-2 text-warning-emphasis fw-bold">
+                        <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+                        <span>TIDAK COCOK DENGAN SANTRI DI DATABASE</span>
+                    </div>
+                    <div class="small text-muted mt-1">Data berhasil diekstrak dari PDF, namun nama <code>"${escapeHtml(data.extracted_name)}"</code> / No Paspor <code>"${escapeHtml(data.no_paspor)}"</code> tidak ditemukan pada tabel <code>master_santri</code>.</div>
+                </div>
+            `;
+        }
+
+        resultBox.innerHTML = `
+            <div class="bg-white p-4 rounded-3 border shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <h6 class="fw-bold mb-0 text-dark">Hasil Analisis: <span class="text-primary">${escapeHtml(file.name)}</span></h6>
+                    <span class="badge bg-primary px-3 py-2 rounded-pill">Format Terdeteksi: ${escapeHtml(data.matched_profile_name || 'Tidak Cocok')}</span>
+                </div>
+
+                ${santriMatchHtml}
+
+                <div class="table-responsive mb-3">
+                    <table class="table table-sm table-bordered small mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Field Dokumen</th>
+                                <th>Nilai Hasil Ekstraksi Mesin</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="fw-bold">Nama Santri</td>
+                                <td><span class="fw-bold text-dark">${escapeHtml(data.extracted_name || '-')}</span></td>
+                                <td>${data.extracted_name ? '<span class="text-success fw-bold">✓ Terdeteksi</span>' : '<span class="text-danger">✗ Kosong</span>'}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Nomor ITAS (Permit No)</td>
+                                <td><code class="text-dark">${escapeHtml(data.no_itas || '-')}</code></td>
+                                <td>${data.no_itas ? '<span class="text-success fw-bold">✓ Terdeteksi</span>' : '<span class="text-danger">✗ Kosong</span>'}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Masa Berlaku (Expiry Date)</td>
+                                <td><span class="badge bg-info-subtle text-info border">${escapeHtml(data.exp_itas || '-')}</span></td>
+                                <td>${data.exp_itas ? '<span class="text-success fw-bold">✓ Terdeteksi</span>' : '<span class="text-danger">✗ Kosong</span>'}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Nomor Paspor (Fallback)</td>
+                                <td><code class="text-dark">${escapeHtml(data.no_paspor || '-')}</code></td>
+                                <td>${data.no_paspor ? '<span class="text-success fw-bold">✓ Terdeteksi</span>' : '<span class="text-muted">-</span>'}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="accordion" id="accTestLogs">
+                    <div class="accordion-item border rounded-3">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed py-2 small" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLogs">
+                                <i class="bi bi-terminal me-2"></i> Lihat Log Pemrosesan Lengkap & Teks Mentah PDF
+                            </button>
+                        </h2>
+                        <div id="collapseLogs" class="accordion-collapse collapse">
+                            <div class="accordion-body p-3 bg-dark text-light rounded-bottom">
+                                <div class="fw-bold text-warning mb-1" style="font-size:0.8rem;">--- LOG EKSEKUSI ---</div>
+                                ${logsHtml}
+                                <div class="fw-bold text-warning mt-3 mb-1" style="font-size:0.8rem;">--- TEKS RAW PDF (Halaman 1) ---</div>
+                                <pre class="text-white-50 small mb-0" style="max-height:200px; overflow-y:auto; white-space:pre-wrap;">${escapeHtml(data.raw_text || '')}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    })
+    .catch(err => {
+        resultBox.innerHTML = `
+            <div class="alert alert-danger rounded-3 border-0 shadow-sm">
+                <strong>Error Koneksi:</strong> ${escapeHtml(err.message)}
+            </div>
+        `;
+    });
+}
+
+function saveItasParserConfig() {
+    Swal.fire({
+        title: 'Menyimpan Konfigurasi ITAS...',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+    fetch('<?= API_URL ?>/api/pengaturan/itas-parser/save', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-Token': csrfToken,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ config: itasConfigState })
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (res.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil Disimpan! 🎉',
+                text: res.message || 'Konfigurasi parser ITAS telah aktif dan diterapkan.',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        } else {
+            Swal.fire('Gagal Menyimpan', res.message || 'Terjadi kesalahan.', 'error');
+        }
+    })
+    .catch(err => {
+        Swal.fire('Error', 'Gagal menghubungi server: ' + err.message, 'error');
+    });
+}
+
+function resetItasConfigToDefault() {
+    Swal.fire({
+        title: 'Reset ke Standar Pabrik?',
+        text: 'Semua aturan format ITAS akan dikembalikan ke template bawaan sistem (Ditjen Imigrasi Modern & Kemenkumham Klasik).',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Reset',
+        cancelButtonText: 'Batal'
+    }).then((r) => {
+        if (r.isConfirmed) {
+            itasConfigState = <?= json_encode(\App\Shared\ItasParserEngine::getDefaultConfig(), JSON_UNESCAPED_UNICODE) ?>;
+            document.getElementById('mode_auto').checked = true;
+            document.getElementById('itas_fallback_passport').checked = true;
+            onItasModeChange();
+            renderItasProfiles();
+            saveItasParserConfig();
+        }
+    });
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+</script>
+

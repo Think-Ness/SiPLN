@@ -28,6 +28,142 @@ $this->setTitle('Master Data Santri | Sistem Informasi');
 .badge-inaktif { background:#dc3545; }
 .preview-row:hover { background-color: #f8f9fa; cursor: pointer; }
 .modal-fullwidth { max-width: 900px; }
+
+/* Modern Touch & Mobile Responsiveness for Master Data Santri */
+.header-actions-grid {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.dt-search {
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    font-size: 0.78rem !important;
+    padding: 0.35rem 0.5rem !important;
+    transition: all 0.2s ease-in-out !important;
+    background-color: #ffffff !important;
+}
+.dt-search:focus {
+    border-color: #0d6efd !important;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15) !important;
+    background-color: #ffffff !important;
+    outline: none !important;
+}
+
+.table-action-btn {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: transform 0.15s ease, background-color 0.15s ease;
+}
+.table-action-btn:active {
+    transform: scale(0.92);
+}
+
+.filter-card-input {
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: 10px !important;
+    overflow: hidden;
+    transition: all 0.2s ease-in-out;
+}
+.filter-card-input:focus-within {
+    border-color: #0d6efd !important;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15) !important;
+}
+
+#detailTabs {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 4px;
+    padding-bottom: 4px;
+}
+#detailTabs::-webkit-scrollbar {
+    display: none;
+}
+#detailTabs .nav-item {
+    flex-shrink: 0;
+}
+#detailTabs .nav-link {
+    white-space: nowrap;
+    border-radius: 20px;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #64748b;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+}
+#detailTabs .nav-link.active {
+    background-color: #0d6efd;
+    color: #ffffff !important;
+    border-color: #0d6efd;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(13, 110, 253, 0.25);
+}
+
+@media (max-width: 991.98px) {
+    .page-header-responsive {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 1rem;
+    }
+    .header-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+        width: 100%;
+    }
+    .header-actions-grid .btn {
+        width: 100%;
+        padding: 0.5rem 0.65rem !important;
+        font-size: 0.82rem !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .header-actions-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.4rem;
+    }
+    .header-actions-grid .btn {
+        font-size: 0.75rem !important;
+        padding: 0.45rem 0.4rem !important;
+        letter-spacing: -0.2px;
+    }
+    .modal-mobile-fullscreen {
+        margin: 0;
+        max-width: 100% !important;
+        height: 100%;
+    }
+    .modal-mobile-fullscreen .modal-content {
+        height: 100%;
+        border-radius: 0 !important;
+        display: flex;
+        flex-direction: column;
+    }
+    .modal-mobile-fullscreen .modal-body {
+        flex: 1 1 auto;
+        overflow-y: auto;
+    }
+    .modal-mobile-fullscreen .modal-header {
+        position: sticky;
+        top: 0;
+        z-index: 1020;
+        background: #f8fafc !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+    }
+}
 </style>
 
 <script>
@@ -47,7 +183,7 @@ $this->setTitle('Master Data Santri | Sistem Informasi');
             <div class="text-muted small fw-medium mt-1">Total: <strong class="text-dark"><?= number_format($total) ?></strong> santri aktif</div>
         </div>
     </div>
-    <div class="d-flex gap-2">
+    <div class="header-actions-grid">
         <button class="btn btn-outline-info rounded-pill px-4 fw-medium shadow-sm" onclick="tarikDataFirebase()">
             <i class="bi bi-cloud-arrow-down me-1"></i> Tarik Data
         </button>
@@ -65,14 +201,14 @@ $this->setTitle('Master Data Santri | Sistem Informasi');
 
 <!-- Filter & Bulk Action Toolbar -->
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-        <button class="btn btn-sm btn-primary d-none me-2 rounded-pill shadow-sm px-3" id="btnBulkBukaProses" onclick="bukaProsesBulkSantri()">
+    <div class="d-flex flex-wrap gap-2">
+        <button class="btn btn-sm btn-primary d-none rounded-pill shadow-sm px-3" id="btnBulkBukaProses" onclick="bukaProsesBulkSantri()">
             <i class="bi bi-play-circle me-1"></i> Buka Proses Terpilih (<span id="countSelectedProses">0</span>)
         </button>
-        <button class="btn btn-sm btn-danger d-none me-2 rounded-pill shadow-sm px-3" id="btnBulkNonaktif" onclick="bulkNonaktif()">
+        <button class="btn btn-sm btn-danger d-none rounded-pill shadow-sm px-3" id="btnBulkNonaktif" onclick="bulkNonaktif()">
             <i class="bi bi-trash-fill me-1"></i> Nonaktifkan Terpilih (<span id="countSelected">0</span>)
         </button>
-        <button class="btn btn-sm btn-info d-none me-2 rounded-pill shadow-sm px-3 text-white" id="btnBulkEdit" onclick="bukaEditMassal()">
+        <button class="btn btn-sm btn-info d-none rounded-pill shadow-sm px-3 text-white" id="btnBulkEdit" onclick="bukaEditMassal()">
             <i class="bi bi-pencil-square me-1"></i> Edit Massal (<span id="countSelectedEdit">0</span>)
         </button>
     </div>
@@ -88,9 +224,9 @@ $this->setTitle('Master Data Santri | Sistem Informasi');
     <div id="collapseFilter" class="accordion-collapse collapse" data-bs-parent="#filterAccordion">
       <div class="accordion-body bg-white py-4 px-4 border-top">
         <div class="row g-3">
-            <div class="col-md-3">
+            <div class="col-12 col-sm-6 col-md-3">
                 <label class="form-label fw-bold text-muted small mb-1" style="font-size: .75rem; letter-spacing: .5px;">PONDOK</label>
-                <div class="input-group input-group-sm border shadow-sm rounded-3 overflow-hidden">
+                <div class="input-group input-group-sm filter-card-input shadow-sm">
                     <span class="input-group-text bg-light border-0 px-2"><i class="bi bi-house-door text-secondary"></i></span>
                     <select id="flt_pondok" class="form-select border-0 shadow-none bg-white dt-filter py-2" style="font-size: .8rem;">
                         <option value="">Semua Pondok</option>
@@ -98,9 +234,9 @@ $this->setTitle('Master Data Santri | Sistem Informasi');
                     </select>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-12 col-sm-6 col-md-3">
                 <label class="form-label fw-bold text-muted small mb-1" style="font-size: .75rem; letter-spacing: .5px;">KEPENGURUSAN</label>
-                <div class="input-group input-group-sm border shadow-sm rounded-3 overflow-hidden">
+                <div class="input-group input-group-sm filter-card-input shadow-sm">
                     <span class="input-group-text bg-light border-0 px-2"><i class="bi bi-building text-secondary"></i></span>
                     <select id="flt_kepengurusan" class="form-select border-0 shadow-none bg-white dt-filter py-2" style="font-size: .8rem;">
                         <option value="">Semua Kepengurusan</option>
@@ -108,9 +244,9 @@ $this->setTitle('Master Data Santri | Sistem Informasi');
                     </select>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-12 col-sm-6 col-md-3">
                 <label class="form-label fw-bold text-muted small mb-1" style="font-size: .75rem; letter-spacing: .5px;">NEGARA ASAL</label>
-                <div class="input-group input-group-sm border shadow-sm rounded-3 overflow-hidden">
+                <div class="input-group input-group-sm filter-card-input shadow-sm">
                     <span class="input-group-text bg-light border-0 px-2"><i class="bi bi-globe text-secondary"></i></span>
                     <select id="flt_negara" class="form-select border-0 shadow-none bg-white dt-filter py-2" style="font-size: .8rem;">
                         <option value="">Semua Negara</option>
@@ -118,9 +254,9 @@ $this->setTitle('Master Data Santri | Sistem Informasi');
                     </select>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-12 col-sm-6 col-md-3">
                 <label class="form-label fw-bold text-muted small mb-1" style="font-size: .75rem; letter-spacing: .5px;">KEWARGANEGARAAN</label>
-                <div class="input-group input-group-sm border shadow-sm rounded-3 overflow-hidden">
+                <div class="input-group input-group-sm filter-card-input shadow-sm">
                     <span class="input-group-text bg-light border-0 px-2"><i class="bi bi-flag text-secondary"></i></span>
                     <select id="flt_kewarganegaraan" class="form-select border-0 shadow-none bg-white dt-filter py-2" style="font-size: .8rem;">
                         <option value="">Semua Kewarganegaraan</option>
@@ -128,9 +264,9 @@ $this->setTitle('Master Data Santri | Sistem Informasi');
                     </select>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-12 col-sm-6 col-md-3">
                 <label class="form-label fw-bold text-muted small mb-1" style="font-size: .75rem; letter-spacing: .5px;">RAYON</label>
-                <div class="input-group input-group-sm border shadow-sm rounded-3 overflow-hidden">
+                <div class="input-group input-group-sm filter-card-input shadow-sm">
                     <span class="input-group-text bg-light border-0 px-2"><i class="bi bi-geo-alt text-secondary"></i></span>
                     <select id="flt_rayon" class="form-select border-0 shadow-none bg-white dt-filter py-2" style="font-size: .8rem;">
                         <option value="">Semua Rayon</option>
@@ -138,9 +274,9 @@ $this->setTitle('Master Data Santri | Sistem Informasi');
                     </select>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-12 col-sm-6 col-md-3">
                 <label class="form-label fw-bold text-muted small mb-1" style="font-size: .75rem; letter-spacing: .5px;">KELAS</label>
-                <div class="input-group input-group-sm border shadow-sm rounded-3 overflow-hidden">
+                <div class="input-group input-group-sm filter-card-input shadow-sm">
                     <span class="input-group-text bg-light border-0 px-2"><i class="bi bi-book text-secondary"></i></span>
                     <select id="flt_kelas" class="form-select border-0 shadow-none bg-white dt-filter py-2" style="font-size: .8rem;">
                         <option value="">Semua Kelas</option>
@@ -148,9 +284,9 @@ $this->setTitle('Master Data Santri | Sistem Informasi');
                     </select>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-12 col-sm-6 col-md-3">
                 <label class="form-label fw-bold text-muted small mb-1" style="font-size: .75rem; letter-spacing: .5px;">EXP ITAS</label>
-                <div class="input-group input-group-sm border shadow-sm rounded-3 overflow-hidden">
+                <div class="input-group input-group-sm filter-card-input shadow-sm">
                     <span class="input-group-text bg-light border-0 px-2"><i class="bi bi-calendar-event text-secondary"></i></span>
                     <select id="flt_exp_itas" class="form-select border-0 shadow-none bg-white dt-filter py-2" style="font-size: .8rem;">
                         <option value="">Semua Bulan</option>
@@ -160,9 +296,9 @@ $this->setTitle('Master Data Santri | Sistem Informasi');
                     </select>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-12 col-sm-6 col-md-3">
                 <label class="form-label fw-bold text-muted small mb-1" style="font-size: .75rem; letter-spacing: .5px;">EXP PASPOR</label>
-                <div class="input-group input-group-sm border shadow-sm rounded-3 overflow-hidden">
+                <div class="input-group input-group-sm filter-card-input shadow-sm">
                     <span class="input-group-text bg-light border-0 px-2"><i class="bi bi-calendar2-check text-secondary"></i></span>
                     <select id="flt_exp_paspor" class="form-select border-0 shadow-none bg-white dt-filter py-2" style="font-size: .8rem;">
                         <option value="">Semua Tahun</option>
@@ -316,11 +452,11 @@ $this->setTitle('Master Data Santri | Sistem Informasi');
                         <td class="d-none"><?= htmlspecialchars((string)($s['kepengurusan'] ?? '-')) ?></td>
                         <td><?= htmlspecialchars((string)($s['pondok'] ?? '-')) ?></td>
                         <td class="text-center text-nowrap">
-                            <div class="d-flex justify-content-center gap-2">
-                                <button class="btn btn-sm btn-outline-info py-0 px-2" title="Lihat & Edit" onclick="editSantri(<?= $s['kds'] ?>)">
+                            <div class="d-flex justify-content-center gap-1">
+                                <button class="btn btn-sm btn-outline-info table-action-btn" title="Lihat & Edit" onclick="editSantri(<?= $s['kds'] ?>)">
                                     <i class="bi bi-pencil-square"></i>
                                 </button>
-                                <button class="btn btn-sm btn-outline-danger py-0 px-2" title="Nonaktifkan" onclick="deleteSantri(<?= $s['kds'] ?>, '<?= addslashes($s['nama']) ?>')">
+                                <button class="btn btn-sm btn-outline-danger table-action-btn" title="Nonaktifkan" onclick="deleteSantri(<?= $s['kds'] ?>, '<?= addslashes($s['nama']) ?>')">
                                     <i class="bi bi-x-circle"></i>
                                 </button>
                             </div>
@@ -652,8 +788,13 @@ $this->setTitle('Master Data Santri | Sistem Informasi');
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
-                <div class="alert alert-info rounded-3 border-0 small mb-4">
-                    <i class="bi bi-info-circle-fill me-2"></i>Fitur ini akan mengekstrak otomatis nama dari dalam file PDF ITAS, lalu mencocokkannya dengan database Santri untuk mengubah nama file dan menyimpannya secara otomatis.
+                <div class="alert alert-info rounded-3 border-0 small mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <i class="bi bi-info-circle-fill me-2"></i>Fitur ini membaca otomatis teks dalam file PDF ITAS (format terkini & klasik), mencocokkannya ke data santri, dan menyimpannya secara otomatis.
+                    </div>
+                    <a href="<?= API_URL ?>/pengaturan#collapseItasParser" class="btn btn-sm btn-outline-primary bg-white text-primary rounded-pill fw-bold" target="_blank">
+                        <i class="bi bi-sliders2-vertical me-1"></i>Kelola Format ITAS
+                    </a>
                 </div>
                 
                 <div id="dropZoneItas" class="border rounded-3 mb-4 d-flex flex-column align-items-center justify-content-center bg-light shadow-sm position-relative" style="min-height: 200px; border-width: 2px !important; border-style: dashed !important; transition: all 0.2s; cursor: pointer;" ondragover="handleDragOverItas(event)" ondragleave="handleDragLeaveItas(event)" ondrop="handleDropItas(event)" onclick="document.getElementById('inputItasMassal').click()">
@@ -1622,7 +1763,13 @@ function editSantri(kds) {
             }
 
             const canEditPaspor = !isPindahan || allowedFields.includes('edit_riwayat_paspor');
-            document.getElementById('listRPaspor').innerHTML = (data.r_paspor || []).map(rp => `
+            const listPasporSorted = (data.r_paspor || []).slice().sort((a, b) => {
+                const dateA = a.exp_paspor ? new Date(a.exp_paspor).getTime() : 0;
+                const dateB = b.exp_paspor ? new Date(b.exp_paspor).getTime() : 0;
+                if (dateA !== dateB) return dateB - dateA;
+                return (b.id || 0) - (a.id || 0);
+            });
+            document.getElementById('listRPaspor').innerHTML = listPasporSorted.map(rp => `
                 <tr>
                     <td>${rp.no_paspor}</td>
                     <td>${formatDate(rp.exp_paspor)}</td>
@@ -1638,7 +1785,13 @@ function editSantri(kds) {
             `).join('') || '<tr><td colspan="4" class="text-center text-muted">Kosong</td></tr>';
 
             const canEditItas = !isPindahan || allowedFields.includes('edit_riwayat_itas');
-            document.getElementById('listRITAS').innerHTML = (data.r_itas || []).map(ri => `
+            const listItasSorted = (data.r_itas || []).slice().sort((a, b) => {
+                const dateA = a.exp_itas ? new Date(a.exp_itas).getTime() : 0;
+                const dateB = b.exp_itas ? new Date(b.exp_itas).getTime() : 0;
+                if (dateA !== dateB) return dateB - dateA;
+                return (b.id || 0) - (a.id || 0);
+            });
+            document.getElementById('listRITAS').innerHTML = listItasSorted.map(ri => `
                 <tr>
                     <td>${ri.no_itas}</td>
                     <td>${ri.level_itas || '-'}</td>
@@ -2260,11 +2413,18 @@ $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
 
 function resetFilters() {
     $('.dt-filter').val('');
-    table.draw();
+    $('.dt-search').val('');
+    if (table) {
+        table.columns().search('');
+        table.search('');
+        table.draw();
+    }
 }
 
     $(document).ready(function() {
     table = $('#santriTable').DataTable({
+        stateSave: true,
+        stateDuration: 60 * 60 * 24 * 365, // Simpan state sort/filter di browser
         pageLength: 20,
         lengthMenu: [[10, 20, 50, -1], [10, 20, 50, "Semua"]],
         dom: "<'row mb-3 pt-3 px-3 align-items-center'<'col-sm-12 col-md-6 d-flex align-items-center gap-3'l B><'col-sm-12 col-md-6 px-4 text-end'f>>" +
@@ -2291,6 +2451,15 @@ function resetFilters() {
         },
         orderCellsTop: true,
         initComplete: function() {
+            var api = this.api();
+            // Restore individual column search values if restored from state
+            api.columns().every(function(colIdx) {
+                var colSearch = this.search();
+                if (colSearch) {
+                    $('.dt-search[data-col="' + colIdx + '"]').val(colSearch);
+                }
+            });
+
             $('.dt-search').on('keyup change clear', function() {
                 var colIdx = $(this).data('col');
                 table.column(colIdx).search(this.value).draw();
@@ -2403,7 +2572,11 @@ async function handleFilesItas(files) {
             const data = await res.json();
             
             if (res.ok && data.success) {
-                appendLogItas(`[OK] ${file.name} -> ${data.santri_name} (${data.extracted_name})`, 'success');
+                const profBadge = data.profile_name ? ` [${data.profile_name}]` : '';
+                const noItasInfo = data.no_itas ? ` | No: ${data.no_itas}` : '';
+                const expInfo = data.exp_itas ? ` | Exp: ${data.exp_itas}` : '';
+                const methodInfo = data.match_method === 'passport_number' ? ' (Via Paspor)' : '';
+                appendLogItas(`[OK] ${file.name} -> ${data.santri_name}${methodInfo}${noItasInfo}${expInfo}${profBadge}`, 'success');
             } else {
                 appendLogItas(`[ERROR] ${file.name}: ${data.message}`, 'error');
             }

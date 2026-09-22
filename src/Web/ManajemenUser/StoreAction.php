@@ -141,6 +141,10 @@ final class StoreAction
                     }
                 }
                 
+                // Filter data based on existing columns in table
+                $tableCols = $db->createCommand("DESCRIBE users")->queryColumn();
+                $data = array_intersect_key($data, array_flip($tableCols));
+
                 // Fetch old user data
                 $oldUser = $db->createCommand("SELECT * FROM users WHERE id = :id", [':id' => $id])->queryOne();
                 
@@ -167,6 +171,10 @@ final class StoreAction
                 if ($firebaseUid) {
                     $data['firebase_uid'] = $firebaseUid;
                 }
+
+                // Filter data based on existing columns in table
+                $tableCols = $db->createCommand("DESCRIBE users")->queryColumn();
+                $data = array_intersect_key($data, array_flip($tableCols));
 
                 $db->createCommand()->insert('users', $data)->execute();
                 $newId = $db->getLastInsertID();

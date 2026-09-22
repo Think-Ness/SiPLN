@@ -77,19 +77,17 @@ final class StoreAction
             
             AuditLogger::log($db, 'CREATE', 'SANTRI', $kds, null, "Menambahkan data santri baru (KDS: $kds)");
 
-            // Cari folder instansi berdasarkan kepengurusan santri
+            // Cari instansi berdasarkan kepengurusan santri
             $kepengurusanFolder = $data['kepengurusan'] ?? '';
-            $instansi = $db->createCommand("SELECT path_folder FROM master_instansi WHERE nama_instansi = :k OR kode = :k", [':k' => $kepengurusanFolder])->queryOne();
-            if (!$instansi) {
-                $instansi = $db->createCommand("SELECT path_folder FROM master_instansi WHERE kode = " . (int)($_SESSION['instansi_id'] ?? 0) . " LIMIT 1")->queryOne();
-            }
+            $instansiRow = $db->createCommand(
+                "SELECT kode FROM master_instansi WHERE def_kepengurusan = :k OR kepengurusan = :k OR nama_instansi = :k LIMIT 1",
+                [':k' => $kepengurusanFolder]
+            )->queryOne();
+            $targetInstansiKode = $instansiRow ? (int)$instansiRow['kode'] : (int)($_SESSION['instansi_id'] ?? 0);
 
             // Handle Photo Upload
             if (isset($files['foto_santri']) && $files['foto_santri']->getError() === UPLOAD_ERR_OK) {
-                $baseDir = !empty($instansi['path_folder']) ? rtrim($instansi['path_folder'], '/\\') : dirname(__DIR__, 4) . '/public/uploads';
-                $baseDir .= DIRECTORY_SEPARATOR . 'foto santri';
-                if (!is_dir($baseDir)) @mkdir($baseDir, 0777, true);
-
+                $baseDir = \App\Shared\UploadPath::getFolder($db, 'foto santri', $targetInstansiKode);
                 $ext = pathinfo($files['foto_santri']->getClientFilename(), PATHINFO_EXTENSION);
                 $safeName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $data['nama']) . '_' . $data['stambuk'];
                 $fullPath = $baseDir . DIRECTORY_SEPARATOR . $safeName . '.' . $ext;
@@ -105,9 +103,7 @@ final class StoreAction
             if ($hasPasporUpdate) {
                 $pathPaspor = '';
                 if (isset($files['file_paspor']) && $files['file_paspor']->getError() === UPLOAD_ERR_OK) {
-                    $baseDirP = !empty($instansi['path_folder']) ? rtrim($instansi['path_folder'], '/\\') : dirname(__DIR__, 4) . '/public/uploads';
-                    $baseDirP .= DIRECTORY_SEPARATOR . 'paspor';
-                    if (!is_dir($baseDirP)) @mkdir($baseDirP, 0777, true);
+                    $baseDirP = \App\Shared\UploadPath::getFolder($db, 'paspor', $targetInstansiKode);
                     $extP = pathinfo($files['file_paspor']->getClientFilename(), PATHINFO_EXTENSION);
                     $safeNameP = 'Paspor_' . preg_replace('/[^a-zA-Z0-9_\-]/', '_', $data['nama']) . '_' . $data['stambuk'];
                     $fullPathP = $baseDirP . DIRECTORY_SEPARATOR . $safeNameP . '.' . $extP;
@@ -135,9 +131,7 @@ final class StoreAction
             if ($hasItasUpdate) {
                 $pathItas = '';
                 if (isset($files['file_itas']) && $files['file_itas']->getError() === UPLOAD_ERR_OK) {
-                    $baseDirI = !empty($instansi['path_folder']) ? rtrim($instansi['path_folder'], '/\\') : dirname(__DIR__, 4) . '/public/uploads';
-                    $baseDirI .= DIRECTORY_SEPARATOR . 'itas';
-                    if (!is_dir($baseDirI)) @mkdir($baseDirI, 0777, true);
+                    $baseDirI = \App\Shared\UploadPath::getFolder($db, 'itas', $targetInstansiKode);
                     $extI = pathinfo($files['file_itas']->getClientFilename(), PATHINFO_EXTENSION);
                     $safeNameI = 'ITAS_' . preg_replace('/[^a-zA-Z0-9_\-]/', '_', $data['nama']) . '_' . $data['stambuk'];
                     $fullPathI = $baseDirI . DIRECTORY_SEPARATOR . $safeNameI . '.' . $extI;
@@ -146,6 +140,7 @@ final class StoreAction
                         $pathItas = $fullPathI;
                     } catch (\Exception $e) {}
                 }
+
 
                 $itasInserted = [
                     'kds'        => $kds,

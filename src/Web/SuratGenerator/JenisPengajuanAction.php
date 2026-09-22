@@ -13,9 +13,25 @@ use App\Shared\UploadPath;
 
 final class JenisPengajuanAction
 {
-    public function list(ConnectionInterface $db): ResponseInterface
+    public function list(ServerRequestInterface $request, ConnectionInterface $db): ResponseInterface
     {
-        $data = $db->createCommand("SELECT * FROM surat_jenis_pengajuan ORDER BY jenis_pengajuan ASC")->queryAll();
+        $role = $_SESSION['role'] ?? '';
+        $instansiId = $_SESSION['instansi_id'] ?? null;
+        
+        $queryParams = $request->getQueryParams();
+        $targetInstansi = $instansiId;
+        if ($role === 'super_admin' && !empty($queryParams['instansi_id'])) {
+            $targetInstansi = $queryParams['instansi_id'];
+        }
+
+        $where = "WHERE aktif = 1";
+        $params = [];
+        if ($targetInstansi) {
+            $where .= " AND instansi_id = :instId";
+            $params[':instId'] = $targetInstansi;
+        }
+
+        $data = $db->createCommand("SELECT * FROM surat_jenis_pengajuan $where ORDER BY jenis_pengajuan ASC", $params)->queryAll();
         return JsonResponse::create(['success' => true, 'data' => $data]);
     }
 
@@ -34,14 +50,19 @@ final class JenisPengajuanAction
         $isi = trim($body['isi'] ?? '');
         $kepada = trim($body['kepada'] ?? '');
         $tempat = trim($body['tempat'] ?? '');
-        $suratDibutuhkan = trim($body['surat_dibutuhkan'] ?? 'SP,SK,SJ,ST');
+        $suratDibutuhkan = trim($body['surat_dibutuhkan'] ?? '');
         $kantor = trim($body['kantor'] ?? '');
 
         if (empty($jenisPengajuan)) {
             return JsonResponse::create(['success' => false, 'message' => 'Nama jenis pengajuan wajib diisi.'], 400);
         }
 
+        $role = $_SESSION['role'] ?? '';
         $instansiId = $_SESSION['instansi_id'] ?? null;
+        if ($role === 'super_admin' && !empty($body['instansi_id'])) {
+            $instansiId = $body['instansi_id'];
+        }
+
         $templatePath = null;
 
         // Handle File Upload
@@ -105,9 +126,15 @@ final class JenisPengajuanAction
             }
         }
 
-        $oldData = $db->createCommand("SELECT template_path FROM surat_jenis_pengajuan WHERE id = :id", [':id' => $id])->queryOne();
+        $oldData = $db->createCommand("SELECT * FROM surat_jenis_pengajuan WHERE id = :id", [':id' => $id])->queryOne();
         if (!$oldData) {
             return JsonResponse::create(['success' => false, 'message' => 'Data tidak ditemukan.'], 404);
+        }
+
+        $role = $_SESSION['role'] ?? '';
+        $instansiId = $_SESSION['instansi_id'] ?? null;
+        if ($role !== 'super_admin' && $instansiId && (string)($oldData['instansi_id'] ?? '') !== (string)$instansiId) {
+            return JsonResponse::create(['success' => false, 'message' => 'Anda tidak memiliki izin untuk mengubah jenis pengajuan instansi lain.'], 403);
         }
 
         $templatePath = $oldData['template_path'];
@@ -163,7 +190,7 @@ final class JenisPengajuanAction
                 ':isi' => trim($body['isi'] ?? ''),
                 ':kepada' => trim($body['kepada'] ?? ''),
                 ':tempat' => trim($body['tempat'] ?? ''),
-                ':sd' => trim($body['surat_dibutuhkan'] ?? 'SP,SK,SJ,ST'),
+                ':sd' => trim($body['surat_dibutuhkan'] ?? ''),
                 ':kantor' => trim($body['kantor'] ?? ''),
                 ':out' => trim($body['output_path'] ?? ''),
                 ':tpl' => $templatePath,
@@ -179,6 +206,17 @@ final class JenisPengajuanAction
     public function delete(ServerRequestInterface $request, ConnectionInterface $db, CurrentRoute $currentRoute): ResponseInterface
     {
         $id = (int)$currentRoute->getArgument('id', '0');
+
+        $oldData = $db->createCommand("SELECT * FROM surat_jenis_pengajuan WHERE id = :id", [':id' => $id])->queryOne();
+        if (!$oldData) {
+            return JsonResponse::create(['success' => false, 'message' => 'Data tidak ditemukan.'], 404);
+        }
+
+        $role = $_SESSION['role'] ?? '';
+        $instansiId = $_SESSION['instansi_id'] ?? null;
+        if ($role !== 'super_admin' && $instansiId && (string)($oldData['instansi_id'] ?? '') !== (string)$instansiId) {
+            return JsonResponse::create(['success' => false, 'message' => 'Anda tidak memiliki izin untuk menghapus jenis pengajuan instansi lain.'], 403);
+        }
 
         // Check if used in mailing
         $used = (int)$db->createCommand(

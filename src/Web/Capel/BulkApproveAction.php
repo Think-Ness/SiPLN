@@ -196,60 +196,79 @@ final class BulkApproveAction
                 }
 
                 // Process Files (queue them)
-                // Process Files (queue them)
                 $fileCategories = [
-                    'Scan ID Paspor' => ['scan id paspor', 'passport'],
-                    'Scan IC Santri' => ['scan ic (kartu identitas) santri', 'scan ic santri', 'kartu identitas santri', 'scan of id card'],
-                    'Scan IC Ayah' => ['scan ic ayah', 'father\'s scan of id card', 'father\'s scan'],
-                    'Scan IC Ibu' => ['scan ic ibu', 'mother\'s scan of id card', 'mother\'s scan'],
-                    'Surat Beranak' => ['surat beranak', 'surat kelahiran', 'birth certificate'],
-                    'Pas Foto' => ['pas foto', 'pasfoto', 'recent photograph', 'photograph'],
-                    'Curriculum Vitae' => ['curriculum vitae', 'cv'],
-                    'Sertifikat Vaksin' => ['scan sertifikat vaksin', 'vaccine'],
-                    'Asuransi Kesehatan' => ['asuransi kesehatan', 'health insurance'],
-                    'Ijazah / Rapor' => ['scan ijazah', 'rapor terakhir', 'diploma', 'report card'],
-                    'Surat Sehat' => ['kesanggupan sehat', 'surat sehat', 'bebas penyakit menular', 'certificate of health'],
-                    'Surat Kesanggupan Biaya' => ['kesanggupan biaya', 'financial capability'],
-                    'Affidavit' => ['affidavit'],
-                    'Surat Pelajar Asing' => ['pelajar asing']
+                    'Scan ID Paspor' => ['scan id paspor', 'paspor', 'passport'],
+                    'Scan IC Santri' => ['scan ic (kartu identitas) santri', 'scan ic santri', 'kartu identitas santri', 'scan of id card', 'ktp santri', 'ic santri', 'kartu identitas', 'identity card'],
+                    'Scan IC Ayah' => ['scan ic ayah', 'father\'s scan of id card', 'father\'s scan', 'ktp ayah', 'ic ayah', 'identitas ayah'],
+                    'Scan IC Ibu' => ['scan ic ibu', 'mother\'s scan of id card', 'mother\'s scan', 'ktp ibu', 'ic ibu', 'identitas ibu'],
+                    'Surat Beranak' => ['surat beranak', 'surat kelahiran', 'birth certificate', 'akta lahir', 'akta kelahiran'],
+                    'Pas Foto' => ['pas foto', 'pasfoto', 'recent photograph', 'photograph', 'foto', 'photo'],
+                    'Curriculum Vitae' => ['curriculum vitae', 'cv', 'riwayat hidup'],
+                    'Sertifikat Vaksin' => ['scan sertifikat vaksin', 'sertifikat vaksin', 'kartu vaksin', 'vaccine', 'vaksin'],
+                    'Asuransi Kesehatan' => ['asuransi kesehatan', 'health insurance', 'asuransi', 'medical insurance'],
+                    'Ijazah / Rapor' => ['scan ijazah', 'rapor terakhir', 'diploma', 'report card', 'ijazah', 'rapor', 'transkrip', 'skl', 'skhun', 'certificate of education'],
+                    'Surat Sehat' => ['kesanggupan sehat', 'surat sehat', 'bebas penyakit menular', 'certificate of health', 'surat keterangan sehat', 'medical check up'],
+                    'Surat Kesanggupan Biaya' => ['kesanggupan biaya', 'financial capability', 'surat kesanggupan', 'financial statement', 'pernyataan biaya'],
+                    'Affidavit' => ['affidavit', 'kewarganegaraan ganda'],
+                    'Surat Pelajar Asing' => ['pelajar asing', 'izin belajar', 'rekomendasi kementerian'],
+                    'Kartu Keluarga' => ['kartu keluarga', 'kk', 'family card'],
+                    'Surat Rekomendasi' => ['rekomendasi', 'surat rekomendasi', 'recommendation letter'],
+                    'Surat Pernyataan' => ['pernyataan', 'surat pernyataan', 'statement letter'],
+                    'ITAS' => ['itas', 'visa', 'izin tinggal', 'kitas']
                 ];
 
                 foreach ($dataJson as $header => $val) {
                     if (is_string($val) && str_contains($val, 'drive.google.com')) {
-                        // Find matching category
-                        $jenisDokumen = 'Dokumen Pendaftaran Lainnya';
-                        $namaCleanFolder = preg_replace('/[^A-Za-z0-9]/', '_', $nama);
-                        $santriFolder = rtrim($namaCleanFolder, '_') . '_' . $santriData['kode'];
-                        $kategoriFolder = "berkas/$santriFolder"; // Default folder per santri
-                        
+                        $matchedCat = null;
                         foreach ($fileCategories as $catName => $keywords) {
                             foreach ($keywords as $kw) {
-                                if (stripos($header, $kw) !== false) {
-                                    $jenisDokumen = $catName;
-                                    if ($catName === 'Pas Foto') $kategoriFolder = 'foto santri';
-                                    elseif ($catName === 'Scan ID Paspor') $kategoriFolder = 'paspor';
+                                if (stripos((string)$header, $kw) !== false) {
+                                    $matchedCat = $catName;
                                     break 2;
                                 }
                             }
                         }
 
-                        $kategoriFolder = ($pathFolderInstansi ?? 'capel') . '/' . $kategoriFolder;
+                        if ($matchedCat !== null) {
+                            $jenisDokumen = $matchedCat;
+                        } else {
+                            $rawHeader = trim((string)$header);
+                            $cleanTitle = trim(preg_replace('/^(unggah|upload|silakan lampirkan|lampiran|scan|dokumen)\s+/i', '', $rawHeader));
+                            $cleanTitle = ucwords(preg_replace('/[^a-zA-Z0-9\s\-_]/', ' ', $cleanTitle));
+                            $cleanTitle = trim(preg_replace('/\s+/', ' ', $cleanTitle));
+                            $jenisDokumen = !empty($cleanTitle) ? $cleanTitle : 'Dokumen Pendaftaran';
+                        }
+
+                        $kategoriFolder = 'berkas';
+                        if ($jenisDokumen === 'Pas Foto') {
+                            $kategoriFolder = 'foto santri';
+                        } elseif ($jenisDokumen === 'Scan ID Paspor') {
+                            $kategoriFolder = 'paspor';
+                        } elseif ($jenisDokumen === 'ITAS') {
+                            $kategoriFolder = 'itas';
+                        }
 
                         $links = array_map('trim', explode(',', $val));
+                        $linkIndex = 1;
+                        $multipleLinks = count($links) > 1;
+
                         foreach ($links as $link) {
                             if (preg_match('/id=([a-zA-Z0-9_-]+)/', $link, $matches) || preg_match('/d\/([a-zA-Z0-9_-]+)/', $link, $matches)) {
                                 $fileId = $matches[1];
                                 $downloadUrl = "https://drive.google.com/uc?export=download&id=" . $fileId;
+                                $docLabel = $jenisDokumen . ($multipleLinks ? " Part $linkIndex" : "");
                                 
                                 $db->createCommand()->insert('capel_download_queue', [
                                     'draft_id' => $id,
                                     'kode_santri' => $santriData['kode'],
                                     'file_url' => $downloadUrl,
                                     'kategori_folder' => $kategoriFolder,
-                                    'jenis_dokumen' => $jenisDokumen,
-                                    'instansi_id' => $instansiId
+                                    'jenis_dokumen' => $docLabel,
+                                    'instansi_id' => $instansiId,
+                                    'status' => 'pending'
                                 ])->execute();
                                 $hasDownloads = true;
+                                $linkIndex++;
                             }
                         }
                     }

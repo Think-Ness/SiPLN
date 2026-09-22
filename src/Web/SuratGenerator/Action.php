@@ -62,8 +62,15 @@ final class Action
         ksort($negaraList);
 
         // Jenis Pengajuan
+        $jpWhere = "WHERE aktif = 1";
+        $jpParams = [];
+        if ($role !== 'super_admin' && $instansiId) {
+            $jpWhere .= " AND instansi_id = :instId";
+            $jpParams[':instId'] = $instansiId;
+        }
         $jenisPengajuan = $db->createCommand(
-            "SELECT * FROM surat_jenis_pengajuan WHERE aktif = 1 ORDER BY jenis_pengajuan ASC"
+            "SELECT * FROM surat_jenis_pengajuan $jpWhere ORDER BY jenis_pengajuan ASC",
+            $jpParams
         )->queryAll();
 
         // Riwayat Mailing (last 50)
@@ -106,14 +113,63 @@ final class Action
         // Nomor surat counters (max for each type this year)
         $year = date('Y');
         $suratCounters = [];
-        foreach (['SP', 'SK', 'SJ', 'ST'] as $tipe) {
-            $maxNo = $db->createCommand(
+
+        $typeConfigs = [
+            'SP' => ['aliases' => ['SP', 'Surat_Permohonan', 'Surat Permohonan'], 'abbrevs' => ['SP']],
+            'SK' => ['aliases' => ['SK', 'Surat_Keterangan', 'Surat Keterangan'], 'abbrevs' => ['SK']],
+            'SJ' => ['aliases' => ['SJ', 'Surat_Jaminan', 'Surat Jaminan'], 'abbrevs' => ['SJ']],
+            'ST' => ['aliases' => ['ST', 'Surat_Tugas', 'Surat Tugas'], 'abbrevs' => ['ST']],
+        ];
+
+        try {
+            $existingTypes = $db->createCommand("SELECT DISTINCT tipe_surat FROM surat_generated")->queryColumn();
+            foreach ($existingTypes as $et) {
+                if (empty($et)) continue;
+                $matched = false;
+                foreach ($typeConfigs as $cfg) {
+                    if (in_array($et, $cfg['aliases'], true)) {
+                        $matched = true;
+                        break;
+                    }
+                }
+                if (!$matched) {
+                    $clean = str_replace(' ', '_', $et);
+                    $abbr = '';
+                    foreach (explode('_', $clean) as $w) { if (!empty($w)) $abbr .= strtoupper($w[0]); }
+                    $typeConfigs[$clean] = [
+                        'aliases' => array_unique([$et, $clean, str_replace('_', ' ', $et)]),
+                        'abbrevs' => !empty($abbr) ? [substr($abbr, 0, 4)] : []
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        foreach ($typeConfigs as $mainKey => $cfg) {
+            $whereTipeParts = [];
+            foreach ($cfg['aliases'] as $al) {
+                $whereTipeParts[] = "tipe_surat = '" . addslashes($al) . "'";
+            }
+            $whereSql = '(' . implode(' OR ', $whereTipeParts);
+            foreach ($cfg['abbrevs'] as $ab) {
+                $whereSql .= " OR nomor_surat LIKE '%/" . addslashes($ab) . "/%'";
+            }
+            $whereSql .= ')';
+
+            $maxNo = (int)$db->createCommand(
                 "SELECT COALESCE(MAX(CAST(SUBSTRING_INDEX(IFNULL(nomor_akhir, nomor_surat), '/', 1) AS UNSIGNED)), 0) 
                  FROM surat_generated 
-                 WHERE tipe_surat = :tipe AND YEAR(tanggal_surat) = :year",
-                [':tipe' => $tipe, ':year' => $year]
+                 WHERE $whereSql AND YEAR(tanggal_surat) = :year",
+                [':year' => $year]
             )->queryScalar();
-            $suratCounters[$tipe] = (int)$maxNo + 1;
+
+            $nextNo = $maxNo + 1;
+            $suratCounters[$mainKey] = $nextNo;
+            foreach ($cfg['aliases'] as $al) {
+                $suratCounters[$al] = $nextNo;
+            }
+            foreach ($cfg['abbrevs'] as $ab) {
+                $suratCounters[$ab] = $nextNo;
+            }
         }
 
         // Pegawai List untuk Surat Tugas (Dropdown Petugas)

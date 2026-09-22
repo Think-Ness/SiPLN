@@ -55,16 +55,54 @@ final class GenerateSuratAction
         // Auto-generate nomor surat if empty: get MAX for this type this year
         if (empty($nomorSurat)) {
             $year = date('Y');
+            
+            $aliases = [$tipeSurat, str_replace(' ', '_', $tipeSurat), str_replace('_', ' ', $tipeSurat)];
+            $abbrevs = [];
+            $abbrev = $tipeSurat;
+            if (in_array($tipeSurat, ['SP', 'Surat_Permohonan', 'Surat Permohonan'])) {
+                $aliases = ['SP', 'Surat_Permohonan', 'Surat Permohonan'];
+                $abbrevs = ['SP'];
+                $abbrev = 'SP';
+            } elseif (in_array($tipeSurat, ['SK', 'Surat_Keterangan', 'Surat Keterangan'])) {
+                $aliases = ['SK', 'Surat_Keterangan', 'Surat Keterangan'];
+                $abbrevs = ['SK'];
+                $abbrev = 'SK';
+            } elseif (in_array($tipeSurat, ['SJ', 'Surat_Jaminan', 'Surat Jaminan'])) {
+                $aliases = ['SJ', 'Surat_Jaminan', 'Surat Jaminan'];
+                $abbrevs = ['SJ'];
+                $abbrev = 'SJ';
+            } elseif (in_array($tipeSurat, ['ST', 'Surat_Tugas', 'Surat Tugas'])) {
+                $aliases = ['ST', 'Surat_Tugas', 'Surat Tugas'];
+                $abbrevs = ['ST'];
+                $abbrev = 'ST';
+            } else {
+                $clean = str_replace(' ', '_', $tipeSurat);
+                $abbr = '';
+                foreach (explode('_', $clean) as $w) { if (!empty($w)) $abbr .= strtoupper($w[0]); }
+                $abbrev = !empty($abbr) ? substr($abbr, 0, 4) : $tipeSurat;
+                $abbrevs[] = $abbrev;
+            }
+
+            $whereTipeParts = [];
+            foreach ($aliases as $al) {
+                $whereTipeParts[] = "tipe_surat = '" . addslashes($al) . "'";
+            }
+            $whereSql = '(' . implode(' OR ', $whereTipeParts);
+            foreach ($abbrevs as $ab) {
+                $whereSql .= " OR nomor_surat LIKE '%/" . addslashes($ab) . "/%'";
+            }
+            $whereSql .= ')';
+
             $maxNo = (int)$db->createCommand(
                 "SELECT COALESCE(MAX(CAST(SUBSTRING_INDEX(IFNULL(nomor_akhir, nomor_surat), '/', 1) AS UNSIGNED)), 0) 
                  FROM surat_generated 
-                 WHERE tipe_surat = :tipe AND YEAR(tanggal_surat) = :year",
-                [':tipe' => $tipeSurat, ':year' => $year]
+                 WHERE $whereSql AND YEAR(tanggal_surat) = :year",
+                [':year' => $year]
             )->queryScalar();
 
             $nextNo = $maxNo + 1;
             $bulanRomawi = $this->bulanRomawi((int)date('m'));
-            $nomorSurat = str_pad((string)$nextNo, 3, '0', STR_PAD_LEFT) . "/$tipeSurat/PLN/$bulanRomawi/$year";
+            $nomorSurat = str_pad((string)$nextNo, 3, '0', STR_PAD_LEFT) . "/$abbrev/PLN/$bulanRomawi/$year";
         }
 
         // Cek instansi untuk notifikasi path folder

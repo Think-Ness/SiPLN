@@ -1,0 +1,11 @@
+# ==============================================================================
+# Keamanan Root Webapp: Blokir Akses Langsung ke File Sensitif
+# ==============================================================================
+<FilesMatch "(^\.env|^\.git|\.lock|\.yml|\.yaml|\.sql|\.log|\.bak)$">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>
+
+# Matikan Directory Listing
+Options -Indexes
+

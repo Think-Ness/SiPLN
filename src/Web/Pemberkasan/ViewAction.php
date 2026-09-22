@@ -18,10 +18,38 @@ final class ViewAction
             return $r;
         }
 
-        $path = $berkas['path_file'];
-        // Jika path adalah absolute Windows / Linux
-        if (str_starts_with($path, '/') && !file_exists($path)) {
-            $path = __DIR__ . '/../../../../public' . $path;
+        $path = (string)$berkas['path_file'];
+        
+        if (!file_exists($path) || !is_file($path)) {
+            // 1. Cek relative ke public
+            if (str_starts_with($path, '/')) {
+                $check = dirname(__DIR__, 3) . '/public' . $path;
+                if (file_exists($check) && is_file($check)) {
+                    $path = $check;
+                }
+            }
+
+            // 2. Cek jika path mengandung /public/uploads/ dari mesin/drive lain
+            if (!file_exists($path) || !is_file($path)) {
+                $normalized = str_replace('\\', '/', $path);
+                $uploadsPos = strpos($normalized, '/public/uploads/');
+                if ($uploadsPos !== false) {
+                    $relUpload = substr($normalized, $uploadsPos + strlen('/public/uploads/'));
+                    $candidate = dirname(__DIR__, 3) . '/public/uploads/' . $relUpload;
+                    if (file_exists($candidate) && is_file($candidate)) {
+                        $path = $candidate;
+                    }
+                }
+            }
+
+            // 3. Cek pencarian di folder berkas penting instansi
+            if (!file_exists($path) || !is_file($path)) {
+                $baseDir = \App\Shared\UploadPath::getFolder($db, 'berkas penting', (int)($berkas['kode'] ?? 0));
+                $candidate = $baseDir . '/' . basename($path);
+                if (file_exists($candidate) && is_file($candidate)) {
+                    $path = $candidate;
+                }
+            }
         }
 
         if (!file_exists($path) || !is_file($path)) {

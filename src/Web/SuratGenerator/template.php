@@ -73,6 +73,132 @@ $kodeInstansi = $instansi['kode_instansi'] ?? '';
 .surat-type-card:hover { border-color:#86b7fe; }
 .surat-type-card.selected { border-color:#0d6efd; background:#e7f1ff; }
 .surat-type-card .surat-type-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+
+/* ========== RESPONSIVE MOBILE OPTIMIZATIONS ========== */
+@media (max-width: 767.98px) {
+    .page-header-responsive {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 14px;
+    }
+    .page-header-responsive .page-header-actions {
+        width: 100%;
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px !important;
+    }
+    .page-header-responsive .page-header-actions .btn {
+        font-size: 0.8rem;
+        padding: 8px 10px !important;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+
+    #mainTab {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    #mainTab .nav-item {
+        flex: 1 1 45%;
+    }
+    #mainTab .nav-link {
+        width: 100%;
+        text-align: center;
+        padding: 8px 12px !important;
+        font-size: 0.82rem;
+        white-space: nowrap;
+    }
+
+    .wizard-stepper {
+        margin-bottom: 1.25rem;
+    }
+    .wizard-step {
+        padding: 8px 2px !important;
+    }
+    .wizard-step .step-number {
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 0.78rem !important;
+        margin-bottom: 2px !important;
+    }
+    .wizard-step .step-label {
+        font-size: 0.65rem !important;
+        letter-spacing: 0.1px !important;
+        line-height: 1.2;
+    }
+
+    .santri-card-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+        padding: 12px 14px !important;
+    }
+    .santri-card-header .btn-next-step {
+        width: 100% !important;
+        justify-content: center;
+    }
+
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter {
+        text-align: left !important;
+        width: 100% !important;
+        margin-bottom: 8px !important;
+        padding: 0 10px;
+    }
+    .dataTables_wrapper .dataTables_filter label {
+        width: 100% !important;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .dataTables_wrapper .dataTables_filter input {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+    .dataTables_wrapper .dataTables_info {
+        text-align: center !important;
+        width: 100% !important;
+        margin-top: 8px !important;
+        font-size: 0.8rem;
+    }
+    .dataTables_wrapper .dataTables_paginate {
+        text-align: center !important;
+        width: 100% !important;
+        margin-top: 6px !important;
+    }
+    .dataTables_wrapper .dataTables_paginate ul.pagination {
+        justify-content: center !important;
+        flex-wrap: wrap !important;
+        gap: 3px;
+    }
+    .dataTables_wrapper .dataTables_paginate ul.pagination .page-item .page-link {
+        padding: 4px 8px;
+        font-size: 0.78rem;
+        border-radius: 6px;
+    }
+
+    .step-action-buttons {
+        flex-direction: column-reverse !important;
+        gap: 10px !important;
+    }
+    .step-action-buttons .btn {
+        width: 100% !important;
+        justify-content: center;
+    }
+
+    .surat-preview-container {
+        padding: 8px !important;
+    }
+    .surat-paper {
+        padding: 8mm 6mm !important;
+        font-size: 10pt !important;
+        min-height: auto !important;
+    }
+}
 </style>
 
 <!-- HEADER -->
@@ -86,7 +212,7 @@ $kodeInstansi = $instansi['kode_instansi'] ?? '';
             <div class="text-muted small fw-medium mt-1">Buat mailing & cetak surat resmi secara profesional</div>
         </div>
     </div>
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 page-header-actions">
         <button class="btn btn-outline-info rounded-pill px-3 fw-medium shadow-sm" onclick="showTemplateBookmarkInfo()">
             <i class="bi bi-info-circle me-1"></i> Info Bookmark
         </button>
@@ -104,7 +230,7 @@ $kodeInstansi = $instansi['kode_instansi'] ?? '';
         </button>
     </li>
     <li class="nav-item">
-        <button class="nav-link rounded-pill px-4 fw-semibold" data-bs-toggle="pill" data-bs-target="#tabRiwayat">
+        <button class="nav-link rounded-pill px-4 fw-semibold shadow-sm" data-bs-toggle="pill" data-bs-target="#tabRiwayat">
             <i class="bi bi-clock-history me-1"></i> Riwayat Mailing <span class="badge bg-primary ms-1"><?= count($mailings) ?></span>
         </button>
     </li>
@@ -163,13 +289,13 @@ $kodeInstansi = $instansi['kode_instansi'] ?? '';
     <!-- Santri Table -->
     <div class="col-12">
         <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-            <div class="card-header bg-white border-bottom pt-3 pb-3 px-4 d-flex justify-content-between align-items-center sticky-top" style="z-index: 10;">
+            <div class="card-header bg-white border-bottom pt-3 pb-3 px-4 d-flex justify-content-between align-items-center sticky-top santri-card-header" style="z-index: 10;">
                 <div>
                     <h6 class="mb-1 fw-bold text-dark"><i class="bi bi-person-check text-success me-2"></i>Pilih Santri</h6>
                     <div class="text-muted small fw-medium">Total Terpilih: <span class="badge bg-primary rounded-pill px-2" id="countPicked">0</span></div>
                 </div>
-                <button class="btn btn-primary rounded-pill px-4 py-2 fw-semibold shadow-sm" onclick="goToStep(2)" id="btnToStep2">
-                    Lanjut Pengajuan <i class="bi bi-arrow-right ms-1"></i>
+                <button class="btn btn-primary rounded-pill px-4 py-2 fw-semibold shadow-sm btn-next-step d-flex align-items-center" onclick="goToStep(2)" id="btnToStep2">
+                    <span>Lanjut Pengajuan</span> <i class="bi bi-arrow-right ms-1"></i>
                 </button>
             </div>
             <div class="card-body p-0">
@@ -400,11 +526,11 @@ $kodeInstansi = $instansi['kode_instansi'] ?? '';
             </div>
         </div>
     </div>
-    <div class="col-12 d-flex justify-content-between mt-4 mb-5 border-top pt-4">
-        <button class="btn btn-outline-secondary rounded-pill px-4 py-2 fw-medium shadow-sm" onclick="goToStep(1)">
+    <div class="col-12 d-flex justify-content-between mt-4 mb-5 border-top pt-4 step-action-buttons">
+        <button class="btn btn-outline-secondary rounded-pill px-4 py-2 fw-medium shadow-sm d-flex align-items-center justify-content-center" onclick="goToStep(1)">
             <i class="bi bi-arrow-left me-1"></i> Kembali
         </button>
-        <button class="btn btn-success rounded-pill px-5 py-2 fw-semibold shadow" onclick="buatMailing()" id="btnBuatMailing" disabled>
+        <button class="btn btn-success rounded-pill px-5 py-2 fw-semibold shadow d-flex align-items-center justify-content-center" onclick="buatMailing()" id="btnBuatMailing" disabled>
             <i class="bi bi-check-circle me-1"></i> Buat Mailing & Lanjut
         </button>
     </div>
@@ -493,7 +619,7 @@ $kodeInstansi = $instansi['kode_instansi'] ?? '';
 
                 <div class="d-flex gap-2 mb-2">
                     <button class="btn btn-outline-secondary rounded-pill fw-semibold shadow-sm w-100" id="btnBukaTemplate" onclick="bukaTemplate()" style="display:none;">
-                        <i class="bi bi-file-word me-1"></i> Buka Template Asli
+                        <i class="bi bi-download me-1"></i> Unduh Template
                     </button>
                     <button class="btn btn-primary rounded-pill fw-semibold shadow w-100" onclick="generateSurat()" id="btnGenerateSurat" disabled>
                         <i class="bi bi-lightning me-1"></i> Generate
@@ -723,12 +849,50 @@ const instansiData = <?= json_encode($instansi) ?>;
 const currentUserData = <?= json_encode($currentUser) ?>;
 const kopSuratUrl = '<?= !empty($kopSuratPath) ? API_URL . "/profil-instansi/kop-surat/view" : "" ?>';
 
-const SURAT_LABELS = {
-    SP: { label: 'Surat Permohonan', icon: 'bi-file-earmark-text', color: '#0d6efd', bg: '#e7f1ff' },
-    SK: { label: 'Surat Keterangan', icon: 'bi-file-earmark-check', color: '#198754', bg: '#d1e7dd' },
-    SJ: { label: 'Surat Jaminan', icon: 'bi-shield-check', color: '#fd7e14', bg: '#fff3cd' },
-    ST: { label: 'Surat Tugas', icon: 'bi-person-badge', color: '#6f42c1', bg: '#e8d5f5' },
+const SURAT_CATALOG = {
+    SP: { label: 'Surat Permohonan', icon: 'bi-file-earmark-text', color: '#0d6efd', bg: '#e7f1ff', border: '#b6d4fe' },
+    SK: { label: 'Surat Keterangan', icon: 'bi-file-earmark-check', color: '#198754', bg: '#d1e7dd', border: '#a3cfbb' },
+    SJ: { label: 'Surat Jaminan',    icon: 'bi-shield-check',          color: '#d97706', bg: '#fef3c7', border: '#fde68a' },
+    ST: { label: 'Surat Tugas',      icon: 'bi-person-badge',          color: '#6f42c1', bg: '#e8d5f5', border: '#d3b5e5' },
+    Surat_Permohonan: { label: 'Surat Permohonan', icon: 'bi-file-earmark-text', color: '#0d6efd', bg: '#e7f1ff', border: '#b6d4fe' },
+    'Surat Permohonan': { label: 'Surat Permohonan', icon: 'bi-file-earmark-text', color: '#0d6efd', bg: '#e7f1ff', border: '#b6d4fe' },
+    Surat_Keterangan: { label: 'Surat Keterangan', icon: 'bi-file-earmark-check', color: '#198754', bg: '#d1e7dd', border: '#a3cfbb' },
+    'Surat Keterangan': { label: 'Surat Keterangan', icon: 'bi-file-earmark-check', color: '#198754', bg: '#d1e7dd', border: '#a3cfbb' },
+    Surat_Jaminan: { label: 'Surat Jaminan', icon: 'bi-shield-check', color: '#d97706', bg: '#fef3c7', border: '#fde68a' },
+    'Surat Jaminan': { label: 'Surat Jaminan', icon: 'bi-shield-check', color: '#d97706', bg: '#fef3c7', border: '#fde68a' },
+    Surat_Tugas: { label: 'Surat Tugas', icon: 'bi-person-badge', color: '#6f42c1', bg: '#e8d5f5', border: '#d3b5e5' },
+    'Surat Tugas': { label: 'Surat Tugas', icon: 'bi-person-badge', color: '#6f42c1', bg: '#e8d5f5', border: '#d3b5e5' },
+    Surat_Peminjaman: { label: 'Surat Peminjaman', icon: 'bi-box-arrow-in-right', color: '#0891b2', bg: '#cffafe', border: '#a5f3fc' },
+    'Surat Peminjaman': { label: 'Surat Peminjaman', icon: 'bi-box-arrow-in-right', color: '#0891b2', bg: '#cffafe', border: '#a5f3fc' },
+    Surat_Perizinan: { label: 'Surat Perizinan', icon: 'bi-check2-circle', color: '#4f46e5', bg: '#e0e7ff', border: '#c7d2fe' },
+    'Surat Perizinan': { label: 'Surat Perizinan', icon: 'bi-check2-circle', color: '#4f46e5', bg: '#e0e7ff', border: '#c7d2fe' },
+    Surat_Undangan: { label: 'Surat Undangan', icon: 'bi-envelope-paper', color: '#db2777', bg: '#fce7f3', border: '#fbcfe8' },
+    'Surat Undangan': { label: 'Surat Undangan', icon: 'bi-envelope-paper', color: '#db2777', bg: '#fce7f3', border: '#fbcfe8' },
 };
+
+function getSuratMeta(raw) {
+    if (!raw) return { label: '-', icon: 'bi-file-earmark', color: '#6c757d', bg: '#f8f9fa', border: '#dee2e6' };
+    const t = String(raw).trim();
+    if (SURAT_CATALOG[t]) return SURAT_CATALOG[t];
+    const norm = t.replace(/_/g, ' ');
+    if (SURAT_CATALOG[norm]) return SURAT_CATALOG[norm];
+    const code = t.toUpperCase();
+    if (SURAT_CATALOG[code]) return SURAT_CATALOG[code];
+    return {
+        label: norm,
+        icon: 'bi-file-earmark-word',
+        color: '#475569',
+        bg: '#f1f5f9',
+        border: '#cbd5e1'
+    };
+}
+
+const SURAT_LABELS = new Proxy(SURAT_CATALOG, {
+    get: function(target, prop) {
+        if (typeof prop === 'symbol' || prop === 'inspect') return undefined;
+        return getSuratMeta(prop);
+    }
+});
 
 const bulanIndo = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 
@@ -931,17 +1095,14 @@ function updateStep2Summary() {
 function onJenisChange() {
     const sel = document.getElementById('selJenisPengajuan');
     const opt = sel.options[sel.selectedIndex];
-    const suratNeeded = (opt?.dataset.surat || '').split(',').filter(Boolean);
+    const suratNeeded = (opt?.dataset.surat || '').split(',').map(s => s.trim()).filter(Boolean);
 
     let html = '';
     suratNeeded.forEach(t => {
-        const tr = t.trim();
-        const s = SURAT_LABELS[tr];
-        if (s) {
-            html += `<span class="badge rounded-pill px-3 py-1 fw-medium" style="background:${s.bg};color:${s.color};border:1px solid ${s.color}20;">${s.label}</span>`;
-        } else {
-            html += `<span class="badge rounded-pill px-3 py-1 fw-medium bg-secondary text-white border" style="font-size:0.8rem;">${tr.replace(/_/g, ' ')}</span>`;
-        }
+        const s = getSuratMeta(t);
+        html += `<span class="badge rounded-pill px-3 py-1 fw-semibold shadow-xs me-1 mb-1" style="background-color:${s.bg} !important;color:${s.color} !important;border:1px solid ${s.border} !important;font-size:0.8rem;">
+            <i class="bi ${s.icon} me-1"></i>${s.label}
+        </span>`;
     });
     document.getElementById('summarySuratNeeded').innerHTML = html || '<span class="text-muted small">Pilih jenis pengajuan</span>';
     document.getElementById('btnBuatMailing').disabled = !sel.value;
@@ -1001,6 +1162,9 @@ async function buatMailing() {
         if (!data.success) throw new Error(data.message);
 
         currentMailingData = data;
+        if (data.suratCounters) {
+            Object.assign(suratCounters, data.suratCounters);
+        }
         Swal.fire('Berhasil!', data.message, 'success');
         setupStep3();
         goToStep(3);
@@ -1016,16 +1180,24 @@ async function buatMailing() {
 // Template file map sesuai nama file nyata di folder Surat_Menyurat
 const TEMPLATE_MAP = {
     'perseorangan': {
-        'SP': { label: 'Surat Permohonan',  file: 'Surat_Permohonan_Satu_Orang.docx',  icon: 'bi-file-text',      bg: '#EBF0FF', color: '#3B5BDB' },
-        'SK': { label: 'Surat Keterangan',  file: 'Surat_Keterangan_Satu_Orang.docx',  icon: 'bi-patch-check',    bg: '#E6FCF5', color: '#0CA678' },
-        'SJ': { label: 'Surat Jaminan',     file: 'Surat_Jaminan_Satu_Orang.docx',     icon: 'bi-shield-check',   bg: '#FFF4E6', color: '#E67700' },
-        'ST': { label: 'Surat Tugas',       file: 'Surat_Tugas.docx',                  icon: 'bi-briefcase',      bg: '#F3F0FF', color: '#7950F2' },
+        'SP': { label: 'Surat Permohonan',  file: 'Surat_Permohonan_Satu_Orang.docx',  icon: 'bi-file-earmark-text', bg: '#EBF0FF', color: '#3B5BDB' },
+        'SK': { label: 'Surat Keterangan',  file: 'Surat_Keterangan_Satu_Orang.docx',  icon: 'bi-file-earmark-check', bg: '#E6FCF5', color: '#0CA678' },
+        'SJ': { label: 'Surat Jaminan',     file: 'Surat_Jaminan_Satu_Orang.docx',     icon: 'bi-shield-check', bg: '#FFF4E6', color: '#E67700' },
+        'ST': { label: 'Surat Tugas',       file: 'Surat_Tugas.docx',                  icon: 'bi-person-badge', bg: '#F3F0FF', color: '#7950F2' },
+        'Surat_Permohonan': { label: 'Surat Permohonan',  file: 'Surat_Permohonan_Satu_Orang.docx',  icon: 'bi-file-earmark-text', bg: '#EBF0FF', color: '#3B5BDB' },
+        'Surat_Keterangan': { label: 'Surat Keterangan',  file: 'Surat_Keterangan_Satu_Orang.docx',  icon: 'bi-file-earmark-check', bg: '#E6FCF5', color: '#0CA678' },
+        'Surat_Jaminan':    { label: 'Surat Jaminan',     file: 'Surat_Jaminan_Satu_Orang.docx',     icon: 'bi-shield-check', bg: '#FFF4E6', color: '#E67700' },
+        'Surat_Tugas':      { label: 'Surat Tugas',       file: 'Surat_Tugas.docx',                  icon: 'bi-person-badge', bg: '#F3F0FF', color: '#7950F2' },
     },
     'sekaligus': {
-        'SP': { label: 'Permohonan (Kolektif)',  file: 'Surat_Permohonan_Banyak_Orang.docx',  icon: 'bi-file-text',      bg: '#EBF0FF', color: '#3B5BDB' },
-        'SK': { label: 'Keterangan (Kolektif)', file: 'Surat_Keterangan_Banyak_Orang.docx',  icon: 'bi-patch-check',    bg: '#E6FCF5', color: '#0CA678' },
-        'SJ': { label: 'Jaminan (Kolektif)',    file: 'Surat_Jaminan_Banyak_Orang.docx',     icon: 'bi-shield-check',   bg: '#FFF4E6', color: '#E67700' },
-        'ST': { label: 'Surat Tugas',           file: 'Surat_Tugas.docx',                    icon: 'bi-briefcase',      bg: '#F3F0FF', color: '#7950F2' },
+        'SP': { label: 'Permohonan (Kolektif)',  file: 'Surat_Permohonan_Banyak_Orang.docx',  icon: 'bi-file-earmark-text', bg: '#EBF0FF', color: '#3B5BDB' },
+        'SK': { label: 'Keterangan (Kolektif)', file: 'Surat_Keterangan_Banyak_Orang.docx',  icon: 'bi-file-earmark-check', bg: '#E6FCF5', color: '#0CA678' },
+        'SJ': { label: 'Jaminan (Kolektif)',    file: 'Surat_Jaminan_Banyak_Orang.docx',     icon: 'bi-shield-check', bg: '#FFF4E6', color: '#E67700' },
+        'ST': { label: 'Surat Tugas',           file: 'Surat_Tugas.docx',                    icon: 'bi-person-badge', bg: '#F3F0FF', color: '#7950F2' },
+        'Surat_Permohonan': { label: 'Permohonan (Kolektif)',  file: 'Surat_Permohonan_Banyak_Orang.docx',  icon: 'bi-file-earmark-text', bg: '#EBF0FF', color: '#3B5BDB' },
+        'Surat_Keterangan': { label: 'Keterangan (Kolektif)', file: 'Surat_Keterangan_Banyak_Orang.docx',  icon: 'bi-file-earmark-check', bg: '#E6FCF5', color: '#0CA678' },
+        'Surat_Jaminan':    { label: 'Jaminan (Kolektif)',    file: 'Surat_Jaminan_Banyak_Orang.docx',     icon: 'bi-shield-check', bg: '#FFF4E6', color: '#E67700' },
+        'Surat_Tugas':      { label: 'Surat Tugas',           file: 'Surat_Tugas.docx',                    icon: 'bi-person-badge', bg: '#F3F0FF', color: '#7950F2' },
     }
 };
 
@@ -1040,7 +1212,7 @@ function setupStep3() {
     
     // Fallback jika kosong
     if (suratTypes.length === 0) {
-        suratTypes = ['SP', 'SK', 'SJ', 'ST'];
+        suratTypes = ['Surat_Permohonan', 'Surat_Keterangan', 'Surat_Jaminan', 'Surat_Tugas'];
     }
 
     const mode = m.mode || 'perseorangan';
@@ -1051,12 +1223,14 @@ function setupStep3() {
         let s = modeMap[t];
         if (!s) {
             // Dynamic template
+            const meta = getSuratMeta(t);
+            const isSingleOnly = t.toLowerCase().includes('tugas') || t.toLowerCase().includes('undangan');
             s = {
-                label: t.replace(/_/g, ' '),
-                file: t + (mode === 'sekaligus' ? '_Banyak_Orang' : '_Satu_Orang') + '.docx',
-                icon: 'bi-file-word',
-                bg: '#f8f9fa',
-                color: '#212529'
+                label: meta.label + (mode === 'sekaligus' && !isSingleOnly ? ' (Kolektif)' : ''),
+                file: t + (isSingleOnly ? '.docx' : (mode === 'sekaligus' ? '_Banyak_Orang.docx' : '_Satu_Orang.docx')),
+                icon: meta.icon,
+                bg: meta.bg,
+                color: meta.color
             };
         }
         
@@ -1097,22 +1271,44 @@ function selectSuratType(type) {
     document.querySelectorAll('.surat-type-card').forEach(c => c.classList.remove('selected'));
     document.getElementById('stCard_' + type)?.classList.add('selected');
 
-    // Auto-generate nomor
+    // Buat singkatan untuk tipe surat dinamis
+    let abbrev = type;
+    if (type === 'Surat_Permohonan' || type === 'SP' || type === 'Surat Permohonan') abbrev = 'SP';
+    else if (type === 'Surat_Keterangan' || type === 'SK' || type === 'Surat Keterangan') abbrev = 'SK';
+    else if (type === 'Surat_Jaminan' || type === 'SJ' || type === 'Surat Jaminan') abbrev = 'SJ';
+    else if (type === 'Surat_Tugas' || type === 'ST' || type === 'Surat Tugas') abbrev = 'ST';
+    else if (type.length > 3) {
+        abbrev = type.split('_').map(w => w.charAt(0)).join('').toUpperCase().substring(0, 3);
+    }
+
     const year = new Date().getFullYear();
     const month = new Date().getMonth() + 1;
     const romawi = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'][month - 1];
-    const nextNo = (suratCounters[type] || 1);
-    const nomor = String(nextNo).padStart(3, '0');
-    
-    // Buat singkatan untuk tipe surat dinamis
-    let abbrev = type;
-    if (type.length > 3 && !['SP', 'SK', 'SJ', 'ST'].includes(type)) {
-        abbrev = type.split('_').map(w => w.charAt(0)).join('').toUpperCase().substring(0, 3);
+
+    // Cek apakah surat ini sudah pernah di-generate sebelumnya untuk mailing ini
+    let extSurat = null;
+    if (currentMailingData && currentMailingData.surats) {
+        extSurat = currentMailingData.surats.find(s => s.tipe_surat === type);
     }
-    
-    document.getElementById('inpNomorUrut').value = nomor;
-    document.getElementById('inpNomorSuffix').textContent = `/${abbrev}/PLN/${romawi}/${year}`;
-    document.getElementById('lastNomorInfo').textContent = `(Terakhir: ${nextNo > 1 ? String(nextNo - 1).padStart(3, '0') : '000'})`;
+
+    if (extSurat && extSurat.nomor_surat) {
+        const parts = extSurat.nomor_surat.split('/');
+        const existingNo = parts[0] || '';
+        const existingSuffix = extSurat.nomor_surat.substring(existingNo.length);
+        
+        document.getElementById('inpNomorUrut').value = existingNo;
+        document.getElementById('inpNomorSuffix').textContent = existingSuffix;
+        document.getElementById('lastNomorInfo').textContent = `(Tersimpan: ${extSurat.nomor_surat})`;
+    } else {
+        // Ambil nomor berikutnya dari suratCounters
+        const nextNo = (suratCounters[type] || suratCounters[abbrev] || suratCounters[type.replace(/_/g, ' ')] || 1);
+        const nomor = String(nextNo).padStart(3, '0');
+        const lastNo = nextNo > 1 ? nextNo - 1 : 0;
+        
+        document.getElementById('inpNomorUrut').value = nomor;
+        document.getElementById('inpNomorSuffix').textContent = `/${abbrev}/PLN/${romawi}/${year}`;
+        document.getElementById('lastNomorInfo').textContent = `(Terakhir: ${lastNo > 0 ? String(lastNo).padStart(3, '0') : '000'})`;
+    }
 
     // Populate metadata form with default data from mailing
     const m = currentMailingData.mailing;
@@ -1326,22 +1522,16 @@ function addCollectionRow(name, colsStr) {
         if (!currentSuratType || !currentMailingData) return;
         const mailing_id = currentMailingData.mailing.id;
         const tipe = currentSuratType;
-        
-        const btn = document.getElementById('btnBukaTemplate');
-        const oldHtml = btn.innerHTML;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Membuka...';
-        btn.disabled = true;
-
         try {
-            const res = await fetch(`<?= API_URL ?>/api/surat/download-template?mailing_id=${mailing_id}&tipe=${tipe}`);
+            const res = await fetch(`<?= API_URL ?>/api/surat/download-template?mailing_id=${mailing_id}&tipe=${encodeURIComponent(tipe)}`);
             const data = await res.json();
-            if (!data.success) throw new Error(data.message);
-            // Sukses buka di background
-        } catch(e) {
-            Swal.fire('Gagal Membuka Template', e.message, 'error');
-        } finally {
-            btn.innerHTML = oldHtml;
-            btn.disabled = false;
+            if (data.success && data.sipln_url) {
+                window.location.href = data.sipln_url;
+            } else {
+                window.location.href = `<?= API_URL ?>/api/surat/download-template?mailing_id=${mailing_id}&tipe=${encodeURIComponent(tipe)}&download=1`;
+            }
+        } catch (e) {
+            window.location.href = `<?= API_URL ?>/api/surat/download-template?mailing_id=${mailing_id}&tipe=${encodeURIComponent(tipe)}&download=1`;
         }
     }
 
@@ -1421,7 +1611,24 @@ function addCollectionRow(name, colsStr) {
         if (!data.success) throw new Error(data.message);
 
         // Increment counter locally
-        suratCounters[currentSuratType] = (suratCounters[currentSuratType] || 1) + 1;
+        const santriCount = (currentMailingData.santris || []).length;
+        const countIncrement = (m.mode === 'perseorangan' && santriCount > 1) ? santriCount : 1;
+        const usedNum = parseInt(document.getElementById('inpNomorUrut').value) || 0;
+        const newNextNo = Math.max(usedNum + countIncrement, (suratCounters[currentSuratType] || 1));
+
+        let abbrevType = currentSuratType;
+        if (currentSuratType === 'Surat_Permohonan' || currentSuratType === 'SP' || currentSuratType === 'Surat Permohonan') abbrevType = 'SP';
+        else if (currentSuratType === 'Surat_Keterangan' || currentSuratType === 'SK' || currentSuratType === 'Surat Keterangan') abbrevType = 'SK';
+        else if (currentSuratType === 'Surat_Jaminan' || currentSuratType === 'SJ' || currentSuratType === 'Surat Jaminan') abbrevType = 'SJ';
+        else if (currentSuratType === 'Surat_Tugas' || currentSuratType === 'ST' || currentSuratType === 'Surat Tugas') abbrevType = 'ST';
+        else if (currentSuratType.length > 3) {
+            abbrevType = currentSuratType.split('_').map(w => w.charAt(0)).join('').toUpperCase().substring(0, 3);
+        }
+
+        suratCounters[currentSuratType] = newNextNo;
+        if (abbrevType) suratCounters[abbrevType] = newNextNo;
+        suratCounters[currentSuratType.replace(/_/g, ' ')] = newNextNo;
+        suratCounters[currentSuratType.replace(/ /g, '_')] = newNextNo;
 
         Swal.close();
         
@@ -1692,6 +1899,10 @@ async function openMailingDetail(id) {
         const data = await res.json();
         if (!data.success) throw new Error(data.message);
 
+        if (data.suratCounters) {
+            Object.assign(suratCounters, data.suratCounters);
+        }
+
         const m = data.mailing;
         document.getElementById('modalMailingTitle').textContent = 'Detail Mailing: ' + m.kode_mailing;
 
@@ -1773,6 +1984,9 @@ async function loadMailingToWizard(id) {
         if (!data.success) throw new Error(data.message);
 
         currentMailingData = data;
+        if (data.suratCounters) {
+            Object.assign(suratCounters, data.suratCounters);
+        }
         // Switch to wizard tab
         document.querySelector('[data-bs-target="#tabWizard"]').click();
         setupStep3();
@@ -1861,6 +2075,62 @@ function showJenisPengajuanModal() {
     modal.show();
     loadJPList();
     loadInstansiTujuanList();
+    syncJenisPengajuanDropdown();
+}
+
+function isMatchingTemplate(templateName, requiredVal) {
+    if (!templateName || !requiredVal) return false;
+    const t = templateName.trim();
+    const r = requiredVal.trim();
+    if (t === r) return true;
+    
+    const normT = t.replace(/_/g, ' ').toLowerCase();
+    const normR = r.replace(/_/g, ' ').toLowerCase();
+    if (normT === normR) return true;
+    
+    const codeMap = {
+        'sp': 'surat permohonan',
+        'sk': 'surat keterangan',
+        'sj': 'surat jaminan',
+        'st': 'surat tugas',
+    };
+    
+    const expandedT = codeMap[normT] || normT;
+    const expandedR = codeMap[normR] || normR;
+    return expandedT === expandedR;
+}
+
+async function syncJenisPengajuanDropdown(selectedId = null) {
+    try {
+        const res = await fetch('<?= API_URL ?>/api/surat/jenis-pengajuan');
+        const data = await res.json();
+        if (!data.success) return;
+
+        const sel = document.getElementById('selJenisPengajuan');
+        if (!sel) return;
+        
+        const currentVal = selectedId || sel.value;
+
+        let html = '<option value="">-- Pilih Jenis Pengajuan --</option>';
+        data.data.forEach(jp => {
+            html += `<option value="${jp.id}"
+                data-hal="${escHtml(jp.hal || '')}"
+                data-isi="${escHtml(jp.isi || '')}"
+                data-kepada="${escHtml(jp.kepada || '')}"
+                data-tempat="${escHtml(jp.tempat || '')}"
+                data-surat="${escHtml(jp.surat_dibutuhkan || '')}"
+                data-kantor="${escHtml(jp.kantor || '')}"
+            >${escHtml(jp.jenis_pengajuan)}</option>`;
+        });
+
+        sel.innerHTML = html;
+        if (currentVal && Array.from(sel.options).some(o => o.value == currentVal)) {
+            sel.value = currentVal;
+        }
+        onJenisChange();
+    } catch(e) {
+        console.error("Gagal sinkronisasi dropdown jenis pengajuan", e);
+    }
 }
 
 async function loadInstansiTujuanList() {
@@ -1905,25 +2175,26 @@ async function onJPKantorChange() {
         if (!data.success) throw new Error(data.message);
         
         if (data.data.length === 0) {
-            hint.innerHTML = `<span class="text-muted"><i class="bi bi-info-circle"></i> Tidak ada custom template di folder ${kantor}</span>`;
+            hint.innerHTML = `<span class="text-muted"><i class="bi bi-info-circle"></i> Tidak ada template di folder ${kantor}</span>`;
             return;
         }
         
-        hint.innerHTML = `<span class="text-primary"><i class="bi bi-check-circle"></i> Ditemukan ${data.data.length} custom template di folder ${kantor}</span>`;
+        hint.innerHTML = `<span class="text-primary"><i class="bi bi-check-circle"></i> Ditemukan ${data.data.length} template di folder ${kantor}</span>`;
         
         let html = '';
         let addedCoreNames = new Set();
         data.data.forEach(tpl => {
             const val = tpl.core_name;
-            if (addedCoreNames.has(val)) return; // Only show one checkbox per core name (e.g. one for "Surat Perizinan")
+            if (addedCoreNames.has(val)) return;
             addedCoreNames.add(val);
             
-            const id = 'cb_' + val;
+            const id = 'cb_' + val.replace(/[^a-zA-Z0-9_\-]/g, '_');
+            const meta = getSuratMeta(val);
             
             html += `
                 <input type="checkbox" class="btn-check surat-cb" id="${id}" value="${val}">
-                <label class="btn btn-outline-dark btn-sm rounded-pill px-3" for="${id}">
-                    <i class="bi bi-file-word me-1"></i> ${tpl.display_name} 
+                <label class="btn btn-outline-primary btn-sm rounded-pill px-3 py-1 shadow-xs" for="${id}">
+                    <i class="bi ${meta.icon} me-1"></i> ${tpl.display_name} 
                 </label>
             `;
         });
@@ -1931,10 +2202,11 @@ async function onJPKantorChange() {
         
         // Re-check currently checked boxes if we are in edit mode
         if (window.currentEditJP && window.currentEditJP.surat_dibutuhkan) {
-            const arr = window.currentEditJP.surat_dibutuhkan.split(',');
-            arr.forEach(v => {
-                const cb = document.getElementById('cb_' + v.trim());
-                if (cb) cb.checked = true;
+            const arr = window.currentEditJP.surat_dibutuhkan.split(',').map(s => s.trim()).filter(Boolean);
+            container.querySelectorAll('.surat-cb').forEach(cb => {
+                const val = cb.value;
+                const isChecked = arr.some(req => isMatchingTemplate(val, req));
+                if (isChecked) cb.checked = true;
             });
         }
         
@@ -1943,40 +2215,49 @@ async function onJPKantorChange() {
     }
 }
 
-
 async function loadJPList() {
     try {
         const res = await fetch('<?= API_URL ?>/api/surat/jenis-pengajuan');
         const data = await res.json();
         if (!data.success) throw new Error(data.message);
 
-        let html = '<div class="table-responsive"><table class="table table-sm table-hover align-middle mb-0" style="font-size:.82rem;"><thead class="table-light"><tr><th>Jenis Pengajuan</th><th>Perihal</th><th>Kepada</th><th>Surat</th><th class="text-center">Aksi</th></tr></thead><tbody>';
+        let html = '<div class="table-responsive"><table class="table table-sm table-hover align-middle mb-0" style="font-size:.82rem;"><thead class="table-light"><tr><th>Jenis Pengajuan</th><th>Perihal</th><th>Kepada</th><th>Surat yang Di-generate</th><th class="text-center" style="width:100px;">Aksi</th></tr></thead><tbody>';
+        
+        if (data.data.length === 0) {
+            html += `<tr><td colspan="5" class="text-center text-muted py-4"><i class="bi bi-inbox fs-4 d-block mb-1"></i>Belum ada jenis pengajuan</td></tr>`;
+        }
+
         data.data.forEach(jp => {
-            const suratBadges = (jp.surat_dibutuhkan||'').split(',').map(s => {
-                const t = s.trim();
-                if (!t) return '';
-                const sl = SURAT_LABELS[t];
-                if (sl) {
-                    return `<span class="badge" style="background:${sl.bg};color:${sl.color};font-size:.65rem;">${t}</span>`;
-                } else {
-                    return `<span class="badge bg-secondary" style="font-size:.65rem;">${t.replace(/_/g, ' ')}</span>`;
-                }
-            }).join(' ');
+            const tokens = (jp.surat_dibutuhkan || '').split(',').map(s => s.trim()).filter(Boolean);
+            let suratBadges = '';
+            if (tokens.length > 0) {
+                suratBadges = tokens.map(t => {
+                    const sl = getSuratMeta(t);
+                    return `<span class="badge rounded-pill fw-semibold me-1 mb-1 shadow-xs" style="background-color:${sl.bg} !important;color:${sl.color} !important;border:1px solid ${sl.border} !important;font-size:.72rem;padding:4px 9px;">
+                        <i class="bi ${sl.icon} me-1"></i>${sl.label}
+                    </span>`;
+                }).join('');
+            } else {
+                suratBadges = '<span class="text-muted small fst-italic">-</span>';
+            }
+            
             html += `<tr>
-                <td class="fw-semibold">${jp.jenis_pengajuan}</td>
-                <td class="text-muted small">${jp.hal||'-'}</td>
-                <td class="text-muted small">${jp.kepada||'-'}</td>
-                <td>${suratBadges}</td>
+                <td class="fw-bold text-dark">${escHtml(jp.jenis_pengajuan)}</td>
+                <td class="text-muted small">${escHtml(jp.hal || '-')}</td>
+                <td class="text-muted small">${escHtml(jp.kepada || '-')}</td>
+                <td><div class="d-flex flex-wrap gap-1 align-items-center">${suratBadges}</div></td>
                 <td class="text-center">
-                    <button class="btn btn-sm btn-outline-primary py-0 px-2" onclick='editJP(${JSON.stringify(jp)})'><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="deleteJP(${jp.id})"><i class="bi bi-trash"></i></button>
+                    <div class="d-flex justify-content-center gap-1">
+                        <button class="btn btn-sm btn-outline-primary py-1 px-2 rounded-3 shadow-xs" onclick='editJP(${JSON.stringify(jp)})' title="Edit Pengajuan"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-outline-danger py-1 px-2 rounded-3 shadow-xs" onclick="deleteJP(${jp.id})" title="Hapus Pengajuan"><i class="bi bi-trash"></i></button>
+                    </div>
                 </td>
             </tr>`;
         });
         html += '</tbody></table></div>';
         document.getElementById('jpListContainer').innerHTML = html;
     } catch(e) {
-        document.getElementById('jpListContainer').innerHTML = `<div class="text-danger small">${e.message}</div>`;
+        document.getElementById('jpListContainer').innerHTML = `<div class="text-danger small py-3 text-center"><i class="bi bi-exclamation-circle me-1"></i>${e.message}</div>`;
     }
 }
 
@@ -1996,6 +2277,7 @@ function resetJPForm() {
     document.getElementById('jpTempat').value = '';
     document.getElementById('jpKantor').value = '';
     document.getElementById('jpTemplate').value = '';
+    window.currentEditJP = null;
     
     document.getElementById('dynamicTemplateCheckboxes').innerHTML = '';
     document.getElementById('dynamicTemplateHint').innerHTML = 'Pilih Instansi Tujuan terlebih dahulu untuk melihat daftar template surat yang tersedia.';
@@ -2013,24 +2295,12 @@ function editJP(jp) {
     // Store for dynamic checking
     window.currentEditJP = jp;
 
-    // Handle checkboxes for surat dibutuhkan
-    document.querySelectorAll('.surat-cb').forEach(cb => cb.checked = false);
-    if (jp.surat_dibutuhkan) {
-        const arr = jp.surat_dibutuhkan.split(',');
-        arr.forEach(val => {
-            // Check default SP,SJ,SK,ST
-            const cb = document.getElementById('cb' + val.trim());
-            if (cb) cb.checked = true;
-            // Note: dynamic custom templates are checked inside onJPKantorChange via window.currentEditJP
-        });
-    }
-
     // Set value for Kantor select and trigger change to load templates
     let k = jp.kantor || '';
     let select = document.getElementById('jpKantor');
     let optionExists = Array.from(select.options).some(opt => opt.value === k);
     if (!optionExists && k !== '') {
-        let newOption = new Option(k, k);
+        let newOption = new Option(k.replace(/_/g, ' '), k);
         select.add(newOption);
     }
     select.value = k;
@@ -2063,7 +2333,7 @@ async function simpanJP() {
         formData.append('kantor', document.getElementById('jpKantor').value);
         
         const fileInput = document.getElementById('jpTemplate');
-        if (fileInput.files.length > 0) {
+        if (fileInput && fileInput.files.length > 0) {
             formData.append('template_file', fileInput.files[0]);
         }
 
@@ -2077,28 +2347,51 @@ async function simpanJP() {
         
         const data = await res.json();
         if (!data.success) throw new Error(data.message);
-        Swal.fire('Berhasil', data.message, 'success');
+        Swal.fire({
+            title: 'Berhasil',
+            text: data.message,
+            icon: 'success',
+            timer: 1500,
+            showConfirmButton: false
+        });
         resetJPForm();
         document.getElementById('jpFormContainer').style.display = 'none';
         loadJPList();
+        await syncJenisPengajuanDropdown(id || data.id);
     } catch(e) {
         Swal.fire('Gagal', e.message, 'error');
     }
 }
 
 async function deleteJP(id) {
-    const result = await Swal.fire({ title:'Hapus jenis pengajuan ini?', icon:'warning', showCancelButton:true, confirmButtonColor:'#dc3545', confirmButtonText:'Ya, Hapus' });
+    const result = await Swal.fire({ 
+        title: 'Hapus jenis pengajuan ini?', 
+        text: 'Data yang sudah dihapus tidak dapat dikembalikan.',
+        icon: 'warning', 
+        showCancelButton: true, 
+        confirmButtonColor: '#dc3545', 
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Hapus',
+        cancelButtonText: 'Batal'
+    });
     if (!result.isConfirmed) return;
     try {
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
         const res = await fetch(`<?= API_URL ?>/api/surat/jenis-pengajuan/${id}/delete`, { 
-            method:'POST',
+            method: 'POST',
             headers: { 'X-CSRF-Token': csrfToken }
         });
         const data = await res.json();
         if (!data.success) throw new Error(data.message);
-        Swal.fire('Berhasil', data.message, 'success');
+        Swal.fire({
+            title: 'Berhasil',
+            text: data.message,
+            icon: 'success',
+            timer: 1500,
+            showConfirmButton: false
+        });
         loadJPList();
+        await syncJenisPengajuanDropdown();
     } catch(e) {
         Swal.fire('Gagal', e.message, 'error');
     }
@@ -2235,6 +2528,11 @@ $(document).ready(function() {
             }
         });
     }
+
+    $('#modalJenisPengajuan').on('hidden.bs.modal', function () {
+        resetJPForm();
+        syncJenisPengajuanDropdown();
+    });
 });
 
 function showBookmarkInfo() {

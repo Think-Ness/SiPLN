@@ -46,127 +46,37 @@ final class AutoUploadItasAction
         }
 
         try {
-            $parser = new Parser();
-            $pdf = $parser->parseFile($tempPath);
-            $pages = $pdf->getPages();
-            if (empty($pages)) {
-                @unlink($tempPath);
-                return JsonResponse::create(['success' => false, 'message' => 'Gagal membaca teks dari PDF (kosong/gambar).'], 400);
-            }
-            $text = $pages[0]->getText();
-            
-            if (empty(trim($text))) {
-                @unlink($tempPath);
-                return JsonResponse::create(['success' => false, 'message' => 'Teks PDF tidak terdeteksi (berupa scan?).'], 400);
-            }
+            $parseResult = \App\Shared\ItasParserEngine::parsePdf($tempPath, $db);
 
-            // Bersihkan teks
-            $text = str_replace("\r", "", $text);
-            $lines = explode("\n", $text);
-            $lines = array_values(array_filter(array_map('trim', $lines), function($l) { return $l !== ''; }));
-            
-            if (empty($lines)) {
+            if (!$parseResult['success'] || empty($parseResult['matched_santri'])) {
                 @unlink($tempPath);
-                return JsonResponse::create(['success' => false, 'message' => 'Tidak ada teks yang ditemukan.'], 400);
-            }
-
-            $nama = $lines[0];
-            
-            if (count($lines) > 1) {
-                $line2 = $lines[1];
-                $blockedWords = ["PERMIT", "EXPIRY", "DATE", "NUMBER", "PASSPORT", "NATIONALITY", "MALE", "FEMALE", "PONDOK", "YAYASAN"];
-                
-                $isBlocked = false;
-                foreach ($blockedWords as $word) {
-                    if (stripos($line2, $word) !== false) {
-                        $isBlocked = true;
-                        break;
-                    }
-                }
-                
-                $isUpper = (strtoupper($line2) === $line2);
-                
-                if ($isUpper && !$isBlocked) {
-                    $nama .= " " . $line2;
-                }
-            }
-            
-            $nama = $this->cleanName($nama);
-            
-            if (empty($nama)) {
-                @unlink($tempPath);
-                return JsonResponse::create(['success' => false, 'message' => 'Nama tidak bisa diekstrak.'], 400);
-            }
-
-            $noItas = '';
-            $expItas = '';
-
-            // Extract PERMIT NUMBER
-            if (preg_match('/PERMIT\s+NUMBER\s*:\s*([A-Z0-9\-]+)/i', $text, $matches)) {
-                $noItas = trim($matches[1]);
-            }
-            
-            // Extract STAY PERMIT EXPIRY (asumsi format DD/MM/YYYY)
-            if (preg_match('/STAY\s+PERMIT\s+EXPIRY\s*:\s*(\d{2}\/\d{2}\/\d{4})/i', $text, $matches)) {
-                $dateParts = explode('/', trim($matches[1]));
-                if (count($dateParts) === 3) {
-                    $expItas = $dateParts[2] . '-' . $dateParts[1] . '-' . $dateParts[0];
-                }
-            }
-
-            // Cari Santri
-            // TAHAP 1: Cocok sama persis
-            $santri = $db->createCommand("SELECT kds, nama, stambuk, kepengurusan FROM master_santri WHERE aktif = 1 AND LOWER(nama) = :nama", [':nama' => strtolower($nama)])->queryOne();
-            
-            if (!$santri) {
-                // TAHAP 2: Pencarian menggunakan LIKE (jika ada gelar atau tambahan spasi)
-                $santri = $db->createCommand("SELECT kds, nama, stambuk, kepengurusan FROM master_santri WHERE aktif = 1 AND LOWER(nama) LIKE :nama LIMIT 1", [':nama' => '%' . strtolower($nama) . '%'])->queryOne();
-            }
-            
-            if (!$santri) {
-                // TAHAP 3: Pencarian Nama Terbalik (Word-by-word)
-                // Memecah nama menjadi kata-kata tunggal untuk mencocokkan nama yang susunannya terbalik (misal: "Ahmad Ali" di DB, tapi di ITAS "Ali Ahmad")
-                $words = explode(' ', strtolower(preg_replace('/[^a-z ]/i', '', $nama)));
-                // Hanya ambil kata yang panjangnya lebih dari 2 huruf untuk menghindari pencocokan salah pada kata sandang
-                $words = array_filter($words, function($w) { return strlen(trim($w)) > 2; });
-                
-                if (count($words) > 0) {
-                    $sql = "SELECT kds, nama, stambuk, kepengurusan FROM master_santri WHERE aktif = 1";
-                    $params = [];
-                    $i = 0;
-                    foreach ($words as $word) {
-                        $sql .= " AND LOWER(nama) LIKE :w$i";
-                        $params[":w$i"] = '%' . trim($word) . '%';
-                        $i++;
-                    }
-                    $sql .= " LIMIT 1";
-                    
-                    $santri = $db->createCommand($sql, $params)->queryOne();
-                }
-            }
-            
-            if (!$santri) {
-                @unlink($tempPath);
+                $errMsg = $parseResult['error'] ?? 'Gagal mencocokkan data ITAS dengan database santri.';
                 return JsonResponse::create([
-                    'success' => false, 
-                    'message' => "Tidak ada data santri atas nama '$nama'.",
-                    'extracted_name' => $nama
+                    'success' => false,
+                    'message' => $errMsg,
+                    'extracted_name' => $parseResult['extracted_name'] ?? '',
+                    'no_itas' => $parseResult['no_itas'] ?? '',
+                    'exp_itas' => $parseResult['exp_itas'] ?? '',
+                    'no_paspor' => $parseResult['no_paspor'] ?? '',
+                    'matched_profile' => $parseResult['matched_profile_name'] ?? null
                 ], 404);
             }
+
+            $santri = $parseResult['matched_santri'];
+            $nama = !empty($parseResult['extracted_name']) ? $parseResult['extracted_name'] : $santri['nama'];
+            $noItas = $parseResult['no_itas'] ?? '';
+            $expItas = $parseResult['exp_itas'] ?? '';
+            $matchMethod = $parseResult['match_method'] ?? 'exact_name';
+            $profileName = $parseResult['matched_profile_name'] ?? 'Auto-Detect';
 
             $kds = $santri['kds'];
             $stambuk = $santri['stambuk'];
             $kepengurusan = $santri['kepengurusan'];
 
-            // Tentukan folder
-            $instansi = $db->createCommand("SELECT path_folder FROM master_instansi WHERE nama_instansi = :k OR kode = :k", [':k' => $kepengurusan])->queryOne();
-            if (!$instansi) {
-                $instansi = $db->createCommand("SELECT path_folder FROM master_instansi WHERE kode = " . (int)($_SESSION['instansi_id'] ?? 0) . " LIMIT 1")->queryOne();
-            }
-
-            $baseDir = !empty($instansi['path_folder']) ? rtrim($instansi['path_folder'], '/\\') : dirname(__DIR__, 4) . '/public/uploads';
-            $baseDir .= DIRECTORY_SEPARATOR . 'itas';
-            if (!is_dir($baseDir)) @mkdir($baseDir, 0777, true);
+            // Tentukan folder instansi
+            $instansi = $db->createCommand("SELECT kode FROM master_instansi WHERE def_kepengurusan = :k OR kepengurusan = :k OR nama_instansi = :k LIMIT 1", [':k' => $kepengurusan])->queryOne();
+            $targetInstansiKode = $instansi ? (int)$instansi['kode'] : (int)($_SESSION['instansi_id'] ?? 0);
+            $baseDir = \App\Shared\UploadPath::getFolder($db, 'itas', $targetInstansiKode);
 
             // Tambahkan timestamp di nama file agar tidak bentrok jika file sama di-upload lagi
             $safeName = 'ITAS_' . preg_replace('/[^a-zA-Z0-9_\-]/', '_', $santri['nama']) . '_' . $stambuk . '_' . time();
@@ -288,7 +198,11 @@ final class AutoUploadItasAction
                 'success' => true, 
                 'message' => 'Selesai: ' . $filename . ' -> ' . $santri['nama'],
                 'extracted_name' => $nama,
-                'santri_name' => $santri['nama']
+                'santri_name' => $santri['nama'],
+                'no_itas' => $noItas,
+                'exp_itas' => $expItas,
+                'profile_name' => $profileName,
+                'match_method' => $matchMethod
             ]);
 
         } catch (\Throwable $e) {

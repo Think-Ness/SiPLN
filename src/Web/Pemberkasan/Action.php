@@ -26,7 +26,7 @@ final class Action
             $params[':q'] = "%$search%";
         }
         
-        if ($role !== 'super_admin') {
+        if ($role !== 'super_admin' && !empty($instansiId)) {
             $whereConds[] = "(b.is_public = 1 OR b.kode = :myKode)";
             $params[':myKode'] = $instansiId;
         }

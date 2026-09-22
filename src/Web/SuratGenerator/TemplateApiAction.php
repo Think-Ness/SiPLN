@@ -182,38 +182,55 @@ final class TemplateApiAction
     }
 
     /**
+    /**
+     * Resolve full file system path for template
+     */
+    private function resolveFullPath(array $template): string
+    {
+        $filePath = $template['file_path'] ?? '';
+        if (UploadPath::isAbsolutePath($filePath)) {
+            return str_replace('\\', '/', $filePath);
+        }
+
+        // 1. Coba langsung dari public folder webapp
+        $directPublic = dirname(__DIR__, 3) . '/public/' . ltrim($filePath, '/\\');
+        if (file_exists($directPublic)) {
+            return str_replace('\\', '/', $directPublic);
+        }
+
+        // 2. Coba via base instansi
+        $instansiId = !empty($template['instansi_id']) ? (int)$template['instansi_id'] : null;
+        $instansiBase = UploadPath::getBase($this->db, $instansiId);
+        if ($instansiBase !== null) {
+            $normalizedBase = rtrim(str_replace('\\', '/', $instansiBase), '/');
+            $kepengurusan = basename($normalizedBase);
+            $prefix = 'uploads/' . $kepengurusan . '/';
+            if (str_starts_with($filePath, $prefix)) {
+                $stripped = substr($filePath, strlen($prefix));
+                $instansiPath = $instansiBase . '/' . $stripped;
+                if (file_exists($instansiPath)) {
+                    return str_replace('\\', '/', $instansiPath);
+                }
+            }
+        }
+
+        return str_replace('\\', '/', $directPublic);
+    }
+
+    /**
      * Delete a template
      */
     public function delete(ServerRequestInterface $request): ResponseInterface
     {
         $id = (int)$this->currentRoute->getArgument('id', '0');
         
-        $template = $this->db->createCommand("SELECT file_path FROM surat_template_dinamis WHERE id = :id", [':id' => $id])->queryOne();
+        $template = $this->db->createCommand("SELECT * FROM surat_template_dinamis WHERE id = :id", [':id' => $id])->queryOne();
 
         if (!$template) {
             return JsonResponse::create(['success' => false, 'message' => 'Template tidak ditemukan.'], 404);
         }
 
-        // Path di DB berupa uploads/{kepengurusan}/...
-        $filePath = $template['file_path'];
-        if (UploadPath::isAbsolutePath($filePath)) {
-            $fullPath = $filePath;
-        } else {
-            $instansiBase = UploadPath::getBase($this->db);
-            if ($instansiBase !== null) {
-                $normalizedBase = rtrim(str_replace('\\', '/', $instansiBase), '/');
-                $kepengurusan = basename($normalizedBase);
-                $prefix = 'uploads/' . $kepengurusan . '/';
-                if (str_starts_with($filePath, $prefix)) {
-                    $stripped = substr($filePath, strlen($prefix));
-                    $fullPath = $instansiBase . '/' . $stripped;
-                } else {
-                    $fullPath = dirname(__DIR__, 3) . '/public/' . ltrim($filePath, '/');
-                }
-            } else {
-                $fullPath = dirname(__DIR__, 3) . '/public/' . ltrim($filePath, '/');
-            }
-        }
+        $fullPath = $this->resolveFullPath($template);
         
         try {
             $this->db->createCommand("DELETE FROM surat_template_dinamis WHERE id = :id", [':id' => $id])->execute();
@@ -227,47 +244,96 @@ final class TemplateApiAction
     }
 
     /**
+     * Download template file (.docx) directly
+     */
+    public function download(ServerRequestInterface $request): ResponseInterface
+    {
+        $id = (int)$this->currentRoute->getArgument('id', '0');
+        
+        $template = $this->db->createCommand("SELECT * FROM surat_template_dinamis WHERE id = :id", [':id' => $id])->queryOne();
+
+        if (!$template) {
+            return JsonResponse::create(['success' => false, 'message' => 'Template tidak ditemukan.'], 404);
+        }
+
+        $fullPath = $this->resolveFullPath($template);
+        if (!file_exists($fullPath)) {
+            return JsonResponse::create(['success' => false, 'message' => 'File fisik tidak ditemukan di server: ' . $fullPath], 404);
+        }
+
+        $filename = basename($fullPath);
+        $content = file_get_contents($fullPath);
+        $response = new \HttpSoft\Message\Response(200);
+        $response->getBody()->write($content);
+
+        return $response
+            ->withHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+            ->withHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->withHeader('Cache-Control', 'no-cache');
+    }
+
+    /**
      * Open template using OS default application (Word)
      */
     public function openInWord(ServerRequestInterface $request): ResponseInterface
     {
         $id = (int)$this->currentRoute->getArgument('id', '0');
         
-        $template = $this->db->createCommand("SELECT file_path FROM surat_template_dinamis WHERE id = :id", [':id' => $id])->queryOne();
+        $template = $this->db->createCommand("SELECT * FROM surat_template_dinamis WHERE id = :id", [':id' => $id])->queryOne();
 
         if (!$template) {
-            return JsonResponse::create(['success' => false, 'message' => 'Template tidak ditemukan.'], 404);
+            return JsonResponse::create(['success' => false, 'message' => 'Data template tidak ditemukan di database.'], 404);
         }
 
-        // Path di DB berupa uploads/{kepengurusan}/...
-        $filePath = $template['file_path'];
-        if (UploadPath::isAbsolutePath($filePath)) {
-            $fullPath = str_replace('\\', '/', $filePath);
-        } else {
-            $instansiBase = UploadPath::getBase($this->db);
-            if ($instansiBase !== null) {
-                $normalizedBase = rtrim(str_replace('\\', '/', $instansiBase), '/');
-                $kepengurusan = basename($normalizedBase);
-                $prefix = 'uploads/' . $kepengurusan . '/';
-                if (str_starts_with($filePath, $prefix)) {
-                    $stripped = substr($filePath, strlen($prefix));
-                    $fullPath = $instansiBase . '/' . $stripped;
-                } else {
-                    $fullPath = dirname(__DIR__, 3) . '/public/' . ltrim($filePath, '/');
-                }
-            } else {
-                $fullPath = dirname(__DIR__, 3) . '/public/' . ltrim($filePath, '/');
-            }
-        }
-        
+        $fullPath = $this->resolveFullPath($template);
         if (!file_exists($fullPath)) {
-            return JsonResponse::create(['success' => false, 'message' => 'File fisik tidak ditemukan: ' . $fullPath], 404);
+            return JsonResponse::create([
+                'success' => false, 
+                'message' => "File Word tidak ditemukan di path:\n" . $fullPath . "\n\nPastikan berkas template .docx tersebut sudah ada di folder tersebut."
+            ], 404);
         }
 
         try {
             $windowsPath = str_replace('/', '\\', $fullPath);
-            exec('start "" "' . $windowsPath . '"');
-            return JsonResponse::create(['success' => true, 'message' => 'Template berhasil dibuka di Word.']);
+            // Catatan: exec('start ...') di server ditiadakan agar proses Word tidak terkunci oleh user SYSTEM (Apache)
+            // Pembukaan Word dilakukan langsung oleh browser client via protocol sipln://
+
+            // Generate ms-word URI untuk client/laptop dengan hostname sipln (Intranet Zone aman)
+            $host = $request->getUri()->getHost() ?: ($_SERVER['HTTP_HOST'] ?? 'sipln');
+            if (str_contains($host, ':')) {
+                $host = explode(':', $host)[0];
+            }
+            $docRoot = str_replace('\\', '/', dirname(__DIR__, 3) . '/public');
+            $normalizedFull = str_replace('\\', '/', $fullPath);
+            if (str_starts_with($normalizedFull, $docRoot)) {
+                $relPath = ltrim(substr($normalizedFull, strlen($docRoot)), '/');
+            } else {
+                $relPath = ltrim(str_replace('/', '\\', $template['file_path']), '\\');
+            }
+            $relPathWin = str_replace('/', '\\', $relPath);
+
+            if ($host === 'localhost' || $host === '127.0.0.1') {
+                $msWordTarget = $windowsPath;
+            } else {
+                $uncHost = match(true) {
+                    $host === '192.168.1.10' => '192.168.1.10',
+                    $host === '100.68.135.3' => '100.68.135.3',
+                    default                  => 'sipln',
+                };
+                $msWordTarget = '\\\\' . $uncHost . '\\foreign-pc1\\02. Aplikasi\\XAMPP\\htdocs\\webapp\\public\\' . $relPathWin;
+            }
+
+            // Encode untuk sipln:// custom protocol
+            $siplnUrl = 'sipln://' . rawurlencode($msWordTarget);
+
+            return JsonResponse::create([
+                'success'     => true, 
+                'message'     => 'Template berhasil dibuka di Microsoft Word.', 
+                'path'        => $windowsPath,
+                'unc_path'    => $msWordTarget,
+                'ms_word_url' => 'ms-word:ofe|u|' . $msWordTarget,
+                'sipln_url'   => $siplnUrl
+            ]);
         } catch (\Exception $e) {
             return JsonResponse::create(['success' => false, 'message' => 'Gagal membuka Word: ' . $e->getMessage()], 500);
         }
@@ -304,14 +370,17 @@ final class TemplateApiAction
             }
         }
         
-        // Gabungkan juga dengan data yang sudah ada di database (kantor dari jenis pengajuan)
-        $dbInstansi = $this->db->createCommand("SELECT DISTINCT kantor FROM surat_jenis_pengajuan WHERE kantor IS NOT NULL AND kantor != ''")->queryColumn();
-        
         @session_start();
         $targetInstansiId = !empty($_SESSION['instansi_id']) ? (int)$_SESSION['instansi_id'] : null;
         if (!$targetInstansiId) {
             $targetInstansiId = (int) $this->db->createCommand("SELECT kode FROM master_instansi WHERE def_kepengurusan LIKE '%Ponorogo%' ORDER BY kode ASC LIMIT 1")->queryScalar();
         }
+
+        // Gabungkan juga dengan data yang sudah ada di database (kantor dari jenis pengajuan instansi ini)
+        $dbInstansi = $this->db->createCommand(
+            "SELECT DISTINCT kantor FROM surat_jenis_pengajuan WHERE kantor IS NOT NULL AND kantor != '' AND (instansi_id = :instId OR instansi_id IS NULL)",
+            [':instId' => $targetInstansiId]
+        )->queryColumn();
         
         $dbTemplateInstansi = $this->db->createCommand("SELECT DISTINCT instansi_tujuan FROM surat_template_dinamis WHERE instansi_tujuan IS NOT NULL AND instansi_tujuan != '' AND instansi_id = :instansi_id", [':instansi_id' => $targetInstansiId])->queryColumn();
         

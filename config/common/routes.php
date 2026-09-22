@@ -89,6 +89,12 @@ return [
             Route::post('/api/capel/{id:\d+}/reject')
                 ->action(Web\Capel\RejectAction::class)
                 ->name('api.capel.reject'),
+            Route::post('/api/capel/reunduh')
+                ->action(Web\Capel\ReunduhAction::class)
+                ->name('api.capel.reunduh'),
+            Route::post('/api/capel/{id:\d+}/reunduh')
+                ->action(Web\Capel\ReunduhAction::class)
+                ->name('api.capel.reunduh.single'),
 
             // Manajemen Instansi (Khusus Super Admin)
             Route::get('/manajemen-instansi')
@@ -416,6 +422,9 @@ return [
             Route::get('/api/surat/download-template')
                 ->action(App\Web\SuratGenerator\DownloadTemplateAction::class)
                 ->name('surat.download-template'),
+            Route::get('/api/surat/open-template-vbs')
+                ->action(App\Web\SuratGenerator\OpenTemplateVbsAction::class)
+                ->name('surat.open-template-vbs'),
             Route::post('/api/surat/jenis-pengajuan/store')
                 ->action([Web\SuratGenerator\JenisPengajuanAction::class, 'store'])
                 ->name('surat.jenis-pengajuan.store'),
@@ -442,6 +451,12 @@ return [
             Route::get('/api/surat/templates/{id:\d+}/open')
                 ->action([Web\SuratGenerator\TemplateApiAction::class, 'openInWord'])
                 ->name('surat.templates.open'),
+            Route::get('/api/surat/templates/{id:\d+}/open-word')
+                ->action([Web\SuratGenerator\TemplateApiAction::class, 'openInWord'])
+                ->name('surat.templates.open-word'),
+            Route::get('/api/surat/templates/{id:\d+}/download')
+                ->action([Web\SuratGenerator\TemplateApiAction::class, 'download'])
+                ->name('surat.templates.download'),
             Route::get('/api/surat/instansi-tujuan')
                 ->action([Web\SuratGenerator\TemplateApiAction::class, 'instansiTujuanList'])
                 ->name('surat.instansi-tujuan.list'),
@@ -459,6 +474,15 @@ return [
             Route::post('/api/pengaturan/migrate')
                 ->action(Web\Pengaturan\RunMigrationAction::class)
                 ->name('pengaturan.migrate'),
+            Route::post('/api/pengaturan/itas-parser/save')
+                ->action(Web\Pengaturan\SaveItasParserAction::class)
+                ->name('pengaturan.itas-parser.save'),
+            Route::post('/api/pengaturan/itas-parser/test')
+                ->action(Web\Pengaturan\TestItasParserAction::class)
+                ->name('pengaturan.itas-parser.test'),
+            Route::post('/api/pengaturan/itas-parser/analyze-sample')
+                ->action(Web\Pengaturan\AnalyzeSampleItasAction::class)
+                ->name('pengaturan.itas-parser.analyze-sample'),
 
             // Audit Log
             Route::get('/audit-log')
