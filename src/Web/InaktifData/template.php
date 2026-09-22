@@ -15,7 +15,7 @@ use Yiisoft\Router\UrlGeneratorInterface;
 $this->setTitle('Inaktif Data | Sistem Informasi');
 $isSuperAdmin = ($_SESSION['role'] ?? '') === 'super_admin';
 
-// Hitung metrik statistik ringkasan per pondok
+// Hitung metrik statistik ringkasan
 $totalInaktif = count($santris);
 $pondokStats = [];
 $totalAdaPaspor = 0;
@@ -38,17 +38,12 @@ foreach ($santris as $s) {
     }
 }
 arsort($pondokStats);
-
-// Palette warna dinamis untuk card pondok
-$pondokColorThemes = [
-    ['bg' => 'bg-primary', 'text' => 'text-primary', 'border' => 'border-primary-subtle', 'icon' => 'bi-building'],
-    ['bg' => 'bg-success', 'text' => 'text-success', 'border' => 'border-success-subtle', 'icon' => 'bi-houses-fill'],
-    ['bg' => 'bg-info', 'text' => 'text-info', 'border' => 'border-info-subtle', 'icon' => 'bi-mortarboard-fill'],
-    ['bg' => 'bg-purple', 'text' => 'text-purple', 'border' => 'border-purple-subtle', 'icon' => 'bi-bank2'],
-    ['bg' => 'bg-warning', 'text' => 'text-warning', 'border' => 'border-warning-subtle', 'icon' => 'bi-bookmark-star-fill'],
-    ['bg' => 'bg-secondary', 'text' => 'text-secondary', 'border' => 'border-secondary-subtle', 'icon' => 'bi-geo-alt-fill'],
-];
+$totalPondok = count($pondokStats);
+$santrisJson = json_encode($santris, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
 ?>
+
+<!-- Offline Chart.js -->
+<script src="<?= ASSET_URL ?>/assets/offline/js/chart.umd.min.js"></script>
 
 <style>
 /* Modern Responsive Styling for Inaktif Data */
@@ -60,33 +55,24 @@ $pondokColorThemes = [
     --inaktif-warning: #f59e0b;
 }
 
-.text-purple { color: #8b5cf6 !important; }
-.bg-purple { background-color: #8b5cf6 !important; }
-.border-purple-subtle { border-color: #ddd6fe !important; }
-
 .inaktif-stat-card {
     border-radius: 16px;
     border: 1px solid rgba(226, 232, 240, 0.8);
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     background: #ffffff;
-    cursor: pointer;
-    user-select: none;
 }
 .inaktif-stat-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04) !important;
 }
-.inaktif-stat-card.active-filter {
-    box-shadow: 0 0 0 2.5px #3b82f6, 0 8px 20px rgba(59, 130, 246, 0.2) !important;
-}
 .inaktif-stat-icon {
-    width: 46px;
-    height: 46px;
-    border-radius: 12px;
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.35rem;
+    font-size: 1.4rem;
     flex-shrink: 0;
 }
 
@@ -228,12 +214,10 @@ $pondokColorThemes = [
         gap: 12px;
     }
     .page-header-controls {
-        flex-direction: column;
+        flex-direction: row;
+        flex-wrap: wrap;
         width: 100%;
         gap: 8px;
-    }
-    .page-header-controls .btn {
-        width: 100% !important;
     }
     .inaktif-stat-card .card-body {
         padding: 0.85rem !important;
@@ -265,30 +249,37 @@ $pondokColorThemes = [
 </style>
 
 <!-- Page Header -->
-<div class="d-flex justify-content-between align-items-center mb-4 page-header-responsive">
+<div class="d-flex justify-content-between align-items-center mb-3 page-header-responsive">
     <div class="d-flex align-items-center gap-3">
-        <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 shadow-sm" style="width: 48px; height: 48px; background: rgba(239, 68, 68, 0.12);">
+        <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 shadow-sm" style="width: 46px; height: 46px; background: rgba(239, 68, 68, 0.12);">
             <i class="bi bi-person-x-fill fs-4 text-danger"></i>
         </div>
         <div>
             <h4 class="mb-0 fw-bold text-dark" style="letter-spacing: -.5px;">Data Santri Inaktif</h4>
-            <div class="text-muted small fw-medium mt-1">
+            <div class="text-muted small fw-medium mt-0.5">
                 Daftar arsip santri tidak aktif &bull; Total: <strong class="text-danger"><?= $total ?></strong> santri
             </div>
         </div>
     </div>
+    
+    <!-- Mass Action Controls (Aktifkan Massal & Hapus Massal) -->
     <div class="page-header-controls d-flex align-items-center gap-2">
-        <button class="btn btn-danger rounded-pill px-4 fw-semibold shadow-sm d-none" id="btnBulkDelete" onclick="bulkHapus()">
-            <i class="bi bi-trash-fill me-1"></i> Hapus Terpilih (<span id="countSelected">0</span>)
+        <button class="btn btn-sm btn-success rounded-pill px-3.5 py-1.5 fw-semibold shadow-sm d-none d-inline-flex align-items-center gap-1.5" id="btnBulkReactivate" onclick="bulkReaktifkan()">
+            <i class="bi bi-arrow-counterclockwise"></i>
+            <span>Aktifkan Terpilih (<span id="countSelectedReactivate">0</span>)</span>
+        </button>
+        <button class="btn btn-sm btn-danger rounded-pill px-3.5 py-1.5 fw-semibold shadow-sm d-none d-inline-flex align-items-center gap-1.5" id="btnBulkDelete" onclick="bulkHapus()">
+            <i class="bi bi-trash-fill"></i>
+            <span>Hapus Terpilih (<span id="countSelectedDelete">0</span>)</span>
         </button>
     </div>
 </div>
 
-<!-- Stat Metric Cards (Rekap Berdasarkan Pondok) -->
-<div class="row g-3 mb-4">
+<!-- Stat Metric Cards -->
+<div class="row g-3 mb-3">
     <!-- Card Total Inaktif -->
-    <div class="col-12 col-sm-6 col-lg-3">
-        <div class="card inaktif-stat-card border-0 shadow-sm h-100" onclick="resetPondokFilter()" title="Klik untuk menampilkan seluruh data inaktif">
+    <div class="col-6 col-lg-3">
+        <div class="card inaktif-stat-card border-0 shadow-sm h-100">
             <div class="card-body p-3 d-flex align-items-center gap-3">
                 <div class="inaktif-stat-icon bg-danger bg-opacity-10 text-danger">
                     <i class="bi bi-person-x-fill"></i>
@@ -301,49 +292,92 @@ $pondokColorThemes = [
         </div>
     </div>
 
-    <!-- Dynamic Pondok Cards -->
-    <?php 
-        $colorIdx = 0;
-        foreach ($pondokStats as $pondokName => $cnt): 
-            $theme = $pondokColorThemes[$colorIdx % count($pondokColorThemes)];
-            $colorIdx++;
-    ?>
-    <div class="col-12 col-sm-6 col-lg-3">
-        <div class="card inaktif-stat-card border-0 shadow-sm h-100" onclick="filterByPondokCard('<?= htmlspecialchars(addslashes($pondokName)) ?>', this)" title="Klik untuk memfilter santri pondok ini">
+    <!-- Card Total Pondok Terdampak -->
+    <div class="col-6 col-lg-3">
+        <div class="card inaktif-stat-card border-0 shadow-sm h-100">
             <div class="card-body p-3 d-flex align-items-center gap-3">
-                <div class="inaktif-stat-icon <?= $theme['bg'] ?> bg-opacity-10 <?= $theme['text'] ?>">
-                    <i class="bi <?= $theme['icon'] ?>"></i>
+                <div class="inaktif-stat-icon bg-primary bg-opacity-10 text-primary">
+                    <i class="bi bi-building-fill"></i>
                 </div>
-                <div class="overflow-hidden flex-grow-1">
-                    <div class="text-muted small fw-semibold text-truncate" title="<?= htmlspecialchars($pondokName) ?>"><?= htmlspecialchars($pondokName) ?></div>
-                    <div class="h4 mb-0 fw-bold <?= $theme['text'] ?> inaktif-stat-number"><?= $cnt ?> <span class="text-muted fw-normal" style="font-size:.7rem;">santri</span></div>
+                <div class="overflow-hidden">
+                    <div class="text-muted small fw-semibold text-truncate">Pondok Terdampak</div>
+                    <div class="h4 mb-0 fw-bold text-primary inaktif-stat-number"><?= $totalPondok ?> <span class="text-muted fw-normal" style="font-size:.75rem;">pondok</span></div>
                 </div>
             </div>
         </div>
     </div>
-    <?php endforeach; ?>
 
-    <!-- Additional Info Card (Ada Paspor) if total cards <= 3 -->
-    <?php if (count($pondokStats) < 3): ?>
-    <div class="col-12 col-sm-6 col-lg-3">
-        <div class="card inaktif-stat-card border-0 shadow-sm h-100" onclick="filterByPasporCard()" title="Filter santri yang memiliki data paspor">
+    <!-- Card Dokumen Paspor -->
+    <div class="col-6 col-lg-3">
+        <div class="card inaktif-stat-card border-0 shadow-sm h-100">
             <div class="card-body p-3 d-flex align-items-center gap-3">
                 <div class="inaktif-stat-icon bg-warning bg-opacity-10 text-warning">
                     <i class="bi bi-passport"></i>
                 </div>
                 <div class="overflow-hidden">
-                    <div class="text-muted small fw-semibold text-truncate">Ada Paspor</div>
+                    <div class="text-muted small fw-semibold text-truncate">Ada Data Paspor</div>
                     <div class="h4 mb-0 fw-bold text-warning inaktif-stat-number"><?= $totalAdaPaspor ?></div>
                 </div>
             </div>
         </div>
     </div>
-    <?php endif; ?>
+
+    <!-- Card Santri Pindahan -->
+    <div class="col-6 col-lg-3">
+        <div class="card inaktif-stat-card border-0 shadow-sm h-100">
+            <div class="card-body p-3 d-flex align-items-center gap-3">
+                <div class="inaktif-stat-icon bg-info bg-opacity-10 text-info">
+                    <i class="bi bi-arrow-left-right"></i>
+                </div>
+                <div class="overflow-hidden">
+                    <div class="text-muted small fw-semibold text-truncate">Santri Pindahan</div>
+                    <div class="h4 mb-0 fw-bold text-info inaktif-stat-number"><?= $totalPindahan ?></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row: Distribusi Angkatan (Kelas) & Distribusi Pondok -->
+<div class="row g-3 mb-3">
+    <!-- Chart 1: Distribusi Angkatan (Tingkatan Kelas Sesuai Dashboard) -->
+    <div class="col-12 col-lg-7">
+        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+            <div class="card-header bg-white border-bottom-0 pt-3 pb-1 px-3 px-md-4 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold text-dark small d-flex align-items-center gap-2" style="font-size:.88rem;">
+                    <i class="bi bi-mortarboard-fill text-warning"></i> Distribusi Angkatan (Tingkatan Kelas)
+                </h6>
+                <button class="btn btn-sm btn-link text-muted p-0 text-decoration-none small" style="font-size:.72rem;" onclick="resetFilterTable()"><i class="bi bi-arrow-clockwise me-1"></i>Reset Filter</button>
+            </div>
+            <div class="card-body px-3 px-md-4 pb-3 pt-1">
+                <div style="position: relative; height: 240px; width: 100%;">
+                    <canvas id="angkatanChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart 2: Distribusi Pondok -->
+    <div class="col-12 col-lg-5">
+        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+            <div class="card-header bg-white border-bottom-0 pt-3 pb-1 px-3 px-md-4 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold text-dark small d-flex align-items-center gap-2" style="font-size:.88rem;">
+                    <i class="bi bi-building-fill text-primary"></i> Distribusi Pondok
+                </h6>
+                <span class="badge bg-light text-muted border rounded-pill px-2" style="font-size:.68rem;"><?= $totalPondok ?> Pondok</span>
+            </div>
+            <div class="card-body px-3 px-md-4 pb-3 pt-1">
+                <div style="position: relative; height: 240px; width: 100%;">
+                    <canvas id="pondokChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Search & Filter Bar -->
-<div class="card border-0 shadow-sm rounded-4 mb-4">
-    <div class="card-body p-3">
+<div class="card border-0 shadow-sm rounded-4 mb-3">
+    <div class="card-body p-2.5 p-md-3">
         <form class="row g-2 align-items-center inaktif-search-form" method="GET">
             <div class="col-md-6 col-lg-5">
                 <div class="input-group input-group-sm border shadow-sm rounded-3 overflow-hidden">
@@ -388,7 +422,7 @@ $pondokColorThemes = [
                         <th></th>
                         <th><input type="text" class="form-control form-control-sm column-search" onkeyup="filterTable()" placeholder="Cari stambuk..."></th>
                         <th><input type="text" class="form-control form-control-sm column-search" onkeyup="filterTable()" placeholder="Cari nama..."></th>
-                        <th><input type="text" class="form-control form-control-sm column-search" onkeyup="filterTable()" placeholder="Cari kelas..."></th>
+                        <th><input type="text" class="form-control form-control-sm column-search" onkeyup="filterTable()" placeholder="Cari kelas..." id="filterInputKelas"></th>
                         <th><input type="text" class="form-control form-control-sm column-search" onkeyup="filterTable()" placeholder="Cari pondok..." id="filterInputPondok"></th>
                         <th><input type="text" class="form-control form-control-sm column-search" onkeyup="filterTable()" placeholder="Cari negara asal..."></th>
                         <th><input type="text" class="form-control form-control-sm column-search" onkeyup="filterTable()" placeholder="Cari paspor..."></th>
@@ -635,6 +669,212 @@ $pondokColorThemes = [
 </div>
 
 <script>
+const rawData = <?= $santrisJson ?>;
+
+// Parse kelas/angkatan format
+function parseKelas(raw) {
+    if (!raw) return 'Lainnya';
+    const s = raw.toString().toLowerCase();
+    if (s.includes('penerimaan')) return 'Capel Penerimaan';
+    if (s.includes('persiapan')) return 'Capel Persiapan';
+    if (s.includes('alumni')) return 'Alumni';
+    if (s.includes('pengabdian')) return 'Pengabdian';
+    if (s.includes('1') && s.includes('int')) return 'Kelas 1 Int';
+    if (s.includes('3') && s.includes('int')) return 'Kelas 3 Int';
+    if (s.includes('1')) return 'Kelas 1';
+    if (s.includes('2')) return 'Kelas 2';
+    if (s.includes('3')) return 'Kelas 3';
+    if (s.includes('4')) return 'Kelas 4';
+    if (s.includes('5')) return 'Kelas 5';
+    if (s.includes('6')) return 'Kelas 6';
+    return 'Lainnya';
+}
+
+const classOrder = {
+    'Kelas 1': 1, 'Kelas 1 Int': 2, 'Kelas 2': 3,
+    'Kelas 3': 4, 'Kelas 3 Int': 5, 'Kelas 4': 6,
+    'Kelas 5': 7, 'Kelas 6': 8, 'Capel Persiapan': 9,
+    'Capel Penerimaan': 10, 'Pengabdian': 11,
+    'Alumni': 12, 'Lainnya': 13
+};
+
+// Vibrant palette matching the dashboard screenshot
+const angkatanColorMap = {
+    'Kelas 1': '#3b82f6',
+    'Kelas 1 Int': '#10b981',
+    'Kelas 2': '#f59e0b',
+    'Kelas 3': '#ef4444',
+    'Kelas 3 Int': '#8b5cf6',
+    'Kelas 4': '#f97316',
+    'Kelas 5': '#06b6d4',
+    'Kelas 6': '#84cc16',
+    'Capel Persiapan': '#ec4899',
+    'Capel Penerimaan': '#14b8a6',
+    'Pengabdian': '#6366f1',
+    'Alumni': '#64748b',
+    'Lainnya': '#94a3b8'
+};
+
+const defaultColors = ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#f97316','#06b6d4','#84cc16','#ec4899','#6366f1'];
+
+function groupInaktifData(data, field) {
+    const counts = {};
+    data.forEach(item => {
+        let val = item[field];
+        if (field === 'angkatan') {
+            val = parseKelas(item.kelas);
+        } else {
+            if (!val || val.trim() === '') val = '-';
+            else val = val.trim();
+        }
+        counts[val] = (counts[val] || 0) + 1;
+    });
+
+    if (field === 'angkatan') {
+        const sorted = Object.keys(counts).map(k => ({label: k, count: counts[k]}))
+            .sort((a, b) => (classOrder[a.label] || 99) - (classOrder[b.label] || 99));
+        return { 
+            labels: sorted.map(i => i.label), 
+            data: sorted.map(i => i.count),
+            colors: sorted.map(i => angkatanColorMap[i.label] || '#3b82f6')
+        };
+    }
+
+    const sorted = Object.keys(counts).map(k => ({label: k, count: counts[k]})).sort((a,b) => b.count - a.count);
+    return { 
+        labels: sorted.map(i => i.label), 
+        data: sorted.map(i => i.count),
+        colors: defaultColors 
+    };
+}
+
+let angkatanChartInstance = null;
+let pondokChartInstance = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Inisialisasi Grafik Angkatan
+    const angkatanAgg = groupInaktifData(rawData, 'angkatan');
+    const angkatanCtx = document.getElementById('angkatanChart');
+    if (angkatanCtx && typeof Chart !== 'undefined') {
+        angkatanChartInstance = new Chart(angkatanCtx, {
+            type: 'bar',
+            data: {
+                labels: angkatanAgg.labels,
+                datasets: [{
+                    label: 'Jumlah Santri',
+                    data: angkatanAgg.data,
+                    backgroundColor: angkatanAgg.colors,
+                    borderRadius: 6,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                return ctx.parsed.y + ' santri inaktif';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 2, precision: 0 },
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: {
+                            maxRotation: 25,
+                            minRotation: 15,
+                            font: { size: 11 }
+                        }
+                    }
+                },
+                onClick: (e, activeEls) => {
+                    if (activeEls.length > 0) {
+                        const idx = activeEls[0].index;
+                        const label = angkatanAgg.labels[idx];
+                        filterByKelas(label);
+                    }
+                }
+            }
+        });
+    }
+
+    // 2. Inisialisasi Grafik Pondok
+    const pondokAgg = groupInaktifData(rawData, 'pondok');
+    const pondokCtx = document.getElementById('pondokChart');
+    if (pondokCtx && typeof Chart !== 'undefined') {
+        pondokChartInstance = new Chart(pondokCtx, {
+            type: 'doughnut',
+            data: {
+                labels: pondokAgg.labels,
+                datasets: [{
+                    data: pondokAgg.data,
+                    backgroundColor: defaultColors,
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'right',
+                        labels: { boxWidth: 12, font: { size: 11 } }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                return ' ' + ctx.label + ': ' + ctx.parsed + ' santri';
+                            }
+                        }
+                    }
+                },
+                onClick: (e, activeEls) => {
+                    if (activeEls.length > 0) {
+                        const idx = activeEls[0].index;
+                        const label = pondokAgg.labels[idx];
+                        filterByPondok(label);
+                    }
+                }
+            }
+        });
+    }
+});
+
+function filterByKelas(kelasName) {
+    const inp = document.getElementById('filterInputKelas');
+    if (inp) {
+        inp.value = kelasName;
+        filterTable();
+        inp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+function filterByPondok(pondokName) {
+    const inp = document.getElementById('filterInputPondok');
+    if (inp) {
+        inp.value = pondokName;
+        filterTable();
+        inp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+function resetFilterTable() {
+    const inputs = document.querySelectorAll('.column-filters input');
+    inputs.forEach(inp => inp.value = '');
+    filterTable();
+}
+
 function lihatSantri(kds) {
     fetch('<?= API_URL ?>/santri/' + kds)
         .then(res => res.json())
@@ -794,42 +1034,6 @@ function filterTable() {
     });
 }
 
-function filterByPondokCard(pondokName, cardEl) {
-    // Highlight active card
-    document.querySelectorAll('.inaktif-stat-card').forEach(c => c.classList.remove('active-filter'));
-    if (cardEl) cardEl.classList.add('active-filter');
-
-    const inp = document.getElementById('filterInputPondok');
-    if (inp) {
-        inp.value = pondokName;
-        filterTable();
-        inp.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-}
-
-function resetPondokFilter() {
-    document.querySelectorAll('.inaktif-stat-card').forEach(c => c.classList.remove('active-filter'));
-    const inputs = document.querySelectorAll('.column-filters input');
-    inputs.forEach(inp => inp.value = '');
-    filterTable();
-}
-
-function filterByPasporCard() {
-    const table = document.querySelector('.table-hover');
-    if (!table) return;
-    const pasporInput = table.querySelectorAll('.column-filters input')[5]; // No Paspor
-    if (pasporInput) {
-        pasporInput.value = '';
-        const tbody = table.querySelector('tbody');
-        const rows = tbody.querySelectorAll('tr');
-        rows.forEach(row => {
-            if(row.cells.length <= 1) return;
-            const pasporText = row.cells[7]?.textContent.trim() || '';
-            row.style.display = (pasporText !== '-' && pasporText !== '') ? '' : 'none';
-        });
-    }
-}
-
 function reaktifkan(kds, nama) {
     Swal.fire({
         title: 'Aktifkan Santri?',
@@ -897,13 +1101,60 @@ if (selectAll) {
 
 function updateBulkAction() {
     const count = document.querySelectorAll('.row-cb:checked').length;
-    const btn = document.getElementById('btnBulkDelete');
-    if (btn) {
-        const countSpan = document.getElementById('countSelected');
-        if (countSpan) countSpan.textContent = count;
-        if (count > 0) btn.classList.remove('d-none');
-        else btn.classList.add('d-none');
+    const btnDel = document.getElementById('btnBulkDelete');
+    const btnReact = document.getElementById('btnBulkReactivate');
+    
+    if (btnDel && btnReact) {
+        document.getElementById('countSelectedDelete').textContent = count;
+        document.getElementById('countSelectedReactivate').textContent = count;
+        if (count > 0) {
+            btnDel.classList.remove('d-none');
+            btnReact.classList.remove('d-none');
+        } else {
+            btnDel.classList.add('d-none');
+            btnReact.classList.add('d-none');
+        }
     }
+}
+
+function bulkReaktifkan() {
+    const selected = Array.from(document.querySelectorAll('.row-cb:checked')).map(cb => cb.value);
+    if (selected.length === 0) return;
+
+    Swal.fire({
+        title: 'Aktifkan Massal?',
+        html: `Aktifkan kembali <strong>${selected.length}</strong> data santri terpilih ke daftar santri aktif?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#10b981',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: `<i class="bi bi-arrow-counterclockwise me-1"></i> Ya, Aktifkan ${selected.length} Santri!`,
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Sedang memproses...',
+                text: 'Mohon tunggu proses pengaktifan data massal...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+            fetch('<?= API_URL ?>/api/inaktif-data/bulk-reaktifkan', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+                body: JSON.stringify({ kds: selected })
+            }).then(r => r.json()).then(data => {
+                Swal.close();
+                if (data.success) {
+                    Swal.fire('Berhasil', data.message, 'success').then(() => location.reload());
+                } else {
+                    Swal.fire('Gagal', data.message, 'error');
+                }
+            }).catch(() => {
+                Swal.fire('Gagal', 'Terjadi kesalahan saat mengaktifkan data massal.', 'error');
+            });
+        }
+    });
 }
 
 function hapusData(kds, nama) {

@@ -336,6 +336,9 @@ return [
             Route::post('/api/inaktif-data/bulk-hard-delete')
                 ->action(Web\InaktifData\BulkHardDeleteAction::class)
                 ->name('api.inaktif-data.bulk-hard-delete'),
+            Route::post('/api/inaktif-data/bulk-reaktifkan')
+                ->action(Web\InaktifData\BulkReaktifkanAction::class)
+                ->name('api.inaktif-data.bulk-reaktifkan'),
             Route::post('/api/santri/{kds}/toggle-aktif')
                 ->action(Web\Santri\ToggleAktifAction::class)
                 ->name('santri.toggle-aktif'),
