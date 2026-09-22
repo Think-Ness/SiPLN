@@ -48,6 +48,29 @@ use Yiisoft\View\WebView;
         border-color: #cbd5e1;
         font-size: 0.875rem;
     }
+    .item-kebutuhan-card {
+        border-radius: 14px;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        padding: 14px 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .item-kebutuhan-card:hover {
+        border-color: #cbd5e1;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .subtotal-preview-box {
+        min-height: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #f8fafc;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 0 12px;
+    }
 
     /* =============================================
        PAGE HEADER
@@ -1015,9 +1038,9 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
             <div class="modal-header bg-light border-0 px-3 px-md-4 py-3">
-                <div class="d-flex align-items-center gap-2">
-                    <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
-                        <i class="bi bi-file-earmark-plus fs-5"></i>
+                <div class="d-flex align-items-center gap-2.5">
+                    <div id="modalPengajuanIconWrap" class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px;">
+                        <i id="modalPengajuanIcon" class="bi bi-file-earmark-plus fs-5"></i>
                     </div>
                     <div>
                         <h5 class="modal-title fw-bold text-dark mb-0" id="modalPengajuanTitle" style="font-size: 1.05rem;">Catat Rencana Anggaran</h5>
@@ -2043,7 +2066,13 @@ let itemsAjuan = [];
 
 function openPengajuanModal() {
     document.getElementById('form_pengajuan_id').value = '';
-    document.getElementById('modalPengajuanTitle').innerHTML = '<i class="bi bi-file-earmark-plus text-primary me-2"></i>Catat Rencana Anggaran';
+    const titleEl = document.getElementById('modalPengajuanTitle');
+    if (titleEl) titleEl.innerText = 'Catat Rencana Anggaran';
+    const iconEl = document.getElementById('modalPengajuanIcon');
+    if (iconEl) iconEl.className = 'bi bi-file-earmark-plus fs-5';
+    const iconWrap = document.getElementById('modalPengajuanIconWrap');
+    if (iconWrap) iconWrap.className = 'rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center flex-shrink-0';
+    
     document.getElementById('btnSubmitPengajuan').innerText = 'Simpan Anggaran';
     itemsAjuan = [];
     renderItemsAjuan();
@@ -2053,7 +2082,13 @@ function openPengajuanModal() {
 
 function editPengajuan(p) {
     document.getElementById('form_pengajuan_id').value = p.id;
-    document.getElementById('modalPengajuanTitle').innerHTML = '<i class="bi bi-pencil-square text-info me-2"></i>Edit Rencana Anggaran';
+    const titleEl = document.getElementById('modalPengajuanTitle');
+    if (titleEl) titleEl.innerText = 'Edit Rencana Anggaran';
+    const iconEl = document.getElementById('modalPengajuanIcon');
+    if (iconEl) iconEl.className = 'bi bi-pencil-square fs-5';
+    const iconWrap = document.getElementById('modalPengajuanIconWrap');
+    if (iconWrap) iconWrap.className = 'rounded-circle bg-info bg-opacity-10 text-info d-flex align-items-center justify-content-center flex-shrink-0';
+    
     document.getElementById('btnSubmitPengajuan').innerText = 'Simpan Perubahan';
     
     let parts = p.bulan_hijriah.split(' ');
@@ -2086,7 +2121,13 @@ function editPengajuan(p) {
 
 function copyPengajuan(p) {
     document.getElementById('form_pengajuan_id').value = '';
-    document.getElementById('modalPengajuanTitle').innerHTML = '<i class="bi bi-files text-primary me-2"></i>Duplikat Catatan Anggaran';
+    const titleEl = document.getElementById('modalPengajuanTitle');
+    if (titleEl) titleEl.innerText = 'Duplikat Catatan Anggaran';
+    const iconEl = document.getElementById('modalPengajuanIcon');
+    if (iconEl) iconEl.className = 'bi bi-files fs-5';
+    const iconWrap = document.getElementById('modalPengajuanIconWrap');
+    if (iconWrap) iconWrap.className = 'rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center flex-shrink-0';
+    
     document.getElementById('btnSubmitPengajuan').innerText = 'Simpan Catatan Baru';
     
     let instansiEl = document.getElementById('form_instansi');
@@ -2152,9 +2193,12 @@ function renderItemsAjuan() {
                             <input type="number" id="i_harga_satuan_${index}" class="form-control form-control-sm" placeholder="0" value="${item.harga_satuan || ''}" oninput="updateItem(${index}, 'harga_satuan', this.value)" onkeydown="handleEnter(event, ${index}, 'harga_satuan')">
                         </div>
                     </div>
-                    <div class="col-12 col-md-4 d-flex justify-content-between align-items-center bg-light bg-opacity-75 p-2 rounded-3 border border-secondary-subtle">
-                        <span class="text-muted small fw-bold text-uppercase ms-1" style="font-size: 0.72rem;">Subtotal:</span>
-                        <span class="fw-bold text-dark fs-6 me-1" id="lblSubtotal_${index}">Rp ${formatRupiah(nominal)}</span>
+                    <div class="col-12 col-md-4">
+                        <label class="small text-muted mb-1 fw-bold text-uppercase d-block" style="font-size: 0.7rem;">Subtotal Item</label>
+                        <div class="subtotal-preview-box">
+                            <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.68rem;">Subtotal:</span>
+                            <span class="fw-bold text-dark fs-6" id="lblSubtotal_${index}">Rp ${formatRupiah(nominal)}</span>
+                        </div>
                     </div>
                 </div>
             </div>
