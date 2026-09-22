@@ -129,7 +129,7 @@ class PengeluaranDashboardAction
             FROM jobdesk_case_payment p
             JOIN jobdesk_cases c ON p.case_id = c.id
             JOIN master_santri s ON c.kds = s.kds
-            WHERE p.status_bayar_santri = 'lunas' AND p.status_bayar_instansi = 'lunas' $whereExt
+            WHERE p.status_bayar_santri = 'lunas' $whereExt
         ", $pemasukanParams)->queryScalar() ?: 0);
 
         $totalPengeluaran = (float)($db->createCommand("

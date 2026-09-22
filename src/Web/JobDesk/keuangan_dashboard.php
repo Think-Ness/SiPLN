@@ -307,7 +307,7 @@ $formatRupiah = function($num) {
                     <div>
                         <h4 class="fw-bold mb-0 text-truncate" style="font-size:1.2rem;"><?= $formatRupiah($totalSurplus) ?></h4>
                     </div>
-                    <div class="small opacity-80 mt-1 text-truncate" style="font-size:.68rem;"><i class="bi bi-check2-circle me-1"></i>Dari transaksi lunas</div>
+                    <div class="small opacity-80 mt-1 text-truncate" style="font-size:.68rem;"><i class="bi bi-check2-circle me-1"></i>Dari santri lunas</div>
                     <i class="bi bi-wallet2 position-absolute opacity-10" style="font-size:3.5rem;right:8px;bottom:-6px;pointer-events:none;"></i>
                 </div>
             </div>
@@ -560,13 +560,13 @@ $formatRupiah = function($num) {
                             </td>
                             <td>
                                 <?php
-                                $isLunasSemua = ($tx['status_bayar_santri']==='lunas' && $tx['status_bayar_instansi']==='lunas');
+                                $isLunasSantri = ($tx['status_bayar_santri']==='lunas');
                                 $surplus = (float)$tx['selisih_operasional'];
                                 ?>
-                                <div class="fw-bold <?= $isLunasSemua ? 'text-success' : 'text-muted' ?>" style="font-size:.82rem;">
-                                    <?= $isLunasSemua ? '+' : '' ?><?= $formatRupiah($surplus) ?>
+                                <div class="fw-bold <?= $isLunasSantri ? 'text-success' : 'text-muted' ?>" style="font-size:.82rem;">
+                                    <?= $isLunasSantri ? '+' : '' ?><?= $formatRupiah($surplus) ?>
                                 </div>
-                                <?php if (!$isLunasSemua): ?><div class="text-muted" style="font-size:.62rem;">(Belum valid)</div><?php endif; ?>
+                                <?php if (!$isLunasSantri): ?><div class="text-muted" style="font-size:.62rem;">(Belum lunas)</div><?php endif; ?>
                             </td>
                             <td class="text-muted" style="font-size:.74rem;"><?= date('d M Y H:i', strtotime($tx['updated_at'])) ?></td>
                             <td class="pe-3 text-center keuangan-sticky-action">

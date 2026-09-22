@@ -72,18 +72,18 @@ class KeuanganDashboardAction
             ")->execute();
         } catch (\Exception $e) { /* Table might already exist */ }
 
-        // 1. Hitung Total Uang Operasional (Lunas Kedua Belah Pihak)
+        // 1. Hitung Total Uang Operasional (Ketika Santri sudah bayar lunas)
         $totalSurplus = $db->createCommand("
             SELECT SUM(p.selisih_operasional) as total
             FROM jobdesk_case_payment p
             JOIN jobdesk_cases c ON p.case_id = c.id
             JOIN master_santri s ON c.kds = s.kds
-            WHERE p.status_bayar_santri = 'lunas' AND p.status_bayar_instansi = 'lunas' $whereExt
+            WHERE p.status_bayar_santri = 'lunas' $whereExt
         ", $params)->queryScalar() ?: 0;
 
-        // 2. Hitung Piutang Santri (Belum dibayar oleh Santri)
+        // 2. Hitung Piutang Santri (Belum dibayar oleh Santri dikurangi cicilan)
         $piutangSantri = $db->createCommand("
-            SELECT SUM(p.nominal_santri) as total
+            SELECT SUM(p.nominal_santri - COALESCE((SELECT SUM(i.nominal) FROM jobdesk_payment_installment i WHERE i.case_id = p.case_id), 0)) as total
             FROM jobdesk_case_payment p
             JOIN jobdesk_cases c ON p.case_id = c.id
             JOIN master_santri s ON c.kds = s.kds
@@ -99,16 +99,16 @@ class KeuanganDashboardAction
             WHERE p.status_bayar_instansi = 'belum' $whereExt
         ", $params)->queryScalar() ?: 0;
 
-        // 4. Data Transaksi per Bulan (Trend)
+        // 4. Data Transaksi per Bulan (Trend Pemasukan & Operasional dari Santri lunas)
         $monthlyTrendRaw = $db->createCommand("
             SELECT 
-                DATE_FORMAT(p.updated_at, '%Y-%m') as month,
+                DATE_FORMAT(COALESCE(p.tgl_bayar_santri, p.updated_at), '%Y-%m') as month,
                 SUM(p.selisih_operasional) as surplus,
                 SUM(p.nominal_santri) as penerimaan
             FROM jobdesk_case_payment p
             JOIN jobdesk_cases c ON p.case_id = c.id
             JOIN master_santri s ON c.kds = s.kds
-            WHERE p.status_bayar_santri = 'lunas' AND p.status_bayar_instansi = 'lunas' $whereExt
+            WHERE p.status_bayar_santri = 'lunas' $whereExt
             GROUP BY month
             ORDER BY month ASC
             LIMIT 12
@@ -181,11 +181,11 @@ class KeuanganDashboardAction
                 COUNT(p.id) as jumlah_kasus,
                 SUM(p.nominal_santri) as total_nominal_santri,
                 SUM(CASE WHEN p.status_bayar_santri = 'lunas' THEN p.nominal_santri ELSE 0 END) as total_lunas_santri,
-                SUM(CASE WHEN p.status_bayar_santri = 'belum' THEN p.nominal_santri ELSE 0 END) as total_belum_santri,
+                SUM(CASE WHEN p.status_bayar_santri = 'belum' THEN (p.nominal_santri - COALESCE((SELECT SUM(i.nominal) FROM jobdesk_payment_installment i WHERE i.case_id = p.case_id), 0)) ELSE 0 END) as total_belum_santri,
                 SUM(p.nominal_instansi) as total_nominal_instansi,
                 SUM(CASE WHEN p.status_bayar_instansi = 'lunas' THEN p.nominal_instansi ELSE 0 END) as total_lunas_instansi,
                 SUM(CASE WHEN p.status_bayar_instansi = 'belum' THEN p.nominal_instansi ELSE 0 END) as total_belum_instansi,
-                SUM(p.selisih_operasional) as total_selisih
+                SUM(CASE WHEN p.status_bayar_santri = 'lunas' THEN p.selisih_operasional ELSE 0 END) as total_selisih
             FROM jobdesk_case_payment p
             JOIN jobdesk_cases c ON p.case_id = c.id
             JOIN master_santri s ON c.kds = s.kds
