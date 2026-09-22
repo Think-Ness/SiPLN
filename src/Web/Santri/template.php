@@ -77,15 +77,9 @@ $this->setTitle('Master Data Santri | Sistem Informasi');
 
 #detailTabs {
     display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+    flex-wrap: wrap;
     gap: 4px;
     padding-bottom: 4px;
-}
-#detailTabs::-webkit-scrollbar {
-    display: none;
 }
 #detailTabs .nav-item {
     flex-shrink: 0;
@@ -93,12 +87,18 @@ $this->setTitle('Master Data Santri | Sistem Informasi');
 #detailTabs .nav-link {
     white-space: nowrap;
     border-radius: 20px;
-    padding: 0.4rem 0.75rem;
-    font-size: 0.8rem;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.78rem;
     font-weight: 500;
     color: #64748b;
-    border: 1px solid transparent;
+    border: 1px solid #e2e8f0;
+    background-color: #f8fafc;
     transition: all 0.2s;
+}
+#detailTabs .nav-link:hover {
+    color: #0d6efd;
+    background-color: #eff6ff;
+    border-color: #bfdbfe;
 }
 #detailTabs .nav-link.active {
     background-color: #0d6efd;

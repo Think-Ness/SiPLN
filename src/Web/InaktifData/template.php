@@ -74,21 +74,12 @@ foreach ($santris as $s) {
 /* Segmented Navigation Tabs for Modal */
 .inaktif-nav-tabs {
     display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    flex-wrap: wrap;
     gap: 6px;
     padding: 6px;
     background: #f1f5f9;
     border-radius: 12px;
     border: none;
-}
-.inaktif-nav-tabs::-webkit-scrollbar {
-    height: 3px;
-}
-.inaktif-nav-tabs::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 3px;
 }
 .inaktif-nav-tabs .nav-link {
     white-space: nowrap;
