@@ -155,19 +155,66 @@ class PengeluaranDashboardAction
             ORDER BY total DESC
         ", $pengeluaranParams)->queryAll();
 
-        // Per bulan trend
+        // 12-Month Trend (Pemasukan vs Pengeluaran)
+        $pemasukanBulanan = $db->createCommand("
+            SELECT 
+                DATE_FORMAT(COALESCE(p.tgl_bayar_santri, p.updated_at), '%Y-%m') as month,
+                SUM(p.selisih_operasional) as total_surplus
+            FROM jobdesk_case_payment p
+            JOIN jobdesk_cases c ON p.case_id = c.id
+            JOIN master_santri s ON c.kds = s.kds
+            WHERE p.status_bayar_santri = 'lunas' $whereExt
+            GROUP BY month ORDER BY month ASC
+        ", $pemasukanParams)->queryAll();
+
         $pengeluaranBulanan = $db->createCommand("
             SELECT DATE_FORMAT(p.tanggal, '%Y-%m') as month, SUM(p.nominal) as total
             FROM jobdesk_pengeluaran_birokrasi p
             $pengeluaranWhere
-            GROUP BY month ORDER BY month ASC LIMIT 12
+            GROUP BY month ORDER BY month ASC
         ", $pengeluaranParams)->queryAll();
 
+        $pemMap = [];
+        foreach ($pemasukanBulanan as $pm) {
+            $pemMap[$pm['month']] = (float)$pm['total_surplus'];
+        }
+        $pengMap = [];
+        foreach ($pengeluaranBulanan as $pg) {
+            $pengMap[$pg['month']] = (float)$pg['total'];
+        }
+
+        // Generate months: last 6 months up to current
+        $allMonths = array_unique(array_merge(array_keys($pemMap), array_keys($pengMap)));
+        if (empty($allMonths)) {
+            for ($i = 5; $i >= 0; $i--) {
+                $allMonths[] = date('Y-m', strtotime("-$i months"));
+            }
+        }
+        sort($allMonths);
+        if (count($allMonths) > 12) {
+            $allMonths = array_slice($allMonths, -12);
+        }
+
         $bulananLabels = [];
-        $bulananData = [];
-        foreach ($pengeluaranBulanan as $row) {
-            $bulananLabels[] = date('M Y', strtotime($row['month'] . '-01'));
-            $bulananData[] = (float)$row['total'];
+        $bulananPengeluaran = [];
+        $bulananPemasukan = [];
+        foreach ($allMonths as $m) {
+            $bulananLabels[] = date('M Y', strtotime($m . '-01'));
+            $bulananPengeluaran[] = (float)($pengMap[$m] ?? 0);
+            $bulananPemasukan[] = (float)($pemMap[$m] ?? 0);
+        }
+
+        // Info Instansi (untuk kop surat print)
+        $instansiInfo = [];
+        $semuaInstansi = [];
+        if ($instansiId) {
+            $instansiInfo = $db->createCommand(
+                "SELECT * FROM master_instansi WHERE kode = :kode LIMIT 1",
+                [':kode' => $instansiId]
+            )->queryOne() ?: [];
+        } elseif ($role === 'super_admin') {
+            $instansiInfo = $db->createCommand("SELECT * FROM master_instansi WHERE kode = " . (int)($_SESSION['instansi_id'] ?? 0) . " LIMIT 1")->queryOne() ?: [];
+            $semuaInstansi = $db->createCommand("SELECT kode, nama_instansi FROM master_instansi ORDER BY nama_instansi ASC")->queryAll();
         }
 
         return $viewRenderer->render(__DIR__ . '/pengeluaran_dashboard', [
@@ -178,10 +225,13 @@ class PengeluaranDashboardAction
             'pengeluaranPerKategori' => $pengeluaranPerKategori,
             'pengeluaranBulanan'    => $pengeluaranBulanan,
             'bulananLabels'         => json_encode($bulananLabels),
-            'bulananData'           => json_encode($bulananData),
+            'bulananPengeluaran'    => json_encode($bulananPengeluaran),
+            'bulananPemasukan'      => json_encode($bulananPemasukan),
             'kategoris'             => $kategoris,
             'kategoriColors'        => $kategoriColors,
             'kategoriIcons'         => $kategoriIcons,
+            'instansiInfo'          => $instansiInfo,
+            'semuaInstansi'         => $semuaInstansi,
             'applicationParams'     => $applicationParams,
         ]);
     }
