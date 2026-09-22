@@ -21,6 +21,7 @@ final class BulkReorderItasAction
 
         $scope = $data['scope'] ?? 'selected'; // 'selected' atau 'all'
         $startLevel = max(1, (int)($data['start_level'] ?? 1));
+        $isPreview = !empty($data['preview']);
 
         $role = $_SESSION['role'] ?? '';
         $myKepengurusan = $_SESSION['def_kepengurusan'] ?? '';
@@ -53,7 +54,7 @@ final class BulkReorderItasAction
                 }
             }
 
-            $sql = "SELECT DISTINCT kds FROM master_santri WHERE aktif = 1 $whereExt";
+            $sql = "SELECT DISTINCT kds FROM master_santri WHERE aktif = 1 $whereExt ORDER BY nama ASC";
             $kdsList = $db->createCommand($sql, $params)->queryColumn();
             $kdsList = array_map('intval', $kdsList);
         }
@@ -62,6 +63,99 @@ final class BulkReorderItasAction
             return JsonResponse::create(['success' => false, 'message' => 'Tidak ada data santri yang ditemukan untuk diproses.'], 400);
         }
 
+        // =========================================================================
+        // MODE 1: PRATINJAU (DRY-RUN / PREVIEW)
+        // =========================================================================
+        if ($isPreview) {
+            $previewItems = [];
+            $totalSantriWithChanges = 0;
+            $totalRowsWithChanges = 0;
+            $totalSantriExamined = 0;
+
+            // Fetch info nama, kelas, pondok santri
+            $santriMap = [];
+            if (!empty($kdsList)) {
+                // Chunk to prevent large IN queries
+                $chunks = array_chunk($kdsList, 500);
+                foreach ($chunks as $chunk) {
+                    $inKds = implode(',', $chunk);
+                    $santriRows = $db->createCommand("SELECT kds, nama, kelas, pondok FROM master_santri WHERE kds IN ($inKds)")->queryAll();
+                    foreach ($santriRows as $sr) {
+                        $santriMap[$sr['kds']] = $sr;
+                    }
+                }
+            }
+
+            foreach ($kdsList as $kds) {
+                $itasRows = $db->createCommand(
+                    "SELECT id, no_itas, level_itas, exp_itas FROM mtb_itas 
+                     WHERE kds = :kds 
+                     ORDER BY (exp_itas IS NULL OR exp_itas = '' OR exp_itas = '0000-00-00') ASC, exp_itas ASC, id ASC",
+                    [':kds' => $kds]
+                )->queryAll();
+
+                if (empty($itasRows)) {
+                    continue;
+                }
+
+                $totalSantriExamined++;
+                $currentLevel = $startLevel;
+                $santriHasChanges = false;
+                $itasListPreview = [];
+
+                foreach ($itasRows as $row) {
+                    $targetLevelStr = (string)$currentLevel;
+                    $isDiff = ((string)($row['level_itas'] ?? '') !== $targetLevelStr);
+                    if ($isDiff) {
+                        $santriHasChanges = true;
+                        $totalRowsWithChanges++;
+                    }
+
+                    $itasListPreview[] = [
+                        'id' => $row['id'],
+                        'no_itas' => $row['no_itas'] ?? '-',
+                        'exp_itas' => $row['exp_itas'],
+                        'current_level' => $row['level_itas'] !== null && $row['level_itas'] !== '' ? $row['level_itas'] : '-',
+                        'target_level' => $targetLevelStr,
+                        'is_changed' => $isDiff
+                    ];
+                    $currentLevel++;
+                }
+
+                if ($santriHasChanges) {
+                    $totalSantriWithChanges++;
+                }
+
+                $sInfo = $santriMap[$kds] ?? ['nama' => "Santri #{$kds}", 'kelas' => '-', 'pondok' => '-'];
+
+                $previewItems[] = [
+                    'kds' => $kds,
+                    'nama' => $sInfo['nama'] ?? '-',
+                    'kelas' => $sInfo['kelas'] ?? '-',
+                    'pondok' => $sInfo['pondok'] ?? '-',
+                    'has_changes' => $santriHasChanges,
+                    'total_itas' => count($itasRows),
+                    'itas_list' => $itasListPreview
+                ];
+            }
+
+            return JsonResponse::create([
+                'success' => true,
+                'is_preview' => true,
+                'summary' => [
+                    'total_santri_examined' => $totalSantriExamined,
+                    'total_santri_changed' => $totalSantriWithChanges,
+                    'total_rows_changed' => $totalRowsWithChanges,
+                    'start_level' => $startLevel,
+                    'scope' => $scope
+                ],
+                'items' => $previewItems
+            ]);
+        }
+
+        // =========================================================================
+        // MODE 2: EKSEKUSI PENYIMPANAN MASSAL (COMMIT)
+        // =========================================================================
         $totalSantriProcessed = 0;
         $totalRowsUpdated = 0;
 

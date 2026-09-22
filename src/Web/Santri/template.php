@@ -836,6 +836,96 @@ $this->setTitle('Master Data Santri | Sistem Informasi');
     </div>
 </div>
 
+<!-- Modal Preview Susun Ulang Level ITAS Massal -->
+<div class="modal fade" id="modalBulkItasPreview" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header bg-warning bg-opacity-10 border-bottom py-3 px-4">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center bg-warning bg-opacity-25" style="width: 38px; height: 38px;">
+                        <i class="bi bi-arrow-repeat text-dark fs-5"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold text-dark mb-0">Pratinjau Konfigurasi Level ITAS Massal</h5>
+                        <small class="text-muted" id="previewScopeSubtitle">Memeriksa perbandingan urutan level ITAS sebelum disimpan</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 bg-light">
+                <!-- Summary Metrics Cards -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-xs rounded-3 p-3 bg-white h-100">
+                            <span class="text-muted small fw-bold">TOTAL SANTRI DIPERIKSA</span>
+                            <h3 class="fw-bold text-dark mb-0 mt-1" id="statExamined">0</h3>
+                            <small class="text-muted" style="font-size:0.75rem;">Santri yang memiliki riwayat ITAS</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-xs rounded-3 p-3 bg-white h-100 border-start border-warning border-4">
+                            <span class="text-muted small fw-bold">SANTRI PERLU PENYESUAIAN</span>
+                            <h3 class="fw-bold text-warning mb-0 mt-1" id="statChangedSantri">0</h3>
+                            <small class="text-muted" style="font-size:0.75rem;">Level ITAS belum terurut / ada selisih</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-xs rounded-3 p-3 bg-white h-100 border-start border-primary border-4">
+                            <span class="text-muted small fw-bold">TOTAL RIWAYAT DIPERBAIKI</span>
+                            <h3 class="fw-bold text-primary mb-0 mt-1" id="statChangedRows">0</h3>
+                            <small class="text-muted" style="font-size:0.75rem;">Baris dokumen ITAS yang akan diupdate</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controls & Filter Toolbar -->
+                <div class="card border-0 shadow-xs rounded-3 p-3 bg-white mb-3">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <label class="form-label mb-0 fw-bold small text-muted text-nowrap">Mulai dari Tingkat:</label>
+                            <input type="number" id="previewStartLevelInput" class="form-control form-control-sm fw-bold text-center" style="width: 70px;" value="1" min="1">
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="reloadBulkItasPreview()">
+                                <i class="bi bi-arrow-clockwise me-1"></i>Hitung Ulang
+                            </button>
+                        </div>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input" type="checkbox" id="checkOnlyChangedItas" checked onchange="renderBulkItasPreviewTable()">
+                                <label class="form-check-label small fw-bold text-dark" for="checkOnlyChangedItas">Hanya Tampilkan yang Mengalami Perubahan</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Preview -->
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+                    <div class="table-responsive" style="max-height: 420px;">
+                        <table class="table table-hover table-bordered align-middle mb-0" style="font-size: 0.8rem;">
+                            <thead class="table-light sticky-top" style="z-index: 5;">
+                                <tr>
+                                    <th class="text-center" style="width: 50px;">No</th>
+                                    <th style="width: 220px;">Santri & Info</th>
+                                    <th>Rincian Riwayat ITAS (Urutan Kronologis)</th>
+                                    <th class="text-center" style="width: 140px;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyBulkItasPreview">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top bg-white px-4 py-3 d-flex justify-content-between">
+                <button type="button" class="btn btn-light border rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-warning rounded-pill px-4 fw-bold text-dark shadow-sm" id="btnApplyBulkItas" onclick="eksekusiBulkItas()">
+                    <i class="bi bi-check-circle-fill me-1"></i>Terapkan Perubahan Massal (<span id="btnApplyBulkItasCount">0</span> Santri)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal Edit Massal -->
 <div class="modal fade" id="bulkEditModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
@@ -2039,13 +2129,19 @@ function konfigurasiUlangLevelItas() {
     });
 }
 
+let currentBulkPreviewData = null;
+let currentBulkScope = 'selected';
+let currentBulkSelectedKds = [];
+
 function bulkKonfigurasiLevelItas(scope = 'selected') {
-    let selectedKds = [];
+    currentBulkScope = scope;
+    currentBulkSelectedKds = [];
+
     if (scope === 'selected') {
         $('.row-cb:checked:not(:disabled)', table.rows({search:'applied'}).nodes()).each(function() {
-            selectedKds.push(parseInt($(this).val()));
+            currentBulkSelectedKds.push(parseInt($(this).val()));
         });
-        if (selectedKds.length === 0) {
+        if (currentBulkSelectedKds.length === 0) {
             Swal.fire({
                 icon: 'warning',
                 title: 'Pilih Santri',
@@ -2056,54 +2152,152 @@ function bulkKonfigurasiLevelItas(scope = 'selected') {
         }
     }
 
-    const titleText = scope === 'selected' 
-        ? `<i class="bi bi-arrow-repeat text-warning me-2"></i>Susun Level ITAS (${selectedKds.length} Santri)`
-        : `<i class="bi bi-arrow-repeat text-warning me-2"></i>Susun Level ITAS Massal (Semua Santri)`;
+    document.getElementById('previewStartLevelInput').value = 1;
+    document.getElementById('checkOnlyChangedItas').checked = true;
+    
+    fetchBulkItasPreview(1);
+}
 
-    const descText = scope === 'selected'
-        ? `Sistem akan menyusun dan memperbaiki nomor urutan Level ITAS secara kronologis (dari tanggal berlaku terlama ke yang terbaru) untuk <strong>${selectedKds.length} santri yang dipilih</strong>.`
-        : `Sistem akan memproses seluruh santri aktif dalam sistem untuk memastikan seluruh riwayat level ITAS terurut secara rapi dan berurutan dari dokumen paling lampau.`;
+function reloadBulkItasPreview() {
+    const startLvl = parseInt(document.getElementById('previewStartLevelInput').value) || 1;
+    fetchBulkItasPreview(startLvl);
+}
+
+function fetchBulkItasPreview(startLevel = 1) {
+    Swal.fire({
+        title: 'Mempersiapkan Pratinjau...',
+        text: 'Memeriksa dan menghitung urutan level ITAS santri',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+    });
+
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+
+    fetch('<?= API_URL ?>/api/santri/bulk-reorder-itas', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrf
+        },
+        body: JSON.stringify({
+            scope: currentBulkScope,
+            kds: currentBulkSelectedKds,
+            start_level: startLevel,
+            preview: true
+        })
+    })
+    .then(r => r.json())
+    .then(res => {
+        Swal.close();
+        if (res.success && res.is_preview) {
+            currentBulkPreviewData = res;
+            
+            document.getElementById('statExamined').innerText = res.summary.total_santri_examined;
+            document.getElementById('statChangedSantri').innerText = res.summary.total_santri_changed;
+            document.getElementById('statChangedRows').innerText = res.summary.total_rows_changed;
+            document.getElementById('btnApplyBulkItasCount').innerText = res.summary.total_santri_changed;
+            
+            document.getElementById('previewScopeSubtitle').innerText = currentBulkScope === 'selected' 
+                ? `Pratinjau untuk ${currentBulkSelectedKds.length} santri yang dipilih (Mulai Tingkat ${startLevel})`
+                : `Pratinjau untuk seluruh santri aktif dalam sistem (Mulai Tingkat ${startLevel})`;
+
+            renderBulkItasPreviewTable();
+            
+            new bootstrap.Modal(document.getElementById('modalBulkItasPreview')).show();
+        } else {
+            Swal.fire('Gagal!', res.message || 'Gagal memuat pratinjau data.', 'error');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        Swal.fire('Gagal!', 'Terjadi kesalahan pada jaringan saat mengambil pratinjau.', 'error');
+    });
+}
+
+function renderBulkItasPreviewTable() {
+    if (!currentBulkPreviewData || !currentBulkPreviewData.items) return;
+    
+    const onlyChanged = document.getElementById('checkOnlyChangedItas').checked;
+    const tbody = document.getElementById('tbodyBulkItasPreview');
+    tbody.innerHTML = '';
+
+    let items = currentBulkPreviewData.items;
+    if (onlyChanged) {
+        items = items.filter(it => it.has_changes);
+    }
+
+    if (items.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" class="text-center py-4 text-muted">
+                    <i class="bi bi-check-circle text-success fs-3 d-block mb-2"></i>
+                    ${onlyChanged ? 'Semua santri yang diperiksa sudah memiliki urutan level ITAS yang sesuai.' : 'Tidak ada data ITAS ditemukan.'}
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    items.forEach((item, idx) => {
+        let itasChipsHtml = item.itas_list.map(it => {
+            const isDiff = it.is_changed;
+            return `
+                <div class="d-inline-flex align-items-center gap-1 p-1 px-2 mb-1 me-1 rounded-2 border ${isDiff ? 'bg-warning bg-opacity-10 border-warning-subtle' : 'bg-light border-secondary-subtle'}" style="font-size:0.75rem;">
+                    <span class="fw-bold text-dark">${it.no_itas}</span>
+                    <span class="text-muted">(${formatDate(it.exp_itas)})</span>
+                    <span class="badge ${isDiff ? 'bg-danger text-white' : 'bg-secondary text-white'}" title="Level Saat Ini">${it.current_level}</span>
+                    <i class="bi bi-arrow-right text-muted mx-1"></i>
+                    <span class="badge bg-success fw-bold" title="Level Baru Disusun">Lvl ${it.target_level}</span>
+                </div>
+            `;
+        }).join('');
+
+        const statusBadge = item.has_changes 
+            ? '<span class="badge bg-warning text-dark border border-warning px-2 py-1"><i class="bi bi-pencil-fill me-1"></i>Perlu Diperbarui</span>'
+            : '<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i class="bi bi-check-all me-1"></i>Sudah Sesuai</span>';
+
+        tbody.innerHTML += `
+            <tr>
+                <td class="text-center text-muted fw-bold">${idx + 1}</td>
+                <td>
+                    <div class="fw-bold text-dark">${item.nama}</div>
+                    <small class="text-muted">KDS: <span class="fw-medium">${item.kds}</span> &middot; Kelas: ${item.kelas || '-'} / ${item.pondok || '-'}</small>
+                </td>
+                <td>${itasChipsHtml}</td>
+                <td class="text-center">${statusBadge}</td>
+            </tr>
+        `;
+    });
+}
+
+function eksekusiBulkItas() {
+    if (!currentBulkPreviewData) return;
+
+    const startLevel = parseInt(document.getElementById('previewStartLevelInput').value) || 1;
+    const countChanged = currentBulkPreviewData.summary.total_santri_changed;
 
     Swal.fire({
-        title: titleText,
-        html: `
-            <div class="text-start small">
-                <p class="text-muted mb-3">${descText}</p>
-                <div class="p-3 bg-light rounded-3 border mb-3">
-                    <label class="form-label mb-1 fw-bold text-dark">Mulai dari Tingkat (Default Level Awal):</label>
-                    <div class="d-flex align-items-center gap-2">
-                        <input type="number" id="swalBulkStartLevel" class="form-control form-control-sm fw-bold" style="width: 80px;" value="1" min="1">
-                        <span class="text-muted" style="font-size: 0.75rem;">(Dokumen ITAS paling lampau akan diberi tingkat ini)</span>
-                    </div>
-                </div>
-                <div class="alert alert-warning py-2 px-3 border-0 rounded-3 mb-0" style="font-size: 0.75rem;">
-                    <i class="bi bi-exclamation-triangle-fill me-1"></i>
-                    Proses ini akan mengurutkan ulang nilai <code>level_itas</code> di database sesuai tanggal berlaku dokumen. Tindakan ini aman dan tercatat di Audit Log.
-                </div>
-            </div>
-        `,
-        width: '500px',
+        title: 'Konfirmasi Terapkan Perubahan',
+        text: `Apakah Anda yakin ingin menyimpan dan menyusun ulang level ITAS untuk ${countChanged} santri?`,
+        icon: 'question',
         showCancelButton: true,
-        confirmButtonText: '<i class="bi bi-play-fill me-1"></i>Mulai Proses Massal',
+        confirmButtonText: '<i class="bi bi-check-circle-fill me-1"></i>Ya, Terapkan Sekarang',
         cancelButtonText: 'Batal',
         confirmButtonColor: '#ffc107',
         cancelButtonColor: '#6c757d',
-        customClass: {
-            popup: 'rounded-4 shadow-lg',
-            confirmButton: 'text-dark fw-bold'
-        },
-        preConfirm: () => {
-            const startLevel = parseInt(document.getElementById('swalBulkStartLevel')?.value) || 1;
-            return { start_level: startLevel };
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            const startLevel = result.value.start_level;
+        customClass: { confirmButton: 'text-dark fw-bold' }
+    }).then((res) => {
+        if (res.isConfirmed) {
             const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+            
+            // Tutup modal preview
+            const modalEl = document.getElementById('modalBulkItasPreview');
+            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+            if (modalInstance) modalInstance.hide();
 
             Swal.fire({
-                title: 'Sedang Memproses...',
-                text: 'Menyusun ulang urutan level ITAS santri...',
+                title: 'Menyimpan Perubahan Massal...',
+                text: 'Sedang memperbarui database...',
                 allowOutsideClick: false,
                 didOpen: () => { Swal.showLoading(); }
             });
@@ -2115,9 +2309,10 @@ function bulkKonfigurasiLevelItas(scope = 'selected') {
                     'X-CSRF-Token': csrf
                 },
                 body: JSON.stringify({
-                    scope: scope,
-                    kds: selectedKds,
-                    start_level: startLevel
+                    scope: currentBulkScope,
+                    kds: currentBulkSelectedKds,
+                    start_level: startLevel,
+                    preview: false
                 })
             })
             .then(r => r.json())
@@ -2125,7 +2320,7 @@ function bulkKonfigurasiLevelItas(scope = 'selected') {
                 if (res.success) {
                     Swal.fire({
                         icon: 'success',
-                        title: 'Selesai!',
+                        title: 'Berhasil Diterapkan!',
                         text: res.message,
                         confirmButtonText: 'OK',
                         confirmButtonColor: '#0d6efd'
@@ -2138,7 +2333,7 @@ function bulkKonfigurasiLevelItas(scope = 'selected') {
             })
             .catch(err => {
                 console.error(err);
-                Swal.fire('Gagal!', 'Terjadi kesalahan pada jaringan/server.', 'error');
+                Swal.fire('Gagal!', 'Terjadi kesalahan koneksi server.', 'error');
             });
         }
     });
