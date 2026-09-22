@@ -220,12 +220,20 @@ $formatRupiah = function($num) {
 }
 .page-header-controls .btn {
     font-size: 0.8rem;
-    padding: 7px 14px;
+    padding: 7px 15px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 7px;
     white-space: nowrap;
-    border-radius: 24px;
+    border-radius: 20px;
+    line-height: 1.4;
+}
+.page-header-controls .btn i {
+    font-size: 0.92rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
 }
 
 /* Responsive Overrides */
@@ -278,67 +286,69 @@ $formatRupiah = function($num) {
         </div>
         <div class="page-header-controls">
             <button class="btn btn-sm btn-primary fw-semibold shadow-xs" onclick="showFormPengeluaran()">
-                <i class="bi bi-plus-circle-fill me-1.5"></i> Catat Pengeluaran
+                <i class="bi bi-plus-lg"></i>
+                <span>Catat Pengeluaran</span>
             </button>
             <button class="btn btn-sm btn-outline-info fw-semibold shadow-xs" onclick="showKategoriManager()">
-                <i class="bi bi-tags-fill me-1.5"></i> Kelola Kategori
+                <i class="bi bi-tags"></i>
+                <span>Kelola Kategori</span>
             </button>
             <button class="btn btn-sm btn-outline-primary fw-semibold shadow-xs" onclick="printLaporanPengeluaran()">
-                <i class="bi bi-printer-fill me-1.5"></i> Cetak Laporan
+                <i class="bi bi-printer"></i>
+                <span>Cetak Laporan</span>
             </button>
             <button class="btn btn-sm btn-outline-secondary fw-semibold shadow-xs" onclick="exportPengeluaran()">
-                <i class="bi bi-file-earmark-spreadsheet-fill me-1.5"></i> Export CSV
+                <i class="bi bi-file-earmark-spreadsheet"></i>
+                <span>Export CSV</span>
             </button>
             <a href="<?= API_URL ?>/job-desk/keuangan" class="btn btn-sm btn-outline-secondary fw-semibold shadow-xs">
-                <i class="bi bi-arrow-left-circle me-1.5"></i> Dashboard Keuangan
+                <i class="bi bi-arrow-left"></i>
+                <span>Dashboard Keuangan</span>
             </a>
         </div>
     </div>
 
-    <!-- === FINANCIAL OVERVIEW CARDS === -->
+    <!-- === FINANCIAL OVERVIEW CARDS (HANYA ICON BESAR) === -->
     <div class="row g-2.5 mb-3">
         <div class="col-12 col-md-4">
             <div class="card border-0 shadow-sm overflow-hidden card-keuangan h-100" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color:white;">
-                <div class="card-body p-3 position-relative d-flex flex-column justify-content-between">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="opacity-85 fw-bold text-uppercase" style="letter-spacing:.05em; font-size:.68rem;">Pemasukan Operasional</span>
-                        <span class="badge bg-white bg-opacity-25 rounded-pill px-2 py-0.5" style="font-size: .68rem;"><i class="bi bi-wallet2"></i></span>
-                    </div>
+                <div class="card-body p-3.5 position-relative d-flex flex-column justify-content-between" style="min-height: 105px;">
                     <div>
-                        <h4 class="fw-bold mb-0 text-truncate" style="font-size:1.25rem;"><?= $formatRupiah($totalPemasukan) ?></h4>
+                        <div class="opacity-85 fw-bold text-uppercase mb-1" style="letter-spacing:.05em; font-size:.68rem;">Pemasukan Operasional</div>
+                        <h4 class="fw-bold mb-0 text-truncate" style="font-size:1.35rem;"><?= $formatRupiah($totalPemasukan) ?></h4>
                     </div>
-                    <div class="small opacity-85 mt-1.5 text-truncate" style="font-size:.7rem;"><i class="bi bi-check-circle-fill me-1"></i>Selisih Job Desk (Santri Lunas)</div>
-                    <i class="bi bi-wallet2 position-absolute opacity-10" style="font-size:3.8rem;right:8px;bottom:-8px;pointer-events:none;"></i>
+                    <div class="small opacity-85 mt-2 text-truncate" style="font-size:.72rem;">
+                        <i class="bi bi-check-circle-fill me-1"></i>Selisih Job Desk (Santri Lunas)
+                    </div>
+                    <i class="bi bi-wallet2 position-absolute" style="font-size:4rem; right:14px; bottom:2px; opacity:0.18; pointer-events:none;"></i>
                 </div>
             </div>
         </div>
         <div class="col-12 col-md-4">
             <div class="card border-0 shadow-sm overflow-hidden card-keuangan h-100" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color:white;">
-                <div class="card-body p-3 position-relative d-flex flex-column justify-content-between">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="opacity-85 fw-bold text-uppercase" style="letter-spacing:.05em; font-size:.68rem;">Total Pengeluaran</span>
-                        <span class="badge bg-white bg-opacity-25 rounded-pill px-2 py-0.5" style="font-size: .68rem;"><i class="bi bi-receipt"></i></span>
-                    </div>
+                <div class="card-body p-3.5 position-relative d-flex flex-column justify-content-between" style="min-height: 105px;">
                     <div>
-                        <h4 class="fw-bold mb-0 text-truncate" style="font-size:1.25rem;"><?= $formatRupiah($totalPengeluaran) ?></h4>
+                        <div class="opacity-85 fw-bold text-uppercase mb-1" style="letter-spacing:.05em; font-size:.68rem;">Total Pengeluaran</div>
+                        <h4 class="fw-bold mb-0 text-truncate" style="font-size:1.35rem;"><?= $formatRupiah($totalPengeluaran) ?></h4>
                     </div>
-                    <div class="small opacity-85 mt-1.5 text-truncate" style="font-size:.7rem;"><i class="bi bi-card-checklist me-1"></i><?= count($pengeluaranList) ?> transaksi pengeluaran tercatat</div>
-                    <i class="bi bi-receipt position-absolute opacity-10" style="font-size:3.8rem;right:8px;bottom:-8px;pointer-events:none;"></i>
+                    <div class="small opacity-85 mt-2 text-truncate" style="font-size:.72rem;">
+                        <i class="bi bi-card-checklist me-1"></i><?= count($pengeluaranList) ?> transaksi pengeluaran tercatat
+                    </div>
+                    <i class="bi bi-receipt position-absolute" style="font-size:4rem; right:14px; bottom:2px; opacity:0.18; pointer-events:none;"></i>
                 </div>
             </div>
         </div>
         <div class="col-12 col-md-4">
             <div class="card border-0 shadow-sm overflow-hidden card-keuangan h-100" style="background: linear-gradient(135deg, <?= $saldoOperasional >= 0 ? '#3b82f6 0%, #1d4ed8 100%' : '#f59e0b 0%, #d97706 100%' ?>); color:white;">
-                <div class="card-body p-3 position-relative d-flex flex-column justify-content-between">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="opacity-85 fw-bold text-uppercase" style="letter-spacing:.05em; font-size:.68rem;">Sisa Saldo Kas</span>
-                        <span class="badge bg-white bg-opacity-25 rounded-pill px-2 py-0.5" style="font-size: .68rem;"><i class="bi bi-safe2"></i></span>
-                    </div>
+                <div class="card-body p-3.5 position-relative d-flex flex-column justify-content-between" style="min-height: 105px;">
                     <div>
-                        <h4 class="fw-bold mb-0 text-truncate" style="font-size:1.25rem;"><?= $formatRupiah($saldoOperasional) ?></h4>
+                        <div class="opacity-85 fw-bold text-uppercase mb-1" style="letter-spacing:.05em; font-size:.68rem;">Sisa Saldo Kas</div>
+                        <h4 class="fw-bold mb-0 text-truncate" style="font-size:1.35rem;"><?= $formatRupiah($saldoOperasional) ?></h4>
                     </div>
-                    <div class="small opacity-85 mt-1.5 text-truncate" style="font-size:.7rem;"><i class="bi bi-calculator me-1"></i>Pemasukan &minus; Pengeluaran</div>
-                    <i class="bi bi-safe2 position-absolute opacity-10" style="font-size:3.8rem;right:8px;bottom:-8px;pointer-events:none;"></i>
+                    <div class="small opacity-85 mt-2 text-truncate" style="font-size:.72rem;">
+                        <i class="bi bi-calculator me-1"></i>Pemasukan &minus; Pengeluaran
+                    </div>
+                    <i class="bi bi-safe2 position-absolute" style="font-size:4rem; right:14px; bottom:2px; opacity:0.18; pointer-events:none;"></i>
                 </div>
             </div>
         </div>
@@ -382,11 +392,11 @@ $formatRupiah = function($num) {
                 <span class="text-muted" style="font-size:.72rem;">Perbandingan realisasi kas operasional 6-12 bulan terakhir</span>
             </div>
             <div class="d-flex gap-1.5">
-                <button class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-0.5 active" id="chartTypeBar" onclick="switchPengeluaranChart('bar')" style="font-size:.74rem;">
-                    <i class="bi bi-bar-chart-fill me-1"></i>Batang
+                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 active d-inline-flex align-items-center gap-1.5" id="chartTypeBar" onclick="switchPengeluaranChart('bar')" style="font-size:.74rem;">
+                    <i class="bi bi-bar-chart-fill"></i><span>Batang</span>
                 </button>
-                <button class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-0.5" id="chartTypeLine" onclick="switchPengeluaranChart('line')" style="font-size:.74rem;">
-                    <i class="bi bi-graph-up me-1"></i>Garis
+                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 d-inline-flex align-items-center gap-1.5" id="chartTypeLine" onclick="switchPengeluaranChart('line')" style="font-size:.74rem;">
+                    <i class="bi bi-graph-up"></i><span>Garis</span>
                 </button>
             </div>
         </div>
@@ -409,12 +419,12 @@ $formatRupiah = function($num) {
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 <!-- Quick Filter Pills -->
                 <div class="quick-filter-pills">
-                    <button type="button" class="btn-quick-filter active" onclick="filterTableQuick('all', this)"><i class="bi bi-grid-fill me-1"></i>Semua</button>
-                    <button type="button" class="btn-quick-filter" onclick="filterTableQuick('this_month', this)"><i class="bi bi-calendar-check me-1 text-primary"></i>Bulan Ini</button>
-                    <button type="button" class="btn-quick-filter" onclick="filterTableQuick('has_nota', this)"><i class="bi bi-image me-1 text-success"></i>Ada Bukti Nota</button>
+                    <button type="button" class="btn-quick-filter active" onclick="filterTableQuick('all', this)"><i class="bi bi-grid-fill"></i><span>Semua</span></button>
+                    <button type="button" class="btn-quick-filter" onclick="filterTableQuick('this_month', this)"><i class="bi bi-calendar-check text-primary"></i><span>Bulan Ini</span></button>
+                    <button type="button" class="btn-quick-filter" onclick="filterTableQuick('has_nota', this)"><i class="bi bi-image text-success"></i><span>Ada Bukti Nota</span></button>
                 </div>
-                <div class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1" id="filterPengeluaranLabel" style="display:none; font-size:.72rem;">
-                    <i class="bi bi-funnel-fill me-1"></i><span id="filterPengeluaranName">Filter aktif</span>
+                <div class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 d-inline-flex align-items-center gap-1" id="filterPengeluaranLabel" style="display:none; font-size:.72rem;">
+                    <i class="bi bi-funnel-fill"></i><span id="filterPengeluaranName">Filter aktif</span>
                 </div>
             </div>
         </div>
