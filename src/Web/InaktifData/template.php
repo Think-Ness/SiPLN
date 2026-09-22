@@ -15,21 +15,20 @@ use Yiisoft\Router\UrlGeneratorInterface;
 $this->setTitle('Inaktif Data | Sistem Informasi');
 $isSuperAdmin = ($_SESSION['role'] ?? '') === 'super_admin';
 
-// Hitung metrik statistik ringkasan
+// Hitung metrik statistik ringkasan per pondok
 $totalInaktif = count($santris);
-$totalLaki = 0;
-$totalPerempuan = 0;
+$pondokStats = [];
 $totalAdaPaspor = 0;
 $totalPindahan = 0;
 $myKep = $_SESSION['def_kepengurusan'] ?? '';
 
 foreach ($santris as $s) {
-    $jk = strtolower(trim((string)($s['jenis_kelamin'] ?? '')));
-    if (in_array($jk, ['l', 'laki-laki', 'laki - laki', 'pria', 'ikhwan', 'putra', 'cowok'])) {
-        $totalLaki++;
-    } elseif (in_array($jk, ['p', 'perempuan', 'wanita', 'akhwat', 'putri', 'cewek'])) {
-        $totalPerempuan++;
+    $p = trim((string)($s['pondok'] ?? ''));
+    if ($p === '') {
+        $p = 'Lainnya / Tanpa Pondok';
     }
+    $pondokStats[$p] = ($pondokStats[$p] ?? 0) + 1;
+    
     if (!empty($s['no_paspor'])) {
         $totalAdaPaspor++;
     }
@@ -38,6 +37,17 @@ foreach ($santris as $s) {
         $totalPindahan++;
     }
 }
+arsort($pondokStats);
+
+// Palette warna dinamis untuk card pondok
+$pondokColorThemes = [
+    ['bg' => 'bg-primary', 'text' => 'text-primary', 'border' => 'border-primary-subtle', 'icon' => 'bi-building'],
+    ['bg' => 'bg-success', 'text' => 'text-success', 'border' => 'border-success-subtle', 'icon' => 'bi-houses-fill'],
+    ['bg' => 'bg-info', 'text' => 'text-info', 'border' => 'border-info-subtle', 'icon' => 'bi-mortarboard-fill'],
+    ['bg' => 'bg-purple', 'text' => 'text-purple', 'border' => 'border-purple-subtle', 'icon' => 'bi-bank2'],
+    ['bg' => 'bg-warning', 'text' => 'text-warning', 'border' => 'border-warning-subtle', 'icon' => 'bi-bookmark-star-fill'],
+    ['bg' => 'bg-secondary', 'text' => 'text-secondary', 'border' => 'border-secondary-subtle', 'icon' => 'bi-geo-alt-fill'],
+];
 ?>
 
 <style>
@@ -50,24 +60,33 @@ foreach ($santris as $s) {
     --inaktif-warning: #f59e0b;
 }
 
+.text-purple { color: #8b5cf6 !important; }
+.bg-purple { background-color: #8b5cf6 !important; }
+.border-purple-subtle { border-color: #ddd6fe !important; }
+
 .inaktif-stat-card {
     border-radius: 16px;
     border: 1px solid rgba(226, 232, 240, 0.8);
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     background: #ffffff;
+    cursor: pointer;
+    user-select: none;
 }
 .inaktif-stat-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.04) !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04) !important;
+}
+.inaktif-stat-card.active-filter {
+    box-shadow: 0 0 0 2.5px #3b82f6, 0 8px 20px rgba(59, 130, 246, 0.2) !important;
 }
 .inaktif-stat-icon {
-    width: 48px;
-    height: 48px;
+    width: 46px;
+    height: 46px;
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.4rem;
+    font-size: 1.35rem;
     flex-shrink: 0;
 }
 
@@ -258,22 +277,21 @@ foreach ($santris as $s) {
             </div>
         </div>
     </div>
-    <?php if ($isSuperAdmin): ?>
     <div class="page-header-controls d-flex align-items-center gap-2">
         <button class="btn btn-danger rounded-pill px-4 fw-semibold shadow-sm d-none" id="btnBulkDelete" onclick="bulkHapus()">
             <i class="bi bi-trash-fill me-1"></i> Hapus Terpilih (<span id="countSelected">0</span>)
         </button>
     </div>
-    <?php endif; ?>
 </div>
 
-<!-- Stat Metric Cards -->
+<!-- Stat Metric Cards (Rekap Berdasarkan Pondok) -->
 <div class="row g-3 mb-4">
-    <div class="col-6 col-lg-3">
-        <div class="card inaktif-stat-card border-0 shadow-sm h-100">
+    <!-- Card Total Inaktif -->
+    <div class="col-12 col-sm-6 col-lg-3">
+        <div class="card inaktif-stat-card border-0 shadow-sm h-100" onclick="resetPondokFilter()" title="Klik untuk menampilkan seluruh data inaktif">
             <div class="card-body p-3 d-flex align-items-center gap-3">
                 <div class="inaktif-stat-icon bg-danger bg-opacity-10 text-danger">
-                    <i class="bi bi-person-x"></i>
+                    <i class="bi bi-person-x-fill"></i>
                 </div>
                 <div class="overflow-hidden">
                     <div class="text-muted small fw-semibold text-truncate">Total Inaktif</div>
@@ -282,34 +300,33 @@ foreach ($santris as $s) {
             </div>
         </div>
     </div>
-    <div class="col-6 col-lg-3">
-        <div class="card inaktif-stat-card border-0 shadow-sm h-100">
+
+    <!-- Dynamic Pondok Cards -->
+    <?php 
+        $colorIdx = 0;
+        foreach ($pondokStats as $pondokName => $cnt): 
+            $theme = $pondokColorThemes[$colorIdx % count($pondokColorThemes)];
+            $colorIdx++;
+    ?>
+    <div class="col-12 col-sm-6 col-lg-3">
+        <div class="card inaktif-stat-card border-0 shadow-sm h-100" onclick="filterByPondokCard('<?= htmlspecialchars(addslashes($pondokName)) ?>', this)" title="Klik untuk memfilter santri pondok ini">
             <div class="card-body p-3 d-flex align-items-center gap-3">
-                <div class="inaktif-stat-icon bg-primary bg-opacity-10 text-primary">
-                    <i class="bi bi-gender-male"></i>
+                <div class="inaktif-stat-icon <?= $theme['bg'] ?> bg-opacity-10 <?= $theme['text'] ?>">
+                    <i class="bi <?= $theme['icon'] ?>"></i>
                 </div>
-                <div class="overflow-hidden">
-                    <div class="text-muted small fw-semibold text-truncate">Santri Putra (L)</div>
-                    <div class="h4 mb-0 fw-bold text-primary inaktif-stat-number"><?= $totalLaki ?></div>
+                <div class="overflow-hidden flex-grow-1">
+                    <div class="text-muted small fw-semibold text-truncate" title="<?= htmlspecialchars($pondokName) ?>"><?= htmlspecialchars($pondokName) ?></div>
+                    <div class="h4 mb-0 fw-bold <?= $theme['text'] ?> inaktif-stat-number"><?= $cnt ?> <span class="text-muted fw-normal" style="font-size:.7rem;">santri</span></div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-6 col-lg-3">
-        <div class="card inaktif-stat-card border-0 shadow-sm h-100">
-            <div class="card-body p-3 d-flex align-items-center gap-3">
-                <div class="inaktif-stat-icon bg-info bg-opacity-10 text-info">
-                    <i class="bi bi-gender-female"></i>
-                </div>
-                <div class="overflow-hidden">
-                    <div class="text-muted small fw-semibold text-truncate">Santri Putri (P)</div>
-                    <div class="h4 mb-0 fw-bold text-info inaktif-stat-number"><?= $totalPerempuan ?></div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="card inaktif-stat-card border-0 shadow-sm h-100">
+    <?php endforeach; ?>
+
+    <!-- Additional Info Card (Ada Paspor) if total cards <= 3 -->
+    <?php if (count($pondokStats) < 3): ?>
+    <div class="col-12 col-sm-6 col-lg-3">
+        <div class="card inaktif-stat-card border-0 shadow-sm h-100" onclick="filterByPasporCard()" title="Filter santri yang memiliki data paspor">
             <div class="card-body p-3 d-flex align-items-center gap-3">
                 <div class="inaktif-stat-icon bg-warning bg-opacity-10 text-warning">
                     <i class="bi bi-passport"></i>
@@ -321,6 +338,7 @@ foreach ($santris as $s) {
             </div>
         </div>
     </div>
+    <?php endif; ?>
 </div>
 
 <!-- Search & Filter Bar -->
@@ -354,27 +372,25 @@ foreach ($santris as $s) {
             <table class="table table-hover table-striped align-middle mb-0">
                 <thead class="sticky-top shadow-sm">
                     <tr>
-                        <?php if ($isSuperAdmin): ?>
-                        <th class="ps-3 text-center" style="width: 40px;"><input type="checkbox" class="form-check-input" id="selectAll"></th>
-                        <?php endif; ?>
+                        <th class="ps-3 text-center" style="width: 40px;"><input type="checkbox" class="form-check-input" id="selectAll" title="Pilih Semua"></th>
                         <th class="ps-3" style="width: 50px;">#</th>
                         <th>Stambuk</th>
                         <th>Nama Santri</th>
                         <th>Kelas</th>
                         <th>Pondok</th>
-                        <th>Kewarganegaraan</th>
+                        <th><i class="bi bi-geo-alt me-1 text-primary"></i>Negara Asal</th>
                         <th>No Paspor</th>
                         <th>Exp Paspor</th>
                         <th class="text-center inaktif-sticky-action" style="min-width: 220px;">Aksi</th>
                     </tr>
                     <tr class="table-secondary column-filters">
-                        <?php if ($isSuperAdmin): ?><th></th><?php endif; ?>
+                        <th></th>
                         <th></th>
                         <th><input type="text" class="form-control form-control-sm column-search" onkeyup="filterTable()" placeholder="Cari stambuk..."></th>
                         <th><input type="text" class="form-control form-control-sm column-search" onkeyup="filterTable()" placeholder="Cari nama..."></th>
                         <th><input type="text" class="form-control form-control-sm column-search" onkeyup="filterTable()" placeholder="Cari kelas..."></th>
-                        <th><input type="text" class="form-control form-control-sm column-search" onkeyup="filterTable()" placeholder="Cari pondok..."></th>
-                        <th><input type="text" class="form-control form-control-sm column-search" onkeyup="filterTable()" placeholder="Cari negara..."></th>
+                        <th><input type="text" class="form-control form-control-sm column-search" onkeyup="filterTable()" placeholder="Cari pondok..." id="filterInputPondok"></th>
+                        <th><input type="text" class="form-control form-control-sm column-search" onkeyup="filterTable()" placeholder="Cari negara asal..."></th>
                         <th><input type="text" class="form-control form-control-sm column-search" onkeyup="filterTable()" placeholder="Cari paspor..."></th>
                         <th><input type="text" class="form-control form-control-sm column-search" onkeyup="filterTable()" placeholder="Cari exp..."></th>
                         <th class="inaktif-sticky-action"></th>
@@ -382,18 +398,16 @@ foreach ($santris as $s) {
                 </thead>
                 <tbody>
                 <?php if (empty($santris)): ?>
-                    <tr><td colspan="<?= $isSuperAdmin ? '10' : '9' ?>" class="text-center py-5 text-muted">
+                    <tr><td colspan="10" class="text-center py-5 text-muted">
                         <i class="bi bi-check-circle-fill fs-1 d-block mb-2 text-success opacity-75"></i>
                         <span class="fw-semibold">Tidak ada santri inaktif ditemukan</span>
                         <div class="small text-muted mt-1">Semua data santri dalam kondisi aktif atau sesuai filter pencarian.</div>
                     </td></tr>
                 <?php else: $no = 1; foreach ($santris as $s): ?>
                     <tr>
-                        <?php if ($isSuperAdmin): ?>
                         <td class="ps-3 text-center">
                             <input type="checkbox" class="form-check-input row-cb" value="<?= $s['kds'] ?>">
                         </td>
-                        <?php endif; ?>
                         <td class="ps-3 text-muted fw-semibold"><?= $no++ ?></td>
                         <td><span class="badge bg-light text-dark border font-monospace"><?= htmlspecialchars((string)$s['stambuk']) ?></span></td>
                         <td class="fw-semibold">
@@ -405,9 +419,9 @@ foreach ($santris as $s) {
                                 <span class="badge bg-warning text-dark border ms-1" style="font-size: 0.65rem; padding: 2px 4px; border-radius: 4px;">Pindahan</span>
                             <?php endif; ?>
                         </td>
-                        <td><span class="badge bg-secondary rounded-pill px-2"><?= htmlspecialchars($s['kelas']) ?></span></td>
-                        <td><span class="badge bg-light text-secondary border"><?= htmlspecialchars($s['pondok']) ?></span></td>
-                        <td><i class="bi bi-globe me-1 text-muted"></i><?= htmlspecialchars($s['kewarganegaraan']) ?></td>
+                        <td><span class="badge bg-secondary rounded-pill px-2"><?= htmlspecialchars((string)($s['kelas'] ?? '-')) ?></span></td>
+                        <td><span class="badge bg-light text-secondary border"><?= htmlspecialchars((string)($s['pondok'] ?? '-')) ?></span></td>
+                        <td><i class="bi bi-globe me-1 text-muted"></i><?= htmlspecialchars((string)($s['negara'] ?? '-')) ?></td>
                         <td><code><?= htmlspecialchars((string)($s['no_paspor'] ?? '-')) ?></code></td>
                         <td>
                             <?php if (!empty($s['exp_paspor']) && $s['exp_paspor'] !== '0000-00-00'): ?>
@@ -418,20 +432,18 @@ foreach ($santris as $s) {
                         </td>
                         <td class="text-center inaktif-sticky-action">
                             <div class="inaktif-action-group">
-                                <button class="btn btn-sm btn-outline-info rounded-pill px-2 py-1 shadow-sm text-nowrap fw-medium" title="Lihat Detail Santri"
+                                <button class="btn btn-sm btn-outline-info rounded-pill px-2.5 py-1 shadow-sm text-nowrap fw-medium d-inline-flex align-items-center gap-1" title="Lihat Detail Santri"
                                     onclick="lihatSantri(<?= $s['kds'] ?>)">
-                                    <i class="bi bi-eye"></i> Detail
+                                    <i class="bi bi-eye"></i><span>Detail</span>
                                 </button>
-                                <button class="btn btn-sm btn-outline-success rounded-pill px-2 py-1 shadow-sm text-nowrap fw-medium" title="Aktifkan Kembali Santri"
+                                <button class="btn btn-sm btn-outline-success rounded-pill px-2.5 py-1 shadow-sm text-nowrap fw-medium d-inline-flex align-items-center gap-1" title="Aktifkan Kembali Santri"
                                     onclick="reaktifkan(<?= $s['kds'] ?>, '<?= addslashes($s['nama']) ?>')">
-                                    <i class="bi bi-arrow-counterclockwise"></i> Aktifkan
+                                    <i class="bi bi-arrow-counterclockwise"></i><span>Aktifkan</span>
                                 </button>
-                                <?php if ($isSuperAdmin): ?>
-                                <button class="btn btn-sm btn-outline-danger rounded-pill px-2 py-1 shadow-sm text-nowrap fw-medium" title="Hapus Permanen"
+                                <button class="btn btn-sm btn-outline-danger rounded-pill px-2.5 py-1 shadow-sm text-nowrap fw-medium d-inline-flex align-items-center gap-1" title="Hapus Permanen"
                                     onclick="hapusData(<?= $s['kds'] ?>, '<?= addslashes($s['nama']) ?>')">
-                                    <i class="bi bi-trash"></i> Hapus
+                                    <i class="bi bi-trash"></i><span>Hapus</span>
                                 </button>
-                                <?php endif; ?>
                             </div>
                         </td>
                     </tr>
@@ -549,31 +561,40 @@ foreach ($santris as $s) {
                             <div><label class="text-muted small fw-bold mb-1">Nama Ibu</label><input type="text" id="f_nama_ibu" class="form-control form-control-sm bg-white border border-secondary-subtle" readonly disabled></div>
                         </div>
                         <div class="tab-pane fade" id="t_telp">
-                            <div class="mb-3"><label class="text-muted small fw-bold mb-1">No. HP Ayah</label><input type="number" id="f_no_ayah" class="form-control form-control-sm bg-white border border-secondary-subtle" readonly disabled></div>
-                            <div class="mb-3"><label class="text-muted small fw-bold mb-1">No. HP Ibu</label><input type="number" id="f_no_ibu" class="form-control form-control-sm bg-white border border-secondary-subtle" readonly disabled></div>
-                            <div><label class="text-muted small fw-bold mb-1">No. HP Alternatif</label><input type="number" id="f_no_hp_alternatif" class="form-control form-control-sm bg-white border border-secondary-subtle" readonly disabled></div>
+                            <div class="mb-3"><label class="text-muted small fw-bold mb-1">No HP Ayah</label><input type="text" id="f_no_ayah" class="form-control form-control-sm bg-white border border-secondary-subtle" readonly disabled></div>
+                            <div class="mb-3"><label class="text-muted small fw-bold mb-1">No HP Ibu</label><input type="text" id="f_no_ibu" class="form-control form-control-sm bg-white border border-secondary-subtle" readonly disabled></div>
+                            <div><label class="text-muted small fw-bold mb-1">No HP Alternatif</label><input type="text" id="f_no_hp_alternatif" class="form-control form-control-sm bg-white border border-secondary-subtle" readonly disabled></div>
                         </div>
                         <div class="tab-pane fade" id="t_barang">
-                            <div class="table-responsive" style="max-height: 140px;">
-                                <table class="table table-sm table-bordered m-0">
-                                    <thead class="table-light"><tr><th class="text-center" style="width: 40px;">#</th><th>Nama Barang</th><th class="text-center" style="width: 60px;">Jml</th></tr></thead>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered mb-0" id="tableBarang">
+                                    <thead class="table-light"><tr><th>Nama Barang</th><th>Jumlah</th><th>Kondisi</th></tr></thead>
                                     <tbody id="listBarang"></tbody>
                                 </table>
                             </div>
                         </div>
                         <div class="tab-pane fade" id="t_rpaspor">
-                            <div class="table-responsive" style="max-height: 140px;">
-                                <table class="table table-sm table-bordered m-0"><thead class="table-light"><tr><th>No Paspor</th><th>Exp</th><th>Dok</th></tr></thead><tbody id="listRPaspor"></tbody></table>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered mb-0">
+                                    <thead class="table-light"><tr><th>No Paspor</th><th>Exp</th><th>File</th></tr></thead>
+                                    <tbody id="listRPaspor"></tbody>
+                                </table>
                             </div>
                         </div>
                         <div class="tab-pane fade" id="t_ritas">
-                            <div class="table-responsive" style="max-height: 140px;">
-                                <table class="table table-sm table-bordered m-0"><thead class="table-light"><tr><th>No ITAS</th><th>Lvl</th><th>Exp</th><th>Dok</th></tr></thead><tbody id="listRITAS"></tbody></table>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered mb-0">
+                                    <thead class="table-light"><tr><th>No ITAS</th><th>Lvl</th><th>Exp</th><th>File</th></tr></thead>
+                                    <tbody id="listRITAS"></tbody>
+                                </table>
                             </div>
                         </div>
                         <div class="tab-pane fade" id="t_berkas">
-                            <div class="table-responsive" style="max-height: 140px;">
-                                <table class="table table-sm table-bordered m-0"><thead class="table-light"><tr><th>Nama File Berkas</th><th class="text-center" style="width:70px;">Aksi</th></tr></thead><tbody id="listBerkas"></tbody></table>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered mb-0">
+                                    <thead class="table-light"><tr><th>Nama Berkas</th><th>Aksi</th></tr></thead>
+                                    <tbody id="listBerkas"></tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -583,28 +604,17 @@ foreach ($santris as $s) {
             <!-- KOLOM KANAN: Foto & Status -->
             <div class="col-12 col-lg-3 inaktif-modal-col">
                 <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
-                    <div class="card-body py-3 px-3 d-flex flex-column">
-                        <div id="fotoContainer" class="border rounded-4 mb-3 flex-grow-1 d-flex align-items-center justify-content-center bg-light overflow-hidden shadow-sm position-relative" style="min-height: 160px; border-width: 2px !important; border-style: dashed !important;">
-                            <img id="imgPreview" src="" alt="Foto Santri" style="max-width:100%; max-height:160px; display:none; object-fit: contain;">
-                            <i id="imgIcon" class="bi bi-person text-secondary" style="font-size: 5rem;"></i>
+                    <div class="card-header bg-white border-bottom-0 pt-3 pb-1 px-3">
+                        <h6 class="mb-0 small fw-bold text-dark"><i class="bi bi-image text-success me-2"></i>Foto Santri</h6>
+                    </div>
+                    <div class="card-body py-3 px-3 px-md-4 text-center d-flex flex-column align-items-center justify-content-center">
+                        <div class="rounded-4 border p-2 bg-light shadow-sm mb-3" style="width: 140px; height: 180px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;">
+                            <img id="imgPreview" src="" alt="Foto Santri" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px; display: none;">
+                            <div id="imgIcon" class="text-secondary"><i class="bi bi-person-bounding-box fs-1"></i><div class="small mt-1">Tanpa Foto</div></div>
                         </div>
-                        
-                        <div class="row g-2 mb-3">
-                            <div class="col-6"><label class="text-muted small fw-bold mb-1">Status</label><select id="f_aktif" class="form-select form-select-sm bg-white border border-secondary-subtle" disabled><option value="1">Aktif</option><option value="0" selected>Inaktif</option></select></div>
-                            <div class="col-6">
-                                <label class="text-muted small fw-bold mb-1">Pondok</label>
-                                <input type="text" id="f_pondok" class="form-control form-control-sm bg-white border border-secondary-subtle" readonly disabled>
-                            </div>
+                        <div class="alert alert-danger p-2 small mb-0 rounded-3 text-start w-100">
+                            <i class="bi bi-info-circle me-1"></i> Data dalam status <strong>Inaktif (Arsip)</strong>. Klik <strong>Aktifkan</strong> pada tabel jika santri ini telah kembali aktif belajar.
                         </div>
-                        <div class="mb-3"><label class="text-muted small fw-bold mb-1">Keberadaan Paspor</label><input type="text" id="f_keberadaan_paspor" class="form-control form-control-sm bg-white border border-secondary-subtle" readonly disabled></div>
-                        <div class="row g-2 mb-3">
-                            <div class="col-6"><label class="text-muted small fw-bold mb-1">Ukuran Baju</label><input type="text" id="f_ukuran_baju" class="form-control form-control-sm bg-white border border-secondary-subtle" readonly disabled></div>
-                            <div class="col-6"><label class="text-muted small fw-bold mb-1">Gender</label><select id="f_jenis_kelamin" class="form-select form-select-sm bg-white border border-secondary-subtle" disabled><option value="Laki-laki">L</option><option value="Perempuan">P</option></select></div>
-                        </div>
-                        <div class="mb-3"><label class="text-muted small fw-bold mb-1">Kepengurusan</label><input type="text" id="f_kepengurusan" class="form-control form-control-sm bg-white border border-secondary-subtle" readonly disabled></div>
-                        
-                        <!-- Kewarganegaraan -->
-                        <div class="mt-auto"><label class="text-muted small fw-bold mb-1">Kewarganegaraan</label><input type="text" id="f_kewarganegaraan" class="form-control form-control-sm bg-light text-muted border border-secondary-subtle" readonly disabled></div>
                     </div>
                 </div>
             </div>
@@ -614,88 +624,90 @@ foreach ($santris as $s) {
   </div>
 </div>
 
-<!-- Toast Notification -->
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index:9999">
-    <div id="toastMsg" class="toast align-items-center text-white border-0 bg-success shadow-lg" role="alert">
-        <div class="d-flex">
-            <div class="toast-body" id="toastBody"></div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>
+<!-- Toast Container -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 9999;">
+  <div id="statusToast" class="toast align-items-center text-white bg-dark border-0 shadow-lg" role="alert">
+    <div class="d-flex">
+      <div class="toast-body fw-medium" id="toastBody"></div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
     </div>
+  </div>
 </div>
 
 <script>
 function lihatSantri(kds) {
-    const listBarang = document.getElementById('listBarang');
-    const listRPaspor = document.getElementById('listRPaspor');
-    const listRITAS = document.getElementById('listRITAS');
-    const listBerkas = document.getElementById('listBerkas');
-    
-    // reset preview
-    document.getElementById('imgPreview').style.display = 'none';
-    document.getElementById('imgIcon').style.display = 'block';
-    
-    ['stambuk','nama','kelas','rayon','pondok','negara','kewarganegaraan','jenis_kelamin','kepengurusan',
-     'tempat_lahir','tanggal_lahir','nama_ayah','nama_ibu','no_ayah','no_ibu',
-     'no_hp_alternatif','alamat','no_paspor','tempat_paspor','tgl_paspor','exp_paspor',
-     'no_itas','exp_itas','level_itas','nik','no_ic','no_paspor_lama','keberadaan_paspor','ukuran_baju'].forEach(id => {
-         const el = document.getElementById('f_' + id);
-         if(el) el.value = '';
-     });
-
-    fetch('<?= API_URL ?>/api/santri/' + kds)
-        .then(r => r.json())
+    fetch('<?= API_URL ?>/santri/' + kds)
+        .then(res => res.json())
         .then(data => {
-            const s = data.santri || {};
+            if (!data.success) {
+                Swal.fire('Error', data.message || 'Gagal mengambil detail santri', 'error');
+                return;
+            }
+            const s = data.santri;
             const p = data.paspor || {};
-            const i = data.itas || {};
-            const pl = data.paspor_lama || {};
+            const set = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.value = val !== undefined && val !== null ? val : '';
+            };
 
-            const set = (id, val) => { const el = document.getElementById('f_' + id); if(el) el.value = val || ''; };
-            
-            set('stambuk', s.stambuk); set('nama', s.nama); set('kelas', s.kelas); 
-            set('rayon', s.rayon); set('pondok', s.pondok); set('negara', s.negara); 
-            set('kewarganegaraan', s.kewarganegaraan); set('jenis_kelamin', s.jenis_kelamin);
-            set('kepengurusan', s.kepengurusan); set('tempat_lahir', s.tempat_lahir);
-            set('tanggal_lahir', s.tanggal_lahir); set('nama_ayah', s.nama_ayah);
-            set('nama_ibu', s.nama_ibu); set('no_ayah', s.no_ayah); set('no_ibu', s.no_ibu);
-            set('no_hp_alternatif', s.no_hp_alternatif); set('alamat', s.alamat);
-            set('nik', s.no_sktt); set('no_ic', s.no_ic);
-            set('keberadaan_paspor', s.keberadaan_paspor); set('ukuran_baju', s.ukuran_baju);
+            set('santriKds', s.kds);
+            set('f_stambuk', s.stambuk);
+            set('f_nik', s.no_sktt || s.nik);
+            set('f_nama', s.nama);
+            set('f_kelas', s.kelas);
+            set('f_rayon', s.rayon);
+            set('f_negara', s.negara);
+            set('f_tempat_lahir', s.tempat_lahir);
+            set('f_tanggal_lahir', s.tanggal_lahir);
+            set('f_alamat', s.alamat);
 
-            if (p) { 
-                set('no_paspor', p.no_paspor); set('tempat_paspor', p.tempat_keluaran); 
-                set('tgl_paspor', p.tgl_keluaran); set('exp_paspor', p.exp_paspor); 
-                const vp = document.getElementById('view_file_paspor');
-                if (vp) {
-                    if (p.path_file) {
-                        vp.href = '<?= API_URL ?>/api/santri/doc/paspor/' + p.id;
-                        vp.classList.remove('d-none');
-                    } else {
-                        vp.classList.add('d-none');
-                    }
+            set('f_no_paspor', p.no_paspor);
+            set('f_no_paspor_lama', p.no_paspor_lama);
+            set('f_exp_paspor', p.exp_paspor);
+            set('f_exp_itas', p.exp_itas);
+            set('f_level_itas', p.level_itas);
+            set('f_no_itas', p.no_itas);
+            set('f_no_ic', s.no_ic);
+
+            set('f_tempat_paspor', p.tempat_paspor);
+            set('f_tgl_paspor', p.tgl_paspor);
+            set('f_nama_ayah', s.nama_ayah);
+            set('f_nama_ibu', s.nama_ibu);
+            set('f_no_ayah', s.no_ayah);
+            set('f_no_ibu', s.no_ibu);
+            set('f_no_hp_alternatif', s.no_hp_alternatif);
+
+            const vPas = document.getElementById('view_file_paspor');
+            if (vPas) {
+                if (p.path_file_paspor) {
+                    vPas.href = '<?= API_URL ?>/santri/' + kds + '/paspor-file';
+                    vPas.classList.remove('d-none');
+                } else {
+                    vPas.classList.add('d-none');
                 }
             }
-            if (pl) { set('no_paspor_lama', pl.no_paspor); }
-            if (i) { 
-                set('no_itas', i.no_itas); set('exp_itas', i.exp_itas); set('level_itas', i.level_itas); 
-                const vi = document.getElementById('view_file_itas');
-                if(vi) {
-                    if (i.path_file) {
-                        vi.href = '<?= API_URL ?>/api/santri/doc/itas/' + i.id;
-                        vi.classList.remove('d-none');
-                    } else {
-                        vi.classList.add('d-none');
-                    }
+
+            const vItas = document.getElementById('view_file_itas');
+            if (vItas) {
+                if (p.path_file_itas) {
+                    vItas.href = '<?= API_URL ?>/santri/' + kds + '/itas-file';
+                    vItas.classList.remove('d-none');
+                } else {
+                    vItas.classList.add('d-none');
                 }
             }
+
+            const listBarang = document.getElementById('listBarang');
+            const listRPaspor = document.getElementById('listRPaspor');
+            const listRITAS = document.getElementById('listRITAS');
+            const listBerkas = document.getElementById('listBerkas');
 
             if (listBarang) {
-                listBarang.innerHTML = (data.barang || []).map((b, idx) => `
+                listBarang.innerHTML = (data.barang || []).map(b => `
                     <tr>
-                        <td class="text-center">${idx + 1}</td>
                         <td>${b.nama_barang}</td>
-                        <td class="text-center">${b.jumlah_barang}</td>
+                        <td>${b.jumlah}</td>
+                        <td>${b.kondisi || '-'}</td>
                     </tr>
                 `).join('') || '<tr><td colspan="3" class="text-center text-muted small py-2">Belum ada barang bawaan</td></tr>';
             }
@@ -732,13 +744,15 @@ function lihatSantri(kds) {
                 `).join('') || '<tr><td colspan="2" class="text-center text-muted small py-2">Belum ada berkas</td></tr>';
             }
 
-            if (s.path_foto) {
-                const imgPreview = document.getElementById('imgPreview');
-                if(imgPreview) {
-                    imgPreview.src = '<?= API_URL ?>/santri/' + kds + '/photo?v=' + new Date().getTime();
-                    imgPreview.style.display = 'block';
-                    document.getElementById('imgIcon').style.display = 'none';
-                }
+            const imgPreview = document.getElementById('imgPreview');
+            const imgIcon = document.getElementById('imgIcon');
+            if (s.path_foto && imgPreview && imgIcon) {
+                imgPreview.src = '<?= API_URL ?>/santri/' + kds + '/photo?v=' + new Date().getTime();
+                imgPreview.style.display = 'block';
+                imgIcon.style.display = 'none';
+            } else if (imgPreview && imgIcon) {
+                imgPreview.style.display = 'none';
+                imgIcon.style.display = 'block';
             }
             
             const myModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('santriModalInaktif'));
@@ -780,6 +794,42 @@ function filterTable() {
     });
 }
 
+function filterByPondokCard(pondokName, cardEl) {
+    // Highlight active card
+    document.querySelectorAll('.inaktif-stat-card').forEach(c => c.classList.remove('active-filter'));
+    if (cardEl) cardEl.classList.add('active-filter');
+
+    const inp = document.getElementById('filterInputPondok');
+    if (inp) {
+        inp.value = pondokName;
+        filterTable();
+        inp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+function resetPondokFilter() {
+    document.querySelectorAll('.inaktif-stat-card').forEach(c => c.classList.remove('active-filter'));
+    const inputs = document.querySelectorAll('.column-filters input');
+    inputs.forEach(inp => inp.value = '');
+    filterTable();
+}
+
+function filterByPasporCard() {
+    const table = document.querySelector('.table-hover');
+    if (!table) return;
+    const pasporInput = table.querySelectorAll('.column-filters input')[5]; // No Paspor
+    if (pasporInput) {
+        pasporInput.value = '';
+        const tbody = table.querySelector('tbody');
+        const rows = tbody.querySelectorAll('tr');
+        rows.forEach(row => {
+            if(row.cells.length <= 1) return;
+            const pasporText = row.cells[7]?.textContent.trim() || '';
+            row.style.display = (pasporText !== '-' && pasporText !== '') ? '' : 'none';
+        });
+    }
+}
+
 function reaktifkan(kds, nama) {
     Swal.fire({
         title: 'Aktifkan Santri?',
@@ -793,10 +843,14 @@ function reaktifkan(kds, nama) {
     }).then((result) => {
         if (result.isConfirmed) {
             const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
-            fetch('<?= API_URL ?>/api/santri/' + kds + '/toggle-aktif', { method: 'POST', headers: { 'X-CSRF-Token': csrf } })
-                .then(r => r.json()).then(data => {
-                    const t = document.getElementById('toastMsg');
-                    t.className = 'toast align-items-center text-white border-0 shadow-lg ' + (data.success ? 'bg-success' : 'bg-danger');
+            fetch('<?= API_URL ?>/santri/' + kds + '/update-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+                body: JSON.stringify({ aktif: 1 })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    const t = document.getElementById('statusToast');
                     document.getElementById('toastBody').textContent = data.message;
                     new bootstrap.Toast(t, {delay: 2500}).show();
                     if (data.success) setTimeout(() => location.reload(), 1000);
@@ -807,7 +861,6 @@ function reaktifkan(kds, nama) {
     });
 }
 
-<?php if ($isSuperAdmin): ?>
 // Drag to select logic for desktop & click for touch
 let isDragging = false;
 const checkboxes = document.querySelectorAll('.row-cb');
@@ -846,7 +899,8 @@ function updateBulkAction() {
     const count = document.querySelectorAll('.row-cb:checked').length;
     const btn = document.getElementById('btnBulkDelete');
     if (btn) {
-        document.getElementById('countSelected').textContent = count;
+        const countSpan = document.getElementById('countSelected');
+        if (countSpan) countSpan.textContent = count;
         if (count > 0) btn.classList.remove('d-none');
         else btn.classList.add('d-none');
     }
@@ -855,7 +909,7 @@ function updateBulkAction() {
 function hapusData(kds, nama) {
     Swal.fire({
         title: 'Hapus Permanen?',
-        html: `Anda yakin ingin menghapus data santri <strong>"${nama}"</strong> secara permanen?<br><br><div class="alert alert-danger p-2 small text-start mb-0"><i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>Peringatan Keras:</strong> Data yang dihapus tidak dapat dipulihkan kembali, termasuk seluruh berkas paspor, ITAS, dan riwayat JobDesk.</div>`,
+        html: `Anda yakin ingin menghapus data santri <strong>"${nama}"</strong> secara permanen?<br><br><div class="alert alert-danger p-2.5 small text-start mb-0 rounded-3"><i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>Peringatan:</strong> Seluruh berkas paspor, ITAS, dan riwayat yang terkait dengan santri ini akan dihapus permanen.</div>`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#dc2626',
@@ -891,7 +945,7 @@ function bulkHapus() {
 
     Swal.fire({
         title: 'Hapus Massal Permanen?',
-        html: `Anda akan menghapus <strong>${selected.length}</strong> data santri inaktif secara permanen.<br><br><div class="alert alert-danger p-2 small text-start mb-0"><i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>Peringatan Keras:</strong> Seluruh data santri terpilih beserta berkas dan histori riwayatnya akan dihapus permanen dan tidak bisa dikembalikan.</div>`,
+        html: `Anda akan menghapus <strong>${selected.length}</strong> data santri inaktif terpilih secara permanen.<br><br><div class="alert alert-danger p-2.5 small text-start mb-0 rounded-3"><i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>Peringatan:</strong> Seluruh data santri terpilih beserta berkas dan histori riwayatnya akan dihapus permanen.</div>`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#dc2626',
@@ -924,5 +978,4 @@ function bulkHapus() {
         }
     });
 }
-<?php endif; ?>
 </script>

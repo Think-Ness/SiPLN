@@ -1,5 +1,6 @@
 <?php declare(strict_types=1);
 namespace App\Web\InaktifData;
+
 use App\Shared\JsonResponse;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -9,8 +10,12 @@ use App\Shared\AuditLogger;
 final class BulkHardDeleteAction
 {
     public function __invoke(ServerRequestInterface $request, ConnectionInterface $db): ResponseInterface {
-        if (($_SESSION['role'] ?? '') !== 'super_admin') {
-            return JsonResponse::create(['success' => false, 'message' => 'Unauthorized'], 403);
+        $role = $_SESSION['role'] ?? '';
+        $myKep = $_SESSION['def_kepengurusan'] ?? '';
+        $myPondok = $_SESSION['def_pondok'] ?? '';
+
+        if (empty($role)) {
+            return JsonResponse::create(['success' => false, 'message' => 'Unauthorized - Silakan login terlebih dahulu'], 403);
         }
 
         $body = json_decode((string)$request->getBody(), true);
@@ -25,6 +30,28 @@ final class BulkHardDeleteAction
 
         if (empty($kdsList)) {
             return JsonResponse::create(['success' => false, 'message' => 'Tidak ada data valid yang dipilih'], 400);
+        }
+
+        // Check ownership if not super_admin
+        if ($role !== 'super_admin' && (!empty($myKep) || !empty($myPondok))) {
+            $kdsIn = implode(',', $kdsList);
+            $conditions = [];
+            $params = [];
+            if (!empty($myKep)) {
+                $conditions[] = "kepengurusan = :my_kep";
+                $params[':my_kep'] = $myKep;
+            }
+            if (!empty($myPondok)) {
+                $conditions[] = "pondok = :my_pondok";
+                $params[':my_pondok'] = $myPondok;
+            }
+            $whereSql = implode(' OR ', $conditions);
+            $validKds = $db->createCommand("SELECT kds FROM master_santri WHERE kds IN ($kdsIn) AND ($whereSql)", $params)->queryColumn();
+            $kdsList = array_map('intval', $validKds);
+            
+            if (empty($kdsList)) {
+                return JsonResponse::create(['success' => false, 'message' => 'Tidak ada data milik instansi/pondok Anda yang dapat dihapus'], 403);
+            }
         }
 
         try {
