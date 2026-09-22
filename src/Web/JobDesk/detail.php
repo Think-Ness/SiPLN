@@ -226,7 +226,7 @@ $stepColors = ['#6f42c1', '#0d6efd', '#198754', '#fd7e14', '#20c997', '#0dcaf0',
                             <h6 class="fw-bold text-dark mb-0">Informasi Paspor</h6>
                         </div>
                         <?php 
-                        $pasporUrl = ($paspor && !empty($paspor['path_file'])) ? API_URL . "<?= API_URL ?>/api/santri/doc/paspor/{$paspor['id']}" : ''; 
+                        $pasporUrl = ($paspor && !empty($paspor['path_file'])) ? API_URL . "/api/santri/doc/paspor/{$paspor['id']}" : ''; 
                         $pasporIsPdf = strtolower(pathinfo($paspor['path_file'] ?? '', PATHINFO_EXTENSION)) === 'pdf';
                         ?>
                         <button onclick="viewDocument('<?= $pasporUrl ?>', 'Paspor', <?= $pasporIsPdf ? 'true' : 'false' ?>)" class="btn btn-sm btn-light border rounded-pill text-primary fw-medium shadow-sm" style="font-size: .7rem; background-color: #fff;"><i class="bi bi-file-earmark-pdf me-1"></i>Lihat Dokumen</button>
@@ -279,7 +279,7 @@ $stepColors = ['#6f42c1', '#0d6efd', '#198754', '#fd7e14', '#20c997', '#0dcaf0',
                             <h6 class="fw-bold text-dark mb-0">Informasi ITAS</h6>
                         </div>
                         <?php 
-                        $itasUrl = ($itas && !empty($itas['path_file'])) ? API_URL . "<?= API_URL ?>/api/santri/doc/itas/{$itas['id']}" : ''; 
+                        $itasUrl = ($itas && !empty($itas['path_file'])) ? API_URL . "/api/santri/doc/itas/{$itas['id']}" : ''; 
                         $itasIsPdf = strtolower(pathinfo($itas['path_file'] ?? '', PATHINFO_EXTENSION)) === 'pdf';
                         ?>
                         <button onclick="viewDocument('<?= $itasUrl ?>', 'ITAS', <?= $itasIsPdf ? 'true' : 'false' ?>)" class="btn btn-sm btn-light border rounded-pill text-success fw-medium shadow-sm" style="font-size: .7rem; background-color: #fff;"><i class="bi bi-file-earmark-pdf me-1"></i>Lihat Dokumen</button>
