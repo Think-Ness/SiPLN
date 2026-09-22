@@ -552,21 +552,21 @@ foreach ($pengajuanList as $p) {
         $countDiajukan++;
         $reminderItems[] = [
             'type' => 'diajukan',
-            'title' => 'Menunggu Persetujuan ACC Admin',
-            'desc' => ($isAdmin ? 'Pondok ' . htmlspecialchars((string)($p['instansi'] ?: '-')) : 'Pengajuan Anda') . ' • Bulan ' . htmlspecialchars((string)$p['bulan_hijriah']) . ' (Rp ' . number_format((float)$p['total_ajuan'], 0, ',', '.') . ')',
-            'badge' => ($p['hari_sejak_ajuan'] ?? 0) . ' Hari Diajukan',
+            'title' => 'Rencana Anggaran Belum Ditetapkan',
+            'desc' => ($isAdmin ? 'Instansi ' . htmlspecialchars((string)($p['instansi'] ?: '-')) : 'Instansi Anda') . ' • Bulan ' . htmlspecialchars((string)$p['bulan_hijriah']) . ' (Rp ' . number_format((float)$p['total_ajuan'], 0, ',', '.') . ')',
+            'badge' => ($p['hari_sejak_ajuan'] ?? 0) . ' Hari Dicatat',
             'badge_color' => ($p['hari_sejak_ajuan'] ?? 0) >= 3 ? 'warning' : 'info',
             'p' => $p
         ];
     } elseif ($st === 'disetujui') {
         $countDisetujui++;
         $hariCair = (int)($p['hari_sejak_cair'] ?? 0);
-        $badgeText = $hariCair > 0 ? $hariCair . ' Hari Sejak Cair' : 'Baru Cair Hari Ini';
+        $badgeText = $hariCair > 0 ? $hariCair . ' Hari Sejak Dicairkan' : 'Baru Aktif Hari Ini';
         $badgeColor = $hariCair > 7 ? 'danger' : ($hariCair >= 3 ? 'warning' : 'primary');
         $reminderItems[] = [
             'type' => 'disetujui',
             'title' => 'Perlu Lapor Nota Belanja',
-            'desc' => ($isAdmin ? 'Pondok ' . htmlspecialchars((string)($p['instansi'] ?: '-')) : 'Pondok Anda') . ' • Bulan ' . htmlspecialchars((string)$p['bulan_hijriah']) . ' — Plafond: Rp ' . number_format((float)$p['total_disetujui'], 0, ',', '.'),
+            'desc' => ($isAdmin ? 'Instansi ' . htmlspecialchars((string)($p['instansi'] ?: '-')) : 'Instansi Anda') . ' • Bulan ' . htmlspecialchars((string)$p['bulan_hijriah']) . ' — Pagu: Rp ' . number_format((float)$p['total_disetujui'], 0, ',', '.'),
             'badge' => $badgeText,
             'badge_color' => $badgeColor,
             'p' => $p
@@ -600,13 +600,13 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
                 <?php endif; ?>
             </div>
             <div class="text-muted small fw-medium mt-0.5">
-                <?= $isAdmin ? '<span class="badge bg-dark bg-opacity-10 text-dark me-1">Super Admin</span> Mode Seluruh Pondok' : 'Pondok: <strong class="text-primary">' . htmlspecialchars((string)$myPondok) . '</strong>' ?>
+                <?= $isAdmin ? '<span class="badge bg-dark bg-opacity-10 text-dark me-1">Super Admin</span> Mode Seluruh Instansi' : 'Instansi: <strong class="text-primary">' . htmlspecialchars((string)$myPondok) . '</strong>' ?>
             </div>
         </div>
     </div>
     <div class="anggaran-actions">
         <button type="button" class="btn btn-primary rounded-pill shadow-sm" onclick="openPengajuanModal()">
-            <i class="bi bi-plus-circle me-2 fs-6"></i> Buat Pengajuan Baru
+            <i class="bi bi-plus-circle me-2 fs-6"></i> Catat Anggaran Baru
         </button>
         <button type="button" class="btn btn-outline-primary rounded-pill shadow-sm bg-white" onclick="openKopSettingsModal()">
             <i class="bi bi-aspect-ratio me-2 fs-6"></i> Atur Kop Surat
@@ -619,17 +619,17 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
     <div class="col-6 col-lg-3">
         <div class="anggaran-stat-card h-100" onclick="filterAnggaranStatus('diajukan', this)">
             <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="text-muted small fw-bold text-uppercase text-truncate" style="font-size: 0.72rem; letter-spacing: 0.5px;">Menunggu ACC</span>
+                <span class="text-muted small fw-bold text-uppercase text-truncate" style="font-size: 0.72rem; letter-spacing: 0.5px;">Rencana Anggaran</span>
                 <div class="stat-icon-wrap icon-warning">
                     <svg viewBox="0 0 24 24"><path d="M6 2v6h.01L6 8.01 10 12l-4 4 .01.01H6V22h12v-5.99h-.01L18 16l-4-4 4-3.99-.01-.01H18V2H6zm10 14.5V20H8v-3.5l4-4 4 4zm-4-5l-4-4V4h8v3.5l-4 4z"/></svg>
                 </div>
             </div>
             <div class="d-flex align-items-baseline gap-2 my-1.5">
                 <span class="stat-value text-dark"><?= $countDiajukan ?></span>
-                <span class="stat-unit text-muted">Ajuan</span>
+                <span class="stat-unit text-muted">Catatan</span>
             </div>
             <div class="small text-warning-emphasis fw-medium text-truncate mt-1" style="font-size: 0.75rem;">
-                <?= $isAdmin ? 'Butuh review & ACC' : 'Verifikasi admin' ?>
+                Anggaran direncanakan
             </div>
         </div>
     </div>
@@ -646,7 +646,7 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
                 <span class="stat-unit text-danger">Belum Lapor</span>
             </div>
             <div class="small text-danger fw-semibold text-truncate mt-1" style="font-size: 0.75rem;">
-                Dana cair, butuh nota
+                Dana aktif, butuh nota
             </div>
         </div>
     </div>
@@ -663,7 +663,7 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
                 <span class="stat-unit text-muted">Menunggu</span>
             </div>
             <div class="small text-info fw-medium text-truncate mt-1" style="font-size: 0.75rem;">
-                Nota terunggah
+                Nota tercatat
             </div>
         </div>
     </div>
@@ -721,11 +721,9 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
                 </div>
                 <div class="reminder-actions">
                     <?php if ($rem['type'] === 'diajukan'): ?>
-                        <?php if ($isAdmin): ?>
-                            <button class="btn btn-warning btn-sm rounded-pill" onclick='reviewPengajuan(<?= htmlspecialchars(json_encode($pData), ENT_QUOTES, "UTF-8") ?>)'>
-                                <i class="bi bi-check2-circle me-1"></i> ACC
-                            </button>
-                        <?php endif; ?>
+                        <button class="btn btn-warning btn-sm rounded-pill text-dark" onclick='reviewPengajuan(<?= htmlspecialchars(json_encode($pData), ENT_QUOTES, "UTF-8") ?>)'>
+                            <i class="bi bi-check2-circle me-1"></i> Tetapkan
+                        </button>
                     <?php elseif ($rem['type'] === 'disetujui'): ?>
                         <button class="btn btn-success btn-sm rounded-pill" onclick="laporNota(<?= $pData['id'] ?>)">
                             <i class="bi bi-receipt me-1"></i> Lapor
@@ -750,7 +748,7 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
                 <i class="bi bi-grid-fill"></i> Semua <span class="badge bg-secondary"><?= count($pengajuanList) ?></span>
             </button>
             <button type="button" class="btn-filter" onclick="filterAnggaranStatus('diajukan', this)">
-                <i class="bi bi-hourglass-split"></i> Menunggu ACC <span class="badge bg-warning text-dark"><?= $countDiajukan ?></span>
+                <i class="bi bi-hourglass-split"></i> Rencana Anggaran <span class="badge bg-warning text-dark"><?= $countDiajukan ?></span>
             </button>
             <button type="button" class="btn-filter" onclick="filterAnggaranStatus('disetujui', this)">
                 <i class="bi bi-receipt"></i> Perlu Lapor Nota <span class="badge bg-danger"><?= $countDisetujui ?></span>
@@ -765,7 +763,7 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
     </div>
     <div class="anggaran-search-wrap">
         <i class="bi bi-search search-icon"></i>
-        <input type="text" id="searchAnggaranInput" placeholder="Cari pondok/bulan hijriah..." oninput="searchAnggaranCards(this.value)">
+        <input type="text" id="searchAnggaranInput" placeholder="Cari instansi/bulan hijriah..." oninput="searchAnggaranCards(this.value)">
         <button class="anggaran-search-clear" type="button" onclick="document.getElementById('searchAnggaranInput').value=''; searchAnggaranCards('');">
             <i class="bi bi-x-lg"></i> Hapus
         </button>
@@ -778,8 +776,8 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
     <?php if (empty($pengajuanList)): ?>
         <div class="col-12 text-center py-5 text-muted">
             <i class="bi bi-inbox fs-1 d-block mb-3 text-secondary opacity-50"></i>
-            <h5>Belum ada data pengajuan anggaran</h5>
-            <p>Silakan buat pengajuan baru untuk memulai pencatatan anggaran.</p>
+            <h5>Belum ada data catatan anggaran</h5>
+            <p>Silakan catat rencana anggaran baru untuk memulai pencatatan operasional.</p>
         </div>
     <?php else: ?>
         <?php foreach ($pengajuanList as $p): 
@@ -791,7 +789,16 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
                 'ditolak' => 'danger',
                 'selesai' => 'success'
             ];
+            $statusLabels = [
+                'draft' => 'Draft',
+                'diajukan' => 'Rencana',
+                'disetujui' => 'Ditetapkan',
+                'dilaporkan' => 'Dilaporkan',
+                'ditolak' => 'Dibatalkan',
+                'selesai' => 'Selesai'
+            ];
             $color = $statusColors[$p['status']] ?? 'primary';
+            $displayStatus = $statusLabels[$p['status']] ?? strtoupper($p['status']);
             $pct = $p['total_disetujui'] > 0 ? min(100, ($p['total_digunakan'] / $p['total_disetujui']) * 100) : 0;
             $isApproved = in_array($p['status'], ['disetujui', 'dilaporkan', 'selesai']);
             
@@ -800,15 +807,15 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
             if ($p['status'] === 'disetujui') {
                 $hariCair = (int)($p['hari_sejak_cair'] ?? 0);
                 if ($hariCair > 7) {
-                    $reminderBadgeHtml = '<div class="alert alert-danger py-2 px-3 mb-3 rounded-3 d-flex align-items-center gap-2 small fw-bold" style="font-size:0.8rem;"><i class="bi bi-exclamation-triangle-fill fs-6 flex-shrink-0"></i> <span>Mendesak: Belum Lapor Nota (' . $hariCair . ' Hari Cair)</span></div>';
+                    $reminderBadgeHtml = '<div class="alert alert-danger py-2 px-3 mb-3 rounded-3 d-flex align-items-center gap-2 small fw-bold" style="font-size:0.8rem;"><i class="bi bi-exclamation-triangle-fill fs-6 flex-shrink-0"></i> <span>Mendesak: Belum Lapor Nota (' . $hariCair . ' Hari Aktif)</span></div>';
                 } elseif ($hariCair >= 3) {
                     $reminderBadgeHtml = '<div class="alert alert-warning py-2 px-3 mb-3 rounded-3 d-flex align-items-center gap-2 small fw-bold" style="font-size:0.8rem;"><i class="bi bi-clock-history fs-6 flex-shrink-0"></i> <span>Pengingat: Segera Lapor Nota (' . $hariCair . ' Hari)</span></div>';
                 } else {
-                    $reminderBadgeHtml = '<div class="badge bg-primary-subtle text-primary border border-primary-subtle py-1.5 px-2.5 mb-3 rounded-pill d-inline-flex align-items-center gap-1.5 small" style="font-size:0.75rem;"><i class="bi bi-stopwatch"></i> Baru Dicairkan (' . $hariCair . ' Hari)</div>';
+                    $reminderBadgeHtml = '<div class="badge bg-primary-subtle text-primary border border-primary-subtle py-1.5 px-2.5 mb-3 rounded-pill d-inline-flex align-items-center gap-1.5 small" style="font-size:0.75rem;"><i class="bi bi-stopwatch"></i> Baru Aktif (' . $hariCair . ' Hari)</div>';
                 }
             } elseif ($p['status'] === 'diajukan') {
                 $hariAjuan = (int)($p['hari_sejak_ajuan'] ?? 0);
-                $reminderBadgeHtml = '<div class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle py-1.5 px-2.5 mb-3 rounded-pill d-inline-flex align-items-center gap-1.5 small" style="font-size:0.75rem;"><i class="bi bi-hourglass-split"></i> Menunggu ACC (' . $hariAjuan . ' Hari)</div>';
+                $reminderBadgeHtml = '<div class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle py-1.5 px-2.5 mb-3 rounded-pill d-inline-flex align-items-center gap-1.5 small" style="font-size:0.75rem;"><i class="bi bi-hourglass-split"></i> Rencana Anggaran (' . $hariAjuan . ' Hari)</div>';
             }
         ?>
         <div class="col-md-6 col-lg-4 anggaran-item-card" data-status="<?= htmlspecialchars((string)$p['status']) ?>" data-search="<?= strtolower(htmlspecialchars((string)($p['instansi'] . ' ' . $p['bulan_hijriah'] . ' ' . $p['id'] . ' ' . $p['status']))) ?>">
@@ -824,7 +831,7 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
                         <div class="text-muted small mt-0.5" style="font-size: 0.78rem;">ID Dokumen: <strong class="text-secondary">#ANGG-<?= str_pad((string)$p['id'], 4, '0', STR_PAD_LEFT) ?></strong></div>
                     </div>
                     <span class="badge bg-<?= $color ?>-subtle text-<?= $color ?> border border-<?= $color ?>-subtle px-3 py-1.5 rounded-pill text-uppercase fw-bold" style="font-size: 0.72rem; letter-spacing: 0.8px;">
-                        <?= htmlspecialchars((string)$p['status']) ?>
+                        <?= htmlspecialchars($displayStatus) ?>
                     </span>
                 </div>
                 
@@ -834,15 +841,15 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
                         <div class="mb-3"><?= $reminderBadgeHtml ?></div>
                     <?php endif; ?>
 
-                    <!-- Summary Metric Box (Ajuan vs Plafond) -->
+                    <!-- Summary Metric Box (Rencana vs Ditetapkan) -->
                     <div class="card-metric-box d-flex align-items-stretch gap-0">
                         <div class="flex-fill pe-3">
-                            <div class="card-metric-label">Total Ajuan</div>
+                            <div class="card-metric-label">Total Rencana</div>
                             <div class="card-metric-value text-dark" style="font-size:0.95rem;">Rp <?= number_format((float)$p['total_ajuan'], 0, ',', '.') ?></div>
                         </div>
                         <div class="card-metric-divider"></div>
                         <div class="flex-fill ps-3">
-                            <div class="card-metric-label text-success">Disetujui (ACC)</div>
+                            <div class="card-metric-label text-success">Pagu Ditetapkan</div>
                             <div class="card-metric-value text-success">Rp <?= number_format((float)$p['total_disetujui'], 0, ',', '.') ?></div>
                         </div>
                     </div>
@@ -861,7 +868,7 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
                         <div class="d-flex justify-content-between align-items-center small flex-wrap gap-1 pt-1 border-top border-light">
                             <span class="d-flex gap-1.5 flex-wrap">
                                 <?php if($p['durasi_cair'] !== '-'): ?>
-                                    <span class="badge bg-info bg-opacity-10 text-info border border-info-subtle px-2 py-0.5" style="font-size: 0.68rem;" title="Lama Pencairan"><i class="bi bi-stopwatch me-1"></i>Cair: <?= $p['durasi_cair'] ?></span>
+                                    <span class="badge bg-info bg-opacity-10 text-info border border-info-subtle px-2 py-0.5" style="font-size: 0.68rem;" title="Lama Waktu Ditetapkan"><i class="bi bi-stopwatch me-1"></i>Aktif: <?= $p['durasi_cair'] ?></span>
                                 <?php endif; ?>
                                 <?php if($p['durasi_lapor'] !== '-'): ?>
                                     <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle px-2 py-0.5" style="font-size: 0.68rem;" title="Lama Lapor Nota"><i class="bi bi-clock-history me-1"></i>Lapor: <?= $p['durasi_lapor'] ?></span>
@@ -887,11 +894,11 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
                         <div class="d-flex justify-content-between position-relative">
                             <div class="step-tracker-node">
                                 <div class="step-tracker-circle bg-<?= $p['status']!=='draft' ? 'success' : 'secondary' ?> text-white"><i class="bi bi-check2"></i></div>
-                                <div class="step-tracker-label">Diajukan</div>
+                                <div class="step-tracker-label">Direncanakan</div>
                             </div>
                             <div class="step-tracker-node">
                                 <div class="step-tracker-circle bg-<?= in_array($p['status'], ['disetujui', 'dilaporkan', 'selesai']) ? 'success' : 'secondary' ?> text-white"><i class="bi bi-check2"></i></div>
-                                <div class="step-tracker-label">Di-ACC</div>
+                                <div class="step-tracker-label">Ditetapkan</div>
                             </div>
                             <div class="step-tracker-node">
                                 <div class="step-tracker-circle bg-<?= in_array($p['status'], ['dilaporkan', 'selesai']) ? 'success' : 'secondary' ?> text-white"><i class="bi bi-file-earmark-check"></i></div>
@@ -910,15 +917,14 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
                     <!-- Tier 1: Primary Action Button -->
                     <div class="card-action-primary">
                         <?php if ($p['status'] === 'diajukan'): ?>
-                            <?php if ($isAdmin): ?>
-                                <button class="btn btn-warning w-100 shadow-xs text-dark" onclick='reviewPengajuan(<?= htmlspecialchars(json_encode($p), ENT_QUOTES, "UTF-8") ?>)'>
-                                    <i class="bi bi-check2-circle me-2 fs-6"></i> Input ACC Anggaran
+                            <div class="d-flex gap-2 w-100">
+                                <button class="btn btn-warning flex-grow-1 shadow-xs text-dark" onclick='reviewPengajuan(<?= htmlspecialchars(json_encode($p), ENT_QUOTES, "UTF-8") ?>)' title="Tetapkan Anggaran / Plafond">
+                                    <i class="bi bi-check2-circle me-1.5 fs-6"></i> Tetapkan Anggaran
                                 </button>
-                            <?php else: ?>
-                                <button class="btn btn-info w-100 text-white shadow-xs" onclick='editPengajuan(<?= htmlspecialchars(json_encode($p), ENT_QUOTES, "UTF-8") ?>)'>
-                                    <i class="bi bi-pencil-square me-2 fs-6"></i> Edit Pengajuan
+                                <button class="btn btn-info text-white shadow-xs px-3" onclick='editPengajuan(<?= htmlspecialchars(json_encode($p), ENT_QUOTES, "UTF-8") ?>)' title="Edit Rencana Anggaran">
+                                    <i class="bi bi-pencil-square me-1"></i> Edit
                                 </button>
-                            <?php endif; ?>
+                            </div>
                         <?php elseif ($p['status'] === 'disetujui'): ?>
                             <div class="d-flex gap-2 w-100">
                                 <button class="btn btn-success flex-grow-1 shadow-xs" onclick="laporNota(<?= $p['id'] ?>)">
@@ -956,14 +962,12 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
                         <button class="btn btn-icon-action btn-wa text-success" onclick='openWhatsAppReminderModal(<?= htmlspecialchars(json_encode($p), ENT_QUOTES, "UTF-8") ?>)' title="Kirim Pengingat WhatsApp">
                             <i class="bi bi-whatsapp"></i>
                         </button>
-                        <button class="btn btn-icon-action btn-copy text-primary" onclick='copyPengajuan(<?= htmlspecialchars(json_encode($p), ENT_QUOTES, "UTF-8") ?>)' title="Duplikat / Salin Pengajuan">
+                        <button class="btn btn-icon-action btn-copy text-primary" onclick='copyPengajuan(<?= htmlspecialchars(json_encode($p), ENT_QUOTES, "UTF-8") ?>)' title="Duplikat / Salin Catatan">
                             <i class="bi bi-files"></i>
                         </button>
-                        <?php if ($p['status'] === 'draft' || $p['status'] === 'diajukan'): ?>
-                            <button class="btn btn-icon-action btn-delete text-danger" onclick="deletePengajuan(<?= $p['id'] ?>)" title="Hapus Pengajuan">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        <?php endif; ?>
+                        <button class="btn btn-icon-action btn-delete text-danger" onclick="deletePengajuan(<?= $p['id'] ?>)" title="Hapus Catatan Anggaran">
+                            <i class="bi bi-trash"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1006,7 +1010,7 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
     </div>
 </div>
 
-<!-- Modal Pengajuan Baru -->
+<!-- Modal Catat Anggaran Baru -->
 <div class="modal fade" id="modalPengajuan" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
@@ -1016,8 +1020,8 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
                         <i class="bi bi-file-earmark-plus fs-5"></i>
                     </div>
                     <div>
-                        <h5 class="modal-title fw-bold text-dark mb-0" id="modalPengajuanTitle" style="font-size: 1.05rem;">Buat Pengajuan Anggaran</h5>
-                        <div class="text-muted small" style="font-size: 0.75rem;">Isi rincian permohonan operasional bulanan</div>
+                        <h5 class="modal-title fw-bold text-dark mb-0" id="modalPengajuanTitle" style="font-size: 1.05rem;">Catat Rencana Anggaran</h5>
+                        <div class="text-muted small" style="font-size: 0.75rem;">Isi rincian rencana kebutuhan operasional bulanan</div>
                     </div>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -1076,20 +1080,20 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
                 
                 <div class="card border-0 bg-primary bg-opacity-10 rounded-3 shadow-xs">
                     <div class="card-body px-3 py-2.5 d-flex justify-content-between align-items-center">
-                        <span class="fw-bold text-dark small text-uppercase" style="letter-spacing: 0.5px;">TOTAL PENGAJUAN :</span>
+                        <span class="fw-bold text-dark small text-uppercase" style="letter-spacing: 0.5px;">TOTAL RENCANA ANGGARAN :</span>
                         <span class="fw-bold text-primary fs-5" id="lblTotalAjuan">Rp 0</span>
                     </div>
                 </div>
             </div>
             <div class="modal-footer border-0 px-3 px-md-4 py-2.5 bg-white d-flex justify-content-between">
                 <button type="button" class="btn btn-sm btn-light rounded-pill px-3 text-secondary" data-bs-dismiss="modal">Batal</button>
-                <button type="button" id="btnSubmitPengajuan" class="btn btn-sm btn-primary rounded-pill px-4 shadow-sm fw-bold py-1.5" onclick="submitPengajuan()">Kirim Pengajuan</button>
+                <button type="button" id="btnSubmitPengajuan" class="btn btn-sm btn-primary rounded-pill px-4 shadow-sm fw-bold py-1.5" onclick="submitPengajuan()">Simpan Anggaran</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal Review / Approval -->
+<!-- Modal Tetapkan Plafond Anggaran -->
 <div class="modal fade" id="modalReview" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
@@ -1099,8 +1103,8 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
                         <i class="bi bi-check2-circle fs-5"></i>
                     </div>
                     <div>
-                        <h5 class="modal-title fw-bold text-dark mb-0" style="font-size: 1.05rem;">Input Nominal ACC Anggaran</h5>
-                        <div class="text-dark text-opacity-75 small" style="font-size: 0.75rem;">Tetapkan nominal disetujui untuk instansi</div>
+                        <h5 class="modal-title fw-bold text-dark mb-0" style="font-size: 1.05rem;">Tetapkan Plafond Anggaran Operasional</h5>
+                        <div class="text-dark text-opacity-75 small" style="font-size: 0.75rem;">Tetapkan pagu nominal anggaran operasional instansi</div>
                     </div>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -1132,9 +1136,9 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
 
                 <div id="lumpsumContainer" style="display:none;" class="mb-3">
                     <div class="bg-success bg-opacity-10 p-3 rounded-3 border border-success border-opacity-25 text-center">
-                        <label class="text-success small fw-bold mb-1.5">Total Nominal ACC Keseluruhan (Rp)</label>
+                        <label class="text-success small fw-bold mb-1.5">Total Nominal Pagu / Plafond (Rp)</label>
                         <input type="number" id="r_totalLumpsum" class="form-control form-control-sm text-center fw-bold text-success fs-4 border-success shadow-xs" placeholder="0">
-                        <div class="small text-muted mt-1" style="font-size: 0.75rem;">Harga per-item rincian akan diabaikan dan Anda hanya menetapkan nilai akhir.</div>
+                        <div class="small text-muted mt-1" style="font-size: 0.75rem;">Harga per-item rincian akan disesuaikan dengan nilai total akhir yang ditetapkan.</div>
                     </div>
                 </div>
 
@@ -1143,8 +1147,8 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
                         <thead class="table-light">
                             <tr>
                                 <th class="py-2">Item Kebutuhan</th>
-                                <th class="py-2">Ajuan</th>
-                                <th width="180" class="bg-warning bg-opacity-10 text-dark py-2">ACC Nominal (Rp)</th>
+                                <th class="py-2">Rencana</th>
+                                <th width="180" class="bg-warning bg-opacity-10 text-dark py-2">Ditetapkan (Rp)</th>
                             </tr>
                         </thead>
                         <tbody id="r_tbodyItems"></tbody>
@@ -1160,12 +1164,12 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
 
                 <div class="mb-2">
                     <label class="text-muted small fw-bold mb-1" style="font-size: 0.72rem;">Catatan Tambahan (Opsional)</label>
-                    <textarea id="r_catatan" class="form-control form-control-sm" rows="2" placeholder="Alasan disetujui sebagian, catatan pencairan, dll..."></textarea>
+                    <textarea id="r_catatan" class="form-control form-control-sm" rows="2" placeholder="Catatan peruntukan anggaran, keterangan saldo, dll..."></textarea>
                 </div>
             </div>
             <div class="modal-footer border-0 px-3 px-md-4 py-2.5 bg-white d-flex justify-content-between">
-                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-xs fw-bold py-1.5" onclick="approvePengajuan('ditolak')">Tolak Pengajuan</button>
-                <button type="button" class="btn btn-sm btn-success rounded-pill px-4 shadow-xs fw-bold py-1.5" onclick="approvePengajuan('disetujui')">Simpan & Setujui</button>
+                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-xs fw-bold py-1.5" onclick="approvePengajuan('ditolak')">Batalkan Anggaran</button>
+                <button type="button" class="btn btn-sm btn-success rounded-pill px-4 shadow-xs fw-bold py-1.5" onclick="approvePengajuan('disetujui')">Simpan & Tetapkan Anggaran</button>
             </div>
         </div>
     </div>
@@ -1338,7 +1342,7 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
                         <i class="bi bi-eye"></i> Live Paper Canvas (A4 Simulation)
                     </span>
                     <div class="btn-group btn-group-sm shadow-sm">
-                        <button type="button" id="btnPreviewPengajuan" class="btn btn-primary active btn-sm" style="font-size: 12px;" onclick="previewCanvasDoc('pengajuan')">Preview Pengajuan</button>
+                        <button type="button" id="btnPreviewPengajuan" class="btn btn-primary active btn-sm" style="font-size: 12px;" onclick="previewCanvasDoc('pengajuan')">Preview Rencana</button>
                         <button type="button" id="btnPreviewLaporan" class="btn btn-outline-secondary bg-white btn-sm" style="font-size: 12px;" onclick="previewCanvasDoc('laporan')">Preview Laporan</button>
                     </div>
                 </div>
@@ -1354,7 +1358,7 @@ $totalPendingActions = $countDiajukan + $countDisetujui;
                     <div id="canvasDocContent">
                         <div style="text-align: center; margin-top: 15px; margin-bottom: 20px;">
                             <h5 style="font-family: 'Times New Roman', Times, serif; font-weight: bold; margin: 0; font-size: 15px; text-transform: uppercase;">
-                                PENGAJUAN ANGGARAN OPERASIONAL
+                                RENCANA ANGGARAN OPERASIONAL
                             </h5>
                             <h6 style="font-family: 'Times New Roman', Times, serif; font-weight: bold; margin: 3px 0 0 0; font-size: 14px; text-transform: uppercase;">
                                 PEMBIMBING LUAR NEGERI BULAN RABIUL AKHIR 1448 H
@@ -2033,14 +2037,14 @@ function testPrintFromCanvas() {
 }
 
 // ==========================================
-// PENGAJUAN BARU
+// PENCATATAN ANGGARAN
 // ==========================================
 let itemsAjuan = [];
 
 function openPengajuanModal() {
     document.getElementById('form_pengajuan_id').value = '';
-    document.getElementById('modalPengajuanTitle').innerHTML = '<i class="bi bi-file-earmark-plus text-primary me-2"></i>Buat Pengajuan Anggaran';
-    document.getElementById('btnSubmitPengajuan').innerText = 'Kirim Pengajuan';
+    document.getElementById('modalPengajuanTitle').innerHTML = '<i class="bi bi-file-earmark-plus text-primary me-2"></i>Catat Rencana Anggaran';
+    document.getElementById('btnSubmitPengajuan').innerText = 'Simpan Anggaran';
     itemsAjuan = [];
     renderItemsAjuan();
     new bootstrap.Modal(document.getElementById('modalPengajuan')).show();
@@ -2049,7 +2053,7 @@ function openPengajuanModal() {
 
 function editPengajuan(p) {
     document.getElementById('form_pengajuan_id').value = p.id;
-    document.getElementById('modalPengajuanTitle').innerHTML = '<i class="bi bi-pencil-square text-info me-2"></i>Edit Pengajuan Anggaran';
+    document.getElementById('modalPengajuanTitle').innerHTML = '<i class="bi bi-pencil-square text-info me-2"></i>Edit Rencana Anggaran';
     document.getElementById('btnSubmitPengajuan').innerText = 'Simpan Perubahan';
     
     let parts = p.bulan_hijriah.split(' ');
@@ -2082,8 +2086,8 @@ function editPengajuan(p) {
 
 function copyPengajuan(p) {
     document.getElementById('form_pengajuan_id').value = '';
-    document.getElementById('modalPengajuanTitle').innerHTML = '<i class="bi bi-files text-primary me-2"></i>Duplikat Pengajuan Anggaran';
-    document.getElementById('btnSubmitPengajuan').innerText = 'Kirim Pengajuan Baru';
+    document.getElementById('modalPengajuanTitle').innerHTML = '<i class="bi bi-files text-primary me-2"></i>Duplikat Catatan Anggaran';
+    document.getElementById('btnSubmitPengajuan').innerText = 'Simpan Catatan Baru';
     
     let instansiEl = document.getElementById('form_instansi');
     if (instansiEl) instansiEl.value = p.instansi;
@@ -2201,11 +2205,11 @@ function removeItem(index) {
 function submitPengajuan() {
     const btn = document.getElementById('btnSubmitPengajuan');
     Swal.fire({
-        title: 'Kirim Pengajuan?',
-        text: "Pastikan nominal sudah benar. Pengajuan akan dikirim ke Super Admin.",
+        title: 'Simpan Catatan Anggaran?',
+        text: "Pastikan rincian kebutuhan operasional sudah sesuai.",
         icon: 'question',
         showCancelButton: true,
-        confirmButtonText: 'Ya, Kirim'
+        confirmButtonText: 'Ya, Simpan'
     }).then((result) => {
         if (result.isConfirmed) {
             const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
@@ -2248,7 +2252,7 @@ function submitPengajuan() {
                 if(res.success) {
                     Swal.fire('Berhasil', res.message, 'success').then(()=>location.reload());
                 } else {
-                    btn.innerHTML = 'Kirim Pengajuan';
+                    btn.innerHTML = 'Simpan Anggaran';
                     btn.disabled = false;
                     Swal.fire('Gagal', res.message, 'error');
                 }
@@ -2259,8 +2263,8 @@ function submitPengajuan() {
 
 function deletePengajuan(id) {
     Swal.fire({
-        title: 'Hapus Pengajuan?',
-        text: "Data pengajuan anggaran ini akan dihapus permanen.",
+        title: 'Hapus Catatan Anggaran?',
+        text: "Data rincian anggaran dan seluruh nota terkait akan dihapus permanen.",
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#dc3545',
@@ -2283,7 +2287,7 @@ function deletePengajuan(id) {
 }
 
 // ==========================================
-// REVIEW / APPROVE (ADMIN)
+// TETAPKAN PLAFOND ANGGARAN
 // ==========================================
 let rItems = [];
 
@@ -2347,9 +2351,10 @@ function approvePengajuan(status) {
     let isLumpsum = document.getElementById('modeLumpsum').checked;
     
     Swal.fire({
-        title: status === 'disetujui' ? 'Simpan Nominal ACC?' : 'Batalkan Pengajuan?',
+        title: status === 'disetujui' ? 'Simpan & Tetapkan Anggaran?' : 'Batalkan Rencana Anggaran?',
         icon: status === 'disetujui' ? 'success' : 'warning',
-        showCancelButton: true
+        showCancelButton: true,
+        confirmButtonText: status === 'disetujui' ? 'Ya, Tetapkan' : 'Ya, Batalkan'
     }).then((result) => {
         if (result.isConfirmed) {
             const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
@@ -2359,7 +2364,7 @@ function approvePengajuan(status) {
                 if (isLumpsum) {
                     let total = document.getElementById('r_totalLumpsum').value;
                     if (!total || Number(total) <= 0) {
-                        Swal.fire('Error', 'Nominal Total ACC tidak boleh kosong/nol', 'error');
+                        Swal.fire('Error', 'Nominal Total Anggaran tidak boleh kosong/nol', 'error');
                         return;
                     }
                     payload.total_lumpsum = total;
@@ -2564,7 +2569,7 @@ function renderViewDetailHtml(p, isApproved, notas) {
                 <div class="bg-primary p-4 text-white position-relative shadow-sm" style="z-index: 1;">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h3 class="fw-bold mb-1">${isApproved ? 'REVIEW DETIL ANGGARAN' : 'PROPOSAL ANGGARAN'}</h3>
+                            <h3 class="fw-bold mb-1">${isApproved ? 'RINCIAN ANGGARAN OPERASIONAL' : 'RENCANA ANGGARAN'}</h3>
                             <div class="text-white-50 small">ID Dokumen: #ANGG-${p.id.toString().padStart(4, '0')}</div>
                         </div>
                         <div class="text-end">
@@ -2576,12 +2581,12 @@ function renderViewDetailHtml(p, isApproved, notas) {
                 
                 <div class="bg-light p-3 border-bottom border-secondary-subtle d-flex flex-wrap justify-content-end gap-2 position-relative" style="z-index: 1;">
                     <button class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm fw-bold" onclick="printLaporanAnggaran(window.currentPrintP, window.currentPrintNotas)"><i class="bi bi-file-earmark-bar-graph me-1"></i>Cetak Laporan Detail</button>
-                    <button class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm fw-bold" onclick="printSuratPengajuan(window.currentPrintP)"><i class="bi bi-printer me-1"></i>Cetak Surat Pengajuan</button>
+                    <button class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm fw-bold" onclick="printSuratPengajuan(window.currentPrintP)"><i class="bi bi-printer me-1"></i>Cetak Rencana Anggaran</button>
                 </div>
                 
                 <div class="p-4 pt-4 position-relative" style="z-index: 1;">
                     ${stampHtml}
-                    ${isApproved ? '<h5 class="fw-bold text-dark mb-4"><i class="bi bi-file-earmark-text me-2 text-primary"></i>PROPOSAL & PERSETUJUAN</h5>' : ''}
+                    ${isApproved ? '<h5 class="fw-bold text-dark mb-4"><i class="bi bi-file-earmark-text me-2 text-primary"></i>RINCIAN & PENETAPAN PAGU</h5>' : ''}
                     
                     <div class="table-responsive">
                         <table class="table table-borderless table-hover mb-4" style="font-size: 0.9rem;">
@@ -2589,8 +2594,8 @@ function renderViewDetailHtml(p, isApproved, notas) {
                                 <tr class="text-muted small text-uppercase">
                                     <th class="text-center pb-2">No</th>
                                     <th class="pb-2">Rincian Kebutuhan</th>
-                                    <th class="text-end pb-2">Nilai Ajuan</th>
-                                    <th class="text-end pb-2 text-success">Nilai ACC</th>
+                                    <th class="text-end pb-2">Nilai Rencana</th>
+                                    <th class="text-end pb-2 text-success">Pagu Ditetapkan</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -2608,7 +2613,7 @@ function renderViewDetailHtml(p, isApproved, notas) {
 
                     ${p.catatan_admin ? `
                     <div class="bg-warning bg-opacity-10 border-start border-warning border-4 p-3 rounded small mb-4 shadow-sm">
-                        <div class="fw-bold text-warning-emphasis mb-1"><i class="bi bi-info-circle me-1"></i>Catatan Persetujuan:</div>
+                        <div class="fw-bold text-warning-emphasis mb-1"><i class="bi bi-info-circle me-1"></i>Catatan Anggaran:</div>
                         <div class="text-dark">${p.catatan_admin}</div>
                     </div>` : ''}
 
@@ -3997,35 +4002,35 @@ function openWhatsAppReminderModal(p) {
     }
     document.getElementById('wa_nomor_tujuan').value = targetPhone;
 
-    let draftMsg = `*PENGINGAT ANGGARAN OPERASIONAL SIPLN*\n`;
+    let draftMsg = `*PENGINGAT ANGGARAN OPERASIONAL*\n`;
     draftMsg += `------------------------------------\n`;
     draftMsg += `Assalamu'alaikum Wr. Wb.\n\n`;
     draftMsg += `Mengingatkan terkait Anggaran Operasional *${instansiNama}* untuk Bulan *${bulan}*:\n\n`;
-    draftMsg += `• ID Pengajuan: *#ANGG-${String(p.id).padStart(4, '0')}*\n`;
-    draftMsg += `• Status Saat Ini: *${status}*\n`;
+    draftMsg += `• ID Anggaran: *#ANGG-${String(p.id).padStart(4, '0')}*\n`;
+    draftMsg += `• Status: *${status}*\n`;
 
     if (p.status === 'disetujui') {
-        draftMsg += `• Plafond Disetujui: *${accRp}*\n`;
+        draftMsg += `• Pagu Ditetapkan: *${accRp}*\n`;
         draftMsg += `• Realisasi Saat Ini: *${terpakaiRp}*\n`;
-        draftMsg += `• Sisa Plafond: *${sisaRp}*\n`;
+        draftMsg += `• Sisa Anggaran: *${sisaRp}*\n`;
         if (hariCair > 0) {
-            draftMsg += `• Durasi Cair: *${hariCair} hari yang lalu*\n`;
+            draftMsg += `• Durasi Aktif: *${hariCair} hari*\n`;
         }
-        draftMsg += `\n*PENTING:* Mohon untuk segera melengkapi dan mengunggah bukti nota pembelanjaan / kuitansi operasional melalui sistem SIPLN.\n`;
+        draftMsg += `\n*PENTING:* Mohon untuk segera melengkapi dan mengunggah bukti nota pembelanjaan / kuitansi operasional melalui sistem.\n`;
     } else if (p.status === 'diajukan') {
-        draftMsg += `• Total Ajuan: *${ajuanRp}*\n`;
-        draftMsg += `• Tanggal Pengajuan: *${p.tanggal_pengajuan || '-'}*\n`;
-        draftMsg += `\n*INFORMASI:* Pengajuan anggaran sedang menunggu persetujuan (ACC) dari Bagian Keuangan / Super Admin.\n`;
+        draftMsg += `• Total Rencana: *${ajuanRp}*\n`;
+        draftMsg += `• Tanggal Pencatatan: *${p.tanggal_pengajuan || '-'}*\n`;
+        draftMsg += `\n*INFORMASI:* Rencana anggaran telah dicatat dan menunggu penetapan pagu operasional instansi.\n`;
     } else if (p.status === 'dilaporkan') {
-        draftMsg += `• Total Plafond: *${accRp}*\n`;
+        draftMsg += `• Total Pagu: *${accRp}*\n`;
         draftMsg += `• Realisasi Belanja: *${terpakaiRp}*\n`;
-        draftMsg += `\n*INFORMASI:* Nota telah dilaporkan dan sedang menunggu proses verifikasi final (Selesai).\n`;
+        draftMsg += `\n*INFORMASI:* Nota telah dilaporkan dan siap untuk diselesaikan.\n`;
     } else {
         draftMsg += `• Total Anggaran: *${accRp}*\n`;
     }
 
-    draftMsg += `\nSilakan cek detail di: http://sipln.tail2af614.ts.net/webapp/public/index.php/anggaran\n\n`;
-    draftMsg += `Terima kasih.\n_Wassalamu'alaikum Wr. Wb._\n*Admin Keuangan SIPLN*`;
+    draftMsg += `\nSilakan cek detail di: http://sipln/webapp/public/index.php/anggaran\n\n`;
+    draftMsg += `Terima kasih.\n_Wassalamu'alaikum Wr. Wb._\n*Pengurus / Bendahara ${instansiNama}*`;
 
     document.getElementById('wa_pesan_text').value = draftMsg;
 

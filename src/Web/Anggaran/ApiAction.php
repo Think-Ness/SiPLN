@@ -77,7 +77,7 @@ class ApiAction
             }
 
             $transaction->commit();
-            return JsonResponse::create(['success' => true, 'message' => 'Pengajuan berhasil dikirim']);
+            return JsonResponse::create(['success' => true, 'message' => 'Catatan anggaran berhasil disimpan']);
         } catch (\Exception $e) {
             $transaction->rollBack();
             return JsonResponse::create(['success' => false, 'message' => $e->getMessage()], 500);
@@ -148,7 +148,7 @@ class ApiAction
             }
 
             $transaction->commit();
-            return JsonResponse::create(['success' => true, 'message' => 'Pengajuan berhasil diperbarui']);
+            return JsonResponse::create(['success' => true, 'message' => 'Catatan anggaran berhasil diperbarui']);
         } catch (\Exception $e) {
             $transaction->rollBack();
             return JsonResponse::create(['success' => false, 'message' => $e->getMessage()], 500);
@@ -167,7 +167,7 @@ class ApiAction
             $db->createCommand()->delete('anggaran_nota', ['pengajuan_id' => $id])->execute();
             $db->createCommand()->delete('anggaran_pengajuan', ['id' => $id])->execute();
             $transaction->commit();
-            return JsonResponse::create(['success' => true, 'message' => 'Pengajuan dihapus']);
+            return JsonResponse::create(['success' => true, 'message' => 'Catatan anggaran berhasil dihapus']);
         } catch (\Exception $e) {
             $transaction->rollBack();
             return JsonResponse::create(['success' => false, 'message' => $e->getMessage()], 500);
@@ -233,7 +233,7 @@ class ApiAction
             $db->createCommand()->update('anggaran_pengajuan', $updateData, ['id' => $id])->execute();
 
             $transaction->commit();
-            return JsonResponse::create(['success' => true, 'message' => 'Pengajuan berhasil diproses']);
+            return JsonResponse::create(['success' => true, 'message' => 'Anggaran berhasil diproses']);
         } catch (\Exception $e) {
             $transaction->rollBack();
             return JsonResponse::create(['success' => false, 'message' => $e->getMessage()], 500);
