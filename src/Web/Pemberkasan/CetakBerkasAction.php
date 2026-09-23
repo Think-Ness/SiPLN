@@ -283,16 +283,7 @@ final class CetakBerkasAction
         };
         
         $scanPdfs($exportDataDir);
-        if (is_dir($suratMenyuratDir)) {
-            $kantors = @scandir($suratMenyuratDir);
-            if ($kantors) {
-                foreach ($kantors as $k) {
-                    if ($k === '.' || $k === '..') continue;
-                    $outDir = $suratMenyuratDir . DIRECTORY_SEPARATOR . $k . DIRECTORY_SEPARATOR . 'Output';
-                    $scanPdfs($outDir);
-                }
-            }
-        }
+        $scanPdfs($suratMenyuratDir);
 
         // Scan custom output paths from Kelola Jenis Pengajuan
         try {
@@ -405,6 +396,132 @@ final class CetakBerkasAction
             } catch (\Throwable $e) {}
         }
 
+        // Helper universal untuk menemukan file Surat Generator di disk
+        $findSuratFile = function(array $suratInfo, ?string $baseDir, ConnectionInterface $dbConnection): ?string {
+            $tipeLabels = [
+                'SP' => 'Surat_Permohonan',
+                'SK' => 'Surat_Keterangan',
+                'SJ' => 'Surat_Jaminan',
+                'ST' => 'Surat_Tugas',
+                'Surat_Permohonan' => 'Surat_Permohonan',
+                'Surat_Keterangan' => 'Surat_Keterangan',
+                'Surat_Jaminan' => 'Surat_Jaminan',
+                'Surat_Tugas' => 'Surat_Tugas',
+            ];
+
+            $tipeRaw = $suratInfo['tipe_surat'] ?? '';
+            $safeTipeSurat = $tipeLabels[$tipeRaw] ?? preg_replace('/[^a-zA-Z0-9_\-]/', '_', $tipeRaw);
+            $safeJenis = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $suratInfo['jenis_pengajuan'] ?? 'Umum');
+            $safeName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $suratInfo['nama_santri'] ?? '');
+            $kantor = !empty($suratInfo['kantor']) ? preg_replace('/[^a-zA-Z0-9_\-]/', '_', $suratInfo['kantor']) : 'Kemenag';
+
+            $tanggalSurat = $suratInfo['tanggal_surat'] ?? date('Y-m-d');
+            $tahunSurat = !empty($tanggalSurat) ? date('Y', strtotime($tanggalSurat)) : date('Y');
+            $bulanSurat = !empty($tanggalSurat) ? date('m', strtotime($tanggalSurat)) : date('m');
+
+            $tahunItas = $tahunSurat;
+            $bulanItas = $bulanSurat;
+            if (!empty($suratInfo['mailing_id'])) {
+                try {
+                    $firstSantri = $dbConnection->createCommand(
+                        "SELECT i.exp_itas 
+                         FROM surat_mailing_santri ms
+                         LEFT JOIN (SELECT kds, exp_itas FROM mtb_itas WHERE aktif = 1) i ON ms.kds = i.kds
+                         WHERE ms.mailing_id = :mid ORDER BY ms.id ASC LIMIT 1",
+                        [':mid' => (int)$suratInfo['mailing_id']]
+                    )->queryOne();
+
+                    if ($firstSantri && !empty($firstSantri['exp_itas']) && $firstSantri['exp_itas'] !== '-') {
+                        $tahunItas = date('Y', strtotime($firstSantri['exp_itas']));
+                        $bulanItas = date('m', strtotime($firstSantri['exp_itas']));
+                    }
+                } catch (\Throwable $e) {}
+            }
+
+            $candidateDirs = [];
+            $baseDirs = array_filter([
+                $baseDir,
+                dirname(__DIR__, 3) . '/public/uploads',
+                'd:/XAMPP/htdocs/webapp/public/uploads',
+                '//sipln/FOREIGN-PC1/02. Aplikasi/XAMPP/htdocs/webapp/public/uploads'
+            ]);
+
+            foreach ($baseDirs as $bd) {
+                $bdNorm = rtrim(str_replace('\\', '/', $bd), '/');
+                foreach ([[$tahunItas, $bulanItas], [$tahunSurat, $bulanSurat]] as [$th, $bl]) {
+                    $candidateDirs[] = $bdNorm . '/Surat_Menyurat/Output/' . $safeJenis . '/' . $safeTipeSurat . '/' . $th . '/' . $bl;
+                    $candidateDirs[] = $bdNorm . '/Surat_Menyurat/' . $kantor . '/Output/' . $safeJenis . '/' . $safeTipeSurat . '/' . $th . '/' . $bl;
+                    $candidateDirs[] = $bdNorm . '/Surat_Menyurat/Output/' . $safeJenis . '/' . $safeTipeSurat . '/' . $th . '/' . $bl . '/Sekaligus';
+                    $candidateDirs[] = $bdNorm . '/Surat_Menyurat/' . $kantor . '/Output/' . $safeJenis . '/' . $safeTipeSurat . '/' . $th . '/' . $bl . '/Sekaligus';
+                    $candidateDirs[] = $bdNorm . '/Surat_Menyurat/' . $kantor . '/' . $safeJenis . '/' . $safeTipeSurat . '/' . $th . '/' . $bl;
+                }
+                $candidateDirs[] = $bdNorm . '/Export Data/' . $safeJenis;
+            }
+
+            if (!empty($suratInfo['output_path'])) {
+                $up = str_replace('\\', '/', trim($suratInfo['output_path']));
+                foreach ([[$tahunItas, $bulanItas], [$tahunSurat, $bulanSurat]] as [$th, $bl]) {
+                    if (preg_match('/^[a-zA-Z]:/', $up)) {
+                        $candidateDirs[] = rtrim($up, '/') . '/' . $safeJenis . '/' . $safeTipeSurat . '/' . $th . '/' . $bl;
+                        $candidateDirs[] = rtrim($up, '/') . '/' . $safeJenis . '/' . $safeTipeSurat . '/' . $th . '/' . $bl . '/Sekaligus';
+                    } else {
+                        foreach ($baseDirs as $bd) {
+                            $bdNorm = rtrim(str_replace('\\', '/', $bd), '/');
+                            $candidateDirs[] = $bdNorm . '/' . ltrim($up, '/') . '/' . $safeJenis . '/' . $safeTipeSurat . '/' . $th . '/' . $bl;
+                            $candidateDirs[] = $bdNorm . '/' . ltrim($up, '/') . '/' . $safeJenis . '/' . $safeTipeSurat . '/' . $th . '/' . $bl . '/Sekaligus';
+                        }
+                    }
+                }
+            }
+
+            $candidateFileNames = array_filter([
+                $safeTipeSurat . '_' . $safeName . '.pdf',
+                $safeTipeSurat . '_Sekaligus_' . $safeJenis . '.pdf',
+                $safeTipeSurat . '_' . $safeJenis . '.pdf',
+                $safeName . '.pdf'
+            ]);
+
+            foreach ($candidateDirs as $cd) {
+                if (!is_dir($cd)) continue;
+                foreach ($candidateFileNames as $cfn) {
+                    $p = $cd . '/' . $cfn;
+                    if (file_exists($p) && is_file($p)) {
+                        return $p;
+                    }
+                }
+            }
+
+            // Fallback: search with glob in Surat_Menyurat and Export Data
+            foreach ($baseDirs as $bd) {
+                $bdNorm = rtrim(str_replace('\\', '/', $bd), '/');
+                $searchDirs = [
+                    $bdNorm . '/Surat_Menyurat',
+                    $bdNorm . '/Export Data'
+                ];
+                foreach ($searchDirs as $sDir) {
+                    if (!is_dir($sDir)) continue;
+                    if (!empty($safeName)) {
+                        $matches = @glob($sDir . '/*/*/*/*/*/*' . $safeName . '*.pdf') ?: [];
+                        if (!empty($matches) && file_exists($matches[0])) return $matches[0];
+                        $matches = @glob($sDir . '/*/*/*/*/*/' . $safeName . '*.pdf') ?: [];
+                        if (!empty($matches) && file_exists($matches[0])) return $matches[0];
+                        $matches = @glob($sDir . '/*/*/*/*/' . $safeName . '*.pdf') ?: [];
+                        if (!empty($matches) && file_exists($matches[0])) return $matches[0];
+                        $matches = @glob($sDir . '/*/*/*/' . $safeName . '*.pdf') ?: [];
+                        if (!empty($matches) && file_exists($matches[0])) return $matches[0];
+                    }
+                    $matches = @glob($sDir . '/*/*/*/*/*/*' . $safeTipeSurat . '*Sekaligus*.pdf') ?: [];
+                    if (!empty($matches) && file_exists($matches[0])) return $matches[0];
+                    $matches = @glob($sDir . '/*/*/*/*/*' . $safeTipeSurat . '*Sekaligus*.pdf') ?: [];
+                    if (!empty($matches) && file_exists($matches[0])) return $matches[0];
+                    $matches = @glob($sDir . '/*/*/*/*' . $safeTipeSurat . '*Sekaligus*.pdf') ?: [];
+                    if (!empty($matches) && file_exists($matches[0])) return $matches[0];
+                }
+            }
+
+            return null;
+        };
+
         foreach ($santris as &$s) {
             $kds = $s['kds'];
             $kode = $s['kode'];
@@ -506,40 +623,13 @@ final class CetakBerkasAction
                     $namaUnik = $docType . ' (' . $kategori . ')';
                     $tahunSurat = !empty($sdb['tanggal_surat']) ? date('Y', strtotime($sdb['tanggal_surat'])) : null;
                     
-                    $safeJenis = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $kategori);
-                    $safeTipeSurat = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $tipeRaw);
+                    $safeTipeSurat = $tipeLabels[$tipeRaw] ?? preg_replace('/[^a-zA-Z0-9_\-]/', '_', $tipeRaw);
                     if (isset($tipeLabels[$tipeRaw])) {
                         $safeTipeSurat = str_replace(' ', '_', $tipeLabels[$tipeRaw]);
                     }
                     $safeName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $s['nama']);
                     
-                    $kantor = $sdb['kantor'] ?: 'Kemenag';
-                    $publicSuratDir = $baseBerkasDir . '/Surat_Menyurat/' . $kantor;
-                    
-                    $tahunItas = $tahunSurat ?: date('Y');
-                    $bulanItas = !empty($sdb['tanggal_surat']) ? date('m', strtotime($sdb['tanggal_surat'])) : date('m');
-                    
-                    $candidatePaths = [
-                        $publicSuratDir . '/Output/' . $safeJenis . '/' . $safeTipeSurat . '/' . $tahunItas . '/' . $bulanItas . '/' . $safeTipeSurat . '_' . $safeName . '.pdf',
-                        $publicSuratDir . '/Output/' . $safeJenis . '/' . $safeTipeSurat . '/' . $tahunItas . '/' . $bulanItas . '/Sekaligus/' . $safeTipeSurat . '_Sekaligus_' . $safeJenis . '.pdf',
-                        $baseBerkasDir . '/Export Data/' . $safeJenis . '/' . $safeTipeSurat . '_' . $safeName . '.pdf',
-                    ];
-                    if (!empty($sdb['output_path'])) {
-                        $up = str_replace('\\', '/', trim($sdb['output_path']));
-                        if (preg_match('/^[a-zA-Z]:/', $up)) {
-                            $candidatePaths[] = rtrim($up, '/') . '/' . $safeJenis . '/' . $safeTipeSurat . '/' . $tahunItas . '/' . $bulanItas . '/' . $safeTipeSurat . '_' . $safeName . '.pdf';
-                        } else {
-                            $candidatePaths[] = $baseBerkasDir . '/' . ltrim($up, '/') . '/' . $safeJenis . '/' . $safeTipeSurat . '/' . $tahunItas . '/' . $bulanItas . '/' . $safeTipeSurat . '_' . $safeName . '.pdf';
-                        }
-                    }
-
-                    $matchedFile = null;
-                    foreach ($candidatePaths as $cp) {
-                        if (file_exists($cp)) {
-                            $matchedFile = $cp;
-                            break;
-                        }
-                    }
+                    $matchedFile = $findSuratFile($sdb, $baseBerkasDir, $db);
 
                     $serveUrl = $matchedFile 
                         ? ('/serve.php?path=' . urlencode(str_replace('\\', '/', $matchedFile)))

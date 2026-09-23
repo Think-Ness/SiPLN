@@ -279,16 +279,7 @@ final class MergeAction
                 };
                 
                 $scanPdfs($exportDataDir);
-                if (is_dir($suratMenyuratDir)) {
-                    $kantors = @scandir($suratMenyuratDir);
-                    if ($kantors) {
-                        foreach ($kantors as $k) {
-                            if ($k === '.' || $k === '..') continue;
-                            $outDir = $suratMenyuratDir . DIRECTORY_SEPARATOR . $k . DIRECTORY_SEPARATOR . 'Output';
-                            $scanPdfs($outDir);
-                        }
-                    }
-                }
+                $scanPdfs($suratMenyuratDir);
 
                 // Scan custom output paths
                 try {
@@ -347,6 +338,132 @@ final class MergeAction
             }
         }
 
+        // Helper universal untuk menemukan file Surat Generator di disk
+        $findSuratFile = function(array $suratInfo, ?string $baseDir, ConnectionInterface $dbConnection): ?string {
+            $tipeLabels = [
+                'SP' => 'Surat_Permohonan',
+                'SK' => 'Surat_Keterangan',
+                'SJ' => 'Surat_Jaminan',
+                'ST' => 'Surat_Tugas',
+                'Surat_Permohonan' => 'Surat_Permohonan',
+                'Surat_Keterangan' => 'Surat_Keterangan',
+                'Surat_Jaminan' => 'Surat_Jaminan',
+                'Surat_Tugas' => 'Surat_Tugas',
+            ];
+
+            $tipeRaw = $suratInfo['tipe_surat'] ?? '';
+            $safeTipeSurat = $tipeLabels[$tipeRaw] ?? preg_replace('/[^a-zA-Z0-9_\-]/', '_', $tipeRaw);
+            $safeJenis = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $suratInfo['jenis_pengajuan'] ?? 'Umum');
+            $safeName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $suratInfo['nama_santri'] ?? '');
+            $kantor = !empty($suratInfo['kantor']) ? preg_replace('/[^a-zA-Z0-9_\-]/', '_', $suratInfo['kantor']) : 'Kemenag';
+
+            $tanggalSurat = $suratInfo['tanggal_surat'] ?? date('Y-m-d');
+            $tahunSurat = !empty($tanggalSurat) ? date('Y', strtotime($tanggalSurat)) : date('Y');
+            $bulanSurat = !empty($tanggalSurat) ? date('m', strtotime($tanggalSurat)) : date('m');
+
+            $tahunItas = $tahunSurat;
+            $bulanItas = $bulanSurat;
+            if (!empty($suratInfo['mailing_id'])) {
+                try {
+                    $firstSantri = $dbConnection->createCommand(
+                        "SELECT i.exp_itas 
+                         FROM surat_mailing_santri ms
+                         LEFT JOIN (SELECT kds, exp_itas FROM mtb_itas WHERE aktif = 1) i ON ms.kds = i.kds
+                         WHERE ms.mailing_id = :mid ORDER BY ms.id ASC LIMIT 1",
+                        [':mid' => (int)$suratInfo['mailing_id']]
+                    )->queryOne();
+
+                    if ($firstSantri && !empty($firstSantri['exp_itas']) && $firstSantri['exp_itas'] !== '-') {
+                        $tahunItas = date('Y', strtotime($firstSantri['exp_itas']));
+                        $bulanItas = date('m', strtotime($firstSantri['exp_itas']));
+                    }
+                } catch (\Throwable $e) {}
+            }
+
+            $candidateDirs = [];
+            $baseDirs = array_filter([
+                $baseDir,
+                dirname(__DIR__, 3) . '/public/uploads',
+                'd:/XAMPP/htdocs/webapp/public/uploads',
+                '//sipln/FOREIGN-PC1/02. Aplikasi/XAMPP/htdocs/webapp/public/uploads'
+            ]);
+
+            foreach ($baseDirs as $bd) {
+                $bdNorm = rtrim(str_replace('\\', '/', $bd), '/');
+                foreach ([[$tahunItas, $bulanItas], [$tahunSurat, $bulanSurat]] as [$th, $bl]) {
+                    $candidateDirs[] = $bdNorm . '/Surat_Menyurat/Output/' . $safeJenis . '/' . $safeTipeSurat . '/' . $th . '/' . $bl;
+                    $candidateDirs[] = $bdNorm . '/Surat_Menyurat/' . $kantor . '/Output/' . $safeJenis . '/' . $safeTipeSurat . '/' . $th . '/' . $bl;
+                    $candidateDirs[] = $bdNorm . '/Surat_Menyurat/Output/' . $safeJenis . '/' . $safeTipeSurat . '/' . $th . '/' . $bl . '/Sekaligus';
+                    $candidateDirs[] = $bdNorm . '/Surat_Menyurat/' . $kantor . '/Output/' . $safeJenis . '/' . $safeTipeSurat . '/' . $th . '/' . $bl . '/Sekaligus';
+                    $candidateDirs[] = $bdNorm . '/Surat_Menyurat/' . $kantor . '/' . $safeJenis . '/' . $safeTipeSurat . '/' . $th . '/' . $bl;
+                }
+                $candidateDirs[] = $bdNorm . '/Export Data/' . $safeJenis;
+            }
+
+            if (!empty($suratInfo['output_path'])) {
+                $up = str_replace('\\', '/', trim($suratInfo['output_path']));
+                foreach ([[$tahunItas, $bulanItas], [$tahunSurat, $bulanSurat]] as [$th, $bl]) {
+                    if (preg_match('/^[a-zA-Z]:/', $up)) {
+                        $candidateDirs[] = rtrim($up, '/') . '/' . $safeJenis . '/' . $safeTipeSurat . '/' . $th . '/' . $bl;
+                        $candidateDirs[] = rtrim($up, '/') . '/' . $safeJenis . '/' . $safeTipeSurat . '/' . $th . '/' . $bl . '/Sekaligus';
+                    } else {
+                        foreach ($baseDirs as $bd) {
+                            $bdNorm = rtrim(str_replace('\\', '/', $bd), '/');
+                            $candidateDirs[] = $bdNorm . '/' . ltrim($up, '/') . '/' . $safeJenis . '/' . $safeTipeSurat . '/' . $th . '/' . $bl;
+                            $candidateDirs[] = $bdNorm . '/' . ltrim($up, '/') . '/' . $safeJenis . '/' . $safeTipeSurat . '/' . $th . '/' . $bl . '/Sekaligus';
+                        }
+                    }
+                }
+            }
+
+            $candidateFileNames = array_filter([
+                $safeTipeSurat . '_' . $safeName . '.pdf',
+                $safeTipeSurat . '_Sekaligus_' . $safeJenis . '.pdf',
+                $safeTipeSurat . '_' . $safeJenis . '.pdf',
+                $safeName . '.pdf'
+            ]);
+
+            foreach ($candidateDirs as $cd) {
+                if (!is_dir($cd)) continue;
+                foreach ($candidateFileNames as $cfn) {
+                    $p = $cd . '/' . $cfn;
+                    if (file_exists($p) && is_file($p)) {
+                        return $p;
+                    }
+                }
+            }
+
+            // Fallback: search with glob in Surat_Menyurat and Export Data
+            foreach ($baseDirs as $bd) {
+                $bdNorm = rtrim(str_replace('\\', '/', $bd), '/');
+                $searchDirs = [
+                    $bdNorm . '/Surat_Menyurat',
+                    $bdNorm . '/Export Data'
+                ];
+                foreach ($searchDirs as $sDir) {
+                    if (!is_dir($sDir)) continue;
+                    if (!empty($safeName)) {
+                        $matches = @glob($sDir . '/*/*/*/*/*/*' . $safeName . '*.pdf') ?: [];
+                        if (!empty($matches) && file_exists($matches[0])) return $matches[0];
+                        $matches = @glob($sDir . '/*/*/*/*/*/' . $safeName . '*.pdf') ?: [];
+                        if (!empty($matches) && file_exists($matches[0])) return $matches[0];
+                        $matches = @glob($sDir . '/*/*/*/*/' . $safeName . '*.pdf') ?: [];
+                        if (!empty($matches) && file_exists($matches[0])) return $matches[0];
+                        $matches = @glob($sDir . '/*/*/*/' . $safeName . '*.pdf') ?: [];
+                        if (!empty($matches) && file_exists($matches[0])) return $matches[0];
+                    }
+                    $matches = @glob($sDir . '/*/*/*/*/*/*' . $safeTipeSurat . '*Sekaligus*.pdf') ?: [];
+                    if (!empty($matches) && file_exists($matches[0])) return $matches[0];
+                    $matches = @glob($sDir . '/*/*/*/*/*' . $safeTipeSurat . '*Sekaligus*.pdf') ?: [];
+                    if (!empty($matches) && file_exists($matches[0])) return $matches[0];
+                    $matches = @glob($sDir . '/*/*/*/*' . $safeTipeSurat . '*Sekaligus*.pdf') ?: [];
+                    if (!empty($matches) && file_exists($matches[0])) return $matches[0];
+                }
+            }
+
+            return null;
+        };
+
         // Process Direct DB Generated Surat (surat_db_{surat_id}_{kds})
         if (!empty($dbIdsSuratDirect)) {
             $targetInstansiId = !empty($_SESSION['instansi_id']) ? (int)$_SESSION['instansi_id'] : null;
@@ -398,43 +515,27 @@ final class MergeAction
                     if (empty($kategori)) $kategori = 'Surat Generator';
                     $namaUnik = $docType . ' (' . $kategori . ')';
 
-                    $safeJenis = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $kategori);
-                    $safeTipeSurat = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $tipeRaw);
+                    $safeTipeSurat = $tipeLabels[$tipeRaw] ?? preg_replace('/[^a-zA-Z0-9_\-]/', '_', $tipeRaw);
                     if (isset($tipeLabels[$tipeRaw])) {
                         $safeTipeSurat = str_replace(' ', '_', $tipeLabels[$tipeRaw]);
                     }
                     $safeName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $row['nama_santri']);
-                    $kantor = $row['kantor'] ?: 'Kemenag';
 
-                    $tahunSurat = !empty($row['tanggal_surat']) ? date('Y', strtotime($row['tanggal_surat'])) : date('Y');
-                    $bulanSurat = !empty($row['tanggal_surat']) ? date('m', strtotime($row['tanggal_surat'])) : date('m');
+                    $foundPath = $findSuratFile($row, $baseBerkasDir, $db);
 
-                    $publicSuratDir = $baseBerkasDir . '/Surat_Menyurat/' . $kantor;
-                    $candidatePaths = [
-                        $publicSuratDir . '/Output/' . $safeJenis . '/' . $safeTipeSurat . '/' . $tahunSurat . '/' . $bulanSurat . '/' . $safeTipeSurat . '_' . $safeName . '.pdf',
-                        $publicSuratDir . '/Output/' . $safeJenis . '/' . $safeTipeSurat . '/' . $tahunSurat . '/' . $bulanSurat . '/Sekaligus/' . $safeTipeSurat . '_Sekaligus_' . $safeJenis . '.pdf',
-                        $baseBerkasDir . '/Export Data/' . $safeJenis . '/' . $safeTipeSurat . '_' . $safeName . '.pdf',
-                    ];
-                    if (!empty($row['output_path'])) {
-                        $up = str_replace('\\', '/', trim($row['output_path']));
-                        if (preg_match('/^[a-zA-Z]:/', $up)) {
-                            $candidatePaths[] = rtrim($up, '/') . '/' . $safeJenis . '/' . $safeTipeSurat . '/' . $tahunSurat . '/' . $bulanSurat . '/' . $safeTipeSurat . '_' . $safeName . '.pdf';
-                        } else {
-                            $candidatePaths[] = $baseBerkasDir . '/' . ltrim($up, '/') . '/' . $safeJenis . '/' . $safeTipeSurat . '/' . $tahunSurat . '/' . $bulanSurat . '/' . $safeTipeSurat . '_' . $safeName . '.pdf';
-                        }
-                    }
-
-                    $foundPath = null;
-                    foreach ($candidatePaths as $cp) {
-                        if (file_exists($cp)) {
-                            $foundPath = $cp;
-                            break;
-                        }
-                    }
-
-                    if ($foundPath) {
+                    if ($foundPath && file_exists($foundPath)) {
                         $berkas[] = [
                             'path_file' => '/serve.php?path=' . urlencode(str_replace('\\', '/', $foundPath)),
+                            'nama_berkas' => $docType,
+                            'nama_unik' => $namaUnik,
+                            'kds' => $kds,
+                            'nama_santri' => $row['nama_santri']
+                        ];
+                    } else {
+                        // Masukkan dengan URL view surat sebagai fallback jika resolver nanti mencari lagi
+                        $serveUrl = (defined('API_URL') ? API_URL : '/webapp/public') . '/api/surat/view/' . $row['id'] . '?file=' . urlencode($safeTipeSurat . '_' . $safeName . '.pdf');
+                        $berkas[] = [
+                            'path_file' => $serveUrl,
                             'nama_berkas' => $docType,
                             'nama_unik' => $namaUnik,
                             'kds' => $kds,
@@ -483,7 +584,7 @@ final class MergeAction
                 });
             }
 
-            $resolveFilePath = function(?string $pathUrl) {
+            $resolveFilePath = function(?string $pathUrl) use ($findSuratFile, $baseBerkasDir, $db) {
                 if (empty($pathUrl)) return null;
 
                 $path = $pathUrl;
@@ -493,6 +594,45 @@ final class MergeAction
                         parse_str($parsed['query'], $queryData);
                         if (isset($queryData['path'])) {
                             $path = $queryData['path'];
+                        }
+                    }
+                }
+
+                // Cek jika path berupa API view surat generator (/api/surat/view/{id}?file=...)
+                if (str_contains($path, '/api/surat/view/') || str_contains($path, 'api/surat/view/')) {
+                    $parsed = parse_url($path);
+                    $pathParts = explode('/api/surat/view/', $parsed['path'] ?? $path);
+                    if (count($pathParts) < 2) {
+                        $pathParts = explode('api/surat/view/', $parsed['path'] ?? $path);
+                    }
+                    if (count($pathParts) >= 2) {
+                        $suratId = (int)explode('/', trim($pathParts[1], '/'))[0];
+                        $fileName = '';
+                        if (isset($parsed['query'])) {
+                            parse_str($parsed['query'], $qData);
+                            $fileName = $qData['file'] ?? '';
+                        }
+                        if ($suratId > 0) {
+                            $sRow = $db->createCommand("
+                                SELECT sg.id, sg.tipe_surat, sg.nomor_surat, sg.tanggal_surat,
+                                       m.id as mailing_id, m.mode,
+                                       COALESCE(jp.jenis_pengajuan, 'Umum') as jenis_pengajuan,
+                                       jp.kantor, jp.output_path
+                                FROM surat_generated sg
+                                JOIN surat_mailing m ON sg.mailing_id = m.id
+                                LEFT JOIN surat_jenis_pengajuan jp ON m.jenis_pengajuan_id = jp.id
+                                WHERE sg.id = :sid
+                            ", [':sid' => $suratId])->queryOne();
+
+                            if ($sRow) {
+                                if (!empty($fileName)) {
+                                    $sRow['nama_santri'] = pathinfo($fileName, PATHINFO_FILENAME);
+                                }
+                                $found = $findSuratFile($sRow, $baseBerkasDir, $db);
+                                if ($found && file_exists($found)) {
+                                    return $found;
+                                }
+                            }
                         }
                     }
                 }
@@ -554,10 +694,43 @@ final class MergeAction
                 return null;
             };
 
-            $buildPdfContent = function($berkasList) use ($resolveFilePath) {
+            $resolvePdfTool = function(string $name, array $customPaths = []): ?string {
+                foreach ($customPaths as $p) {
+                    if (file_exists($p)) return $p;
+                }
+                $out = [];
+                @exec('where.exe ' . escapeshellarg($name) . ' 2>NUL', $out, $ret);
+                if ($ret === 0 && !empty($out[0]) && file_exists(trim($out[0]))) {
+                    return trim($out[0]);
+                }
+                return null;
+            };
+
+            $buildPdfContent = function($berkasList) use ($resolveFilePath, $resolvePdfTool) {
                 $pdf = new Fpdi();
                 $pdf->SetAutoPageBreak(false);
                 $tempFiles = [];
+
+                $pdftocairoBin = $resolvePdfTool('pdftocairo', [
+                    'C:/Program Files/poppler-24.08.0/Library/bin/pdftocairo.exe',
+                    'C:/Program Files/poppler/bin/pdftocairo.exe'
+                ]);
+
+                $pdftkBin = $resolvePdfTool('pdftk', [
+                    'C:/Program Files (x86)/PDFtk/bin/pdftk.exe',
+                    'C:/Program Files/PDFtk/bin/pdftk.exe',
+                    'C:/PDFtk/bin/pdftk.exe'
+                ]);
+
+                $gsBin = $resolvePdfTool('gswin32c', [
+                    'C:/Program Files (x86)/gs/gs8.64/bin/gswin32c.exe',
+                    'C:/Program Files/gs/gs*/bin/gswin64c.exe'
+                ]);
+
+                $pdftoppmBin = $resolvePdfTool('pdftoppm', [
+                    'C:/Program Files/poppler-24.08.0/Library/bin/pdftoppm.exe',
+                    'C:/Program Files/poppler/bin/pdftoppm.exe'
+                ]);
 
                 foreach ($berkasList as $b) {
                     $pathUrl = $b['path_file'];
@@ -569,33 +742,122 @@ final class MergeAction
                     $ext = strtolower(pathinfo($physicalPath, PATHINFO_EXTENSION));
 
                     if ($ext === 'pdf') {
-                        $f = fopen($physicalPath, 'r');
-                        $firstLine = fgets($f);
-                        fclose($f);
+                        $pageCount = 0;
+                        $importedFile = $physicalPath;
+                        $isRenderedImages = false;
+                        $renderedImages = [];
+
                         try {
                             $pageCount = $pdf->setSourceFile($physicalPath);
-                        } catch (\Exception $e) {
-                            $tempPdf = tempnam(sys_get_temp_dir(), 'pdf_fix_');
-                            $cmd = 'pdftk ' . escapeshellarg($physicalPath) . ' output ' . escapeshellarg($tempPdf) . ' uncompress 2>&1';
-                            exec($cmd, $output, $returnVar);
-                            
-                            if ($returnVar === 0 && file_exists($tempPdf) && filesize($tempPdf) > 0) {
-                                $pageCount = $pdf->setSourceFile($tempPdf);
-                            } else {
-                                throw new \Exception("Gagal memproses file PDF ($physicalPath): " . $e->getMessage() . " | Fallback error: " . implode(" ", $output));
+                        } catch (\Throwable $e) {
+                            $fallbackSuccess = false;
+                            $fallbackErrors = [];
+
+                            // 1. Coba konversi via pdftocairo (sangat akurat menangani PDF 1.5+ kompresi object stream)
+                            if ($pdftocairoBin) {
+                                $tempPdfCairo = tempnam(sys_get_temp_dir(), 'pdf_cairo_') . '.pdf';
+                                $cmd = escapeshellarg($pdftocairoBin) . ' -pdf ' . escapeshellarg($physicalPath) . ' ' . escapeshellarg($tempPdfCairo) . ' 2>&1';
+                                $out = [];
+                                exec($cmd, $out, $ret);
+                                if ($ret === 0 && file_exists($tempPdfCairo) && filesize($tempPdfCairo) > 0) {
+                                    try {
+                                        $pageCount = $pdf->setSourceFile($tempPdfCairo);
+                                        $importedFile = $tempPdfCairo;
+                                        $tempFiles[] = $tempPdfCairo;
+                                        $fallbackSuccess = true;
+                                    } catch (\Throwable $ex) {
+                                        $fallbackErrors[] = 'pdftocairo parse error: ' . $ex->getMessage();
+                                        @unlink($tempPdfCairo);
+                                    }
+                                } else {
+                                    $fallbackErrors[] = 'pdftocairo failed: ' . implode(' ', $out);
+                                }
+                            }
+
+                            // 2. Coba dekompresi via pdftk
+                            if (!$fallbackSuccess && $pdftkBin) {
+                                $tempPdfTk = tempnam(sys_get_temp_dir(), 'pdf_fix_') . '.pdf';
+                                $cmd = escapeshellarg($pdftkBin) . ' ' . escapeshellarg($physicalPath) . ' output ' . escapeshellarg($tempPdfTk) . ' uncompress 2>&1';
+                                $out = [];
+                                exec($cmd, $out, $ret);
+                                if ($ret === 0 && file_exists($tempPdfTk) && filesize($tempPdfTk) > 0) {
+                                    try {
+                                        $pageCount = $pdf->setSourceFile($tempPdfTk);
+                                        $importedFile = $tempPdfTk;
+                                        $tempFiles[] = $tempPdfTk;
+                                        $fallbackSuccess = true;
+                                    } catch (\Throwable $ex) {
+                                        $fallbackErrors[] = 'pdftk parse error: ' . $ex->getMessage();
+                                        @unlink($tempPdfTk);
+                                    }
+                                } else {
+                                    $fallbackErrors[] = 'pdftk failed: ' . implode(' ', $out);
+                                }
+                            }
+
+                            // 3. Coba via Ghostscript
+                            if (!$fallbackSuccess && $gsBin) {
+                                $tempPdfGs = tempnam(sys_get_temp_dir(), 'pdf_gs_') . '.pdf';
+                                $cmd = escapeshellarg($gsBin) . ' -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dNOPAUSE -dQUIET -dBATCH -sOutputFile=' . escapeshellarg($tempPdfGs) . ' ' . escapeshellarg($physicalPath) . ' 2>&1';
+                                $out = [];
+                                exec($cmd, $out, $ret);
+                                if ($ret === 0 && file_exists($tempPdfGs) && filesize($tempPdfGs) > 0) {
+                                    try {
+                                        $pageCount = $pdf->setSourceFile($tempPdfGs);
+                                        $importedFile = $tempPdfGs;
+                                        $tempFiles[] = $tempPdfGs;
+                                        $fallbackSuccess = true;
+                                    } catch (\Throwable $ex) {
+                                        $fallbackErrors[] = 'Ghostscript parse error: ' . $ex->getMessage();
+                                        @unlink($tempPdfGs);
+                                    }
+                                } else {
+                                    $fallbackErrors[] = 'Ghostscript failed: ' . implode(' ', $out);
+                                }
+                            }
+
+                            // 4. Fallback rendering raster jika seluruh parser vector gagal
+                            if (!$fallbackSuccess && ($pdftoppmBin || $pdftocairoBin)) {
+                                $imgPrefix = tempnam(sys_get_temp_dir(), 'pdf_page_');
+                                if ($pdftoppmBin) {
+                                    $cmd = escapeshellarg($pdftoppmBin) . ' -png -r 150 ' . escapeshellarg($physicalPath) . ' ' . escapeshellarg($imgPrefix) . ' 2>&1';
+                                } else {
+                                    $cmd = escapeshellarg($pdftocairoBin) . ' -png -r 150 ' . escapeshellarg($physicalPath) . ' ' . escapeshellarg($imgPrefix) . ' 2>&1';
+                                }
+                                exec($cmd, $out, $ret);
+                                $matchedImgs = @glob($imgPrefix . '-*.png') ?: (@glob($imgPrefix . '*.png') ?: []);
+                                if (!empty($matchedImgs)) {
+                                    sort($matchedImgs, SORT_NATURAL);
+                                    $renderedImages = $matchedImgs;
+                                    $isRenderedImages = true;
+                                    $fallbackSuccess = true;
+                                    foreach ($matchedImgs as $mImg) {
+                                        $tempFiles[] = $mImg;
+                                    }
+                                } else {
+                                    $fallbackErrors[] = 'Rasterize failed: ' . implode(' ', $out);
+                                }
+                            }
+
+                            if (!$fallbackSuccess) {
+                                throw new \Exception("Gagal memproses file PDF ($physicalPath): " . $e->getMessage() . " | Fallback attempts: " . implode(" ; ", $fallbackErrors));
                             }
                         }
 
-                        for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
-                            $templateId = $pdf->importPage($pageNo);
-                            $size = $pdf->getTemplateSize($templateId);
-                            $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-                            $pdf->useTemplate($templateId);
-                        }
-                        
-                        if (isset($tempPdf) && file_exists($tempPdf)) {
-                            $tempFiles[] = $tempPdf;
-                            unset($tempPdf);
+                        if ($isRenderedImages) {
+                            foreach ($renderedImages as $imgPath) {
+                                $imgSize = @getimagesize($imgPath);
+                                $orientation = ($imgSize && $imgSize[0] > $imgSize[1]) ? 'L' : 'P';
+                                $pdf->AddPage($orientation, 'A4');
+                                $pdf->Image($imgPath, 0, 0, ($orientation === 'L' ? 297 : 210), ($orientation === 'L' ? 210 : 297));
+                            }
+                        } else {
+                            for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                                $templateId = $pdf->importPage($pageNo);
+                                $size = $pdf->getTemplateSize($templateId);
+                                $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                                $pdf->useTemplate($templateId);
+                            }
                         }
                     } elseif (in_array($ext, ['jpg', 'jpeg', 'png'])) {
                         $pdf->AddPage('P', 'A4');

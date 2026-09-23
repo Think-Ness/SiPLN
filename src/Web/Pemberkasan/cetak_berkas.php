@@ -136,29 +136,79 @@ rsort($availableYears); // Descending order: 2026, 2025...
     opacity: 0.7; 
 }
 
-/* Floating Action Bar */
+/* Floating Action Bar - Sleek Modern Compact Dock */
 .floating-action-bar {
     position: fixed;
-    bottom: 24px;
+    bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(255, 255, 255, 0.97);
-    backdrop-filter: blur(12px);
-    padding: 12px 24px;
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 6px 12px;
     border-radius: 50px;
-    box-shadow: 0 12px 36px rgba(15, 23, 42, 0.2);
+    box-shadow: 0 8px 30px rgba(15, 23, 42, 0.14), 0 2px 8px rgba(15, 23, 42, 0.06);
     z-index: 1040;
     display: flex;
-    gap: 16px;
+    gap: 8px;
     align-items: center;
-    border: 1.5px solid #cbd5e1;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: 1px solid rgba(203, 213, 225, 0.85);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     max-width: 95vw;
 }
+.floating-action-bar:hover {
+    box-shadow: 0 12px 36px rgba(15, 23, 42, 0.18), 0 4px 12px rgba(15, 23, 42, 0.08);
+    border-color: rgba(147, 197, 253, 0.9);
+}
 .floating-action-bar.hidden {
-    bottom: -160px;
+    bottom: -120px;
     opacity: 0;
     pointer-events: none;
+    transform: translateX(-50%) scale(0.96);
+}
+
+.floating-pill-badge {
+    font-size: 0.76rem;
+    padding: 0.3rem 0.6rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border-radius: 50rem;
+    line-height: 1.2;
+}
+.floating-pill-badge .counter-num {
+    font-size: 0.85rem;
+    font-weight: 800;
+}
+
+.floating-select-mode {
+    font-size: 0.78rem !important;
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+    padding-left: 0.65rem !important;
+    padding-right: 1.75rem !important;
+    font-weight: 600 !important;
+    border-radius: 50rem !important;
+    border-color: #cbd5e1 !important;
+    max-width: 220px;
+    background-color: #f8fafc !important;
+    color: #334155 !important;
+}
+.floating-select-mode:focus {
+    border-color: #0d6efd !important;
+    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.15) !important;
+}
+
+.btn-floating-action {
+    font-size: 0.78rem !important;
+    padding: 0.3rem 0.8rem !important;
+    font-weight: 600 !important;
+    border-radius: 50rem !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    letter-spacing: -0.2px;
 }
 
 /* Custom Checkbox Size */
@@ -220,47 +270,47 @@ rsort($availableYears); // Descending order: 2026, 2025...
 /* Mobile Responsive Optimization */
 @media (max-width: 767.98px) {
     .floating-action-bar {
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
+        left: 10px !important;
+        right: 10px !important;
+        bottom: 10px !important;
         transform: none !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        border-radius: 20px 20px 0 0 !important;
-        padding: 12px 14px 16px !important;
+        width: auto !important;
+        max-width: none !important;
+        border-radius: 18px !important;
+        padding: 8px 10px !important;
         flex-direction: column !important;
-        gap: 10px !important;
-        box-shadow: 0 -8px 25px rgba(15, 23, 42, 0.16) !important;
-        border-left: none !important;
-        border-right: none !important;
-        border-bottom: none !important;
+        gap: 6px !important;
+        box-shadow: 0 8px 25px rgba(15, 23, 42, 0.18) !important;
     }
     .floating-action-bar.hidden {
-        bottom: -220px !important;
+        bottom: -180px !important;
+        transform: none !important;
     }
     .floating-bar-info {
         width: 100% !important;
         justify-content: space-between !important;
-        font-size: 0.85rem !important;
+        gap: 6px !important;
     }
     .floating-bar-actions {
         width: 100% !important;
         display: flex !important;
         flex-wrap: wrap !important;
-        gap: 8px !important;
+        gap: 6px !important;
     }
     .floating-bar-actions select {
         width: 100% !important;
-        font-size: 0.8rem !important;
+        max-width: 100% !important;
+        font-size: 0.75rem !important;
     }
     .floating-bar-actions button {
         flex: 1 1 45% !important;
-        font-size: 0.8rem !important;
-        padding: 8px 12px !important;
+        font-size: 0.75rem !important;
+        padding: 5px 8px !important;
+        justify-content: center;
     }
     
     #step2 {
-        padding-bottom: 120px !important;
+        padding-bottom: 90px !important;
     }
     
     .doc-card {
@@ -616,28 +666,30 @@ rsort($availableYears); // Descending order: 2026, 2025...
     </div>
 </div>
 
-<!-- Floating Action Bar -->
+<!-- Floating Action Bar (Sleek Compact Dock) -->
 <div class="floating-action-bar hidden" id="actionBar">
-    <div class="fw-bold text-dark me-md-auto d-flex align-items-center gap-3 floating-bar-info">
-        <div>
-            <span id="selectedCountSantri" class="text-primary fs-5 fw-extrabold">0</span> Santri Terpilih
-        </div>
-        <div class="vr"></div>
-        <div>
-            <span id="selectedCountFile" class="text-success fs-5 fw-extrabold">0</span> File Siap Gabung
-        </div>
+    <div class="d-flex align-items-center gap-1.5 floating-bar-info">
+        <span class="floating-pill-badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">
+            <i class="bi bi-people-fill text-primary"></i>
+            <span id="selectedCountSantri" class="counter-num">0</span> Santri
+        </span>
+        <span class="floating-pill-badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">
+            <i class="bi bi-file-earmark-check-fill text-success"></i>
+            <span id="selectedCountFile" class="counter-num">0</span> File
+        </span>
     </div>
-    <div class="d-flex align-items-center gap-2 flex-wrap floating-bar-actions">
-        <select name="merge_mode" class="form-select form-select-sm border-success text-success fw-bold rounded-pill shadow-sm" style="width: auto;" id="mergeMode">
-            <option value="sekaligus">Gabung Semua Santri (1 PDF Utuh)</option>
+    <div class="vr opacity-25 d-none d-md-block" style="height: 18px;"></div>
+    <div class="d-flex align-items-center gap-1.5 flex-wrap floating-bar-actions">
+        <select name="merge_mode" class="form-select form-select-sm floating-select-mode shadow-xs" id="mergeMode">
+            <option value="sekaligus">Gabung Semua (1 PDF)</option>
             <option value="individual">Pisah Per Santri (.zip)</option>
-            <option value="save_storage">Simpan Langsung ke Storage Server</option>
+            <option value="save_storage">Simpan ke Storage Server</option>
         </select>
-        <button type="submit" name="action" value="print" class="btn btn-info btn-sm rounded-pill px-4 fw-bold text-white shadow-sm" id="btnPrint" disabled>
-            <i class="bi bi-printer-fill me-1"></i> Print
+        <button type="submit" name="action" value="print" class="btn btn-outline-primary btn-floating-action shadow-xs" id="btnPrint" disabled>
+            <i class="bi bi-printer-fill"></i> Print
         </button>
-        <button type="submit" name="action" value="merge" class="btn btn-success btn-sm rounded-pill px-4 fw-bold shadow-sm" id="btnMerge" disabled>
-            <i class="bi bi-file-earmark-pdf-fill me-1"></i> Merge Dokumen
+        <button type="submit" name="action" value="merge" class="btn btn-primary btn-floating-action shadow-xs text-white" id="btnMerge" disabled>
+            <i class="bi bi-file-earmark-pdf-fill"></i> Merge PDF
         </button>
     </div>
 </div>
