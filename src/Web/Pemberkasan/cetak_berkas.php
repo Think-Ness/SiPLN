@@ -136,40 +136,10 @@ rsort($availableYears); // Descending order: 2026, 2025...
     opacity: 0.7; 
 }
 
-/* Floating Action Bar - Sleek Modern Compact Dock */
-.floating-action-bar {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(255, 255, 255, 0.94);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    padding: 6px 12px;
-    border-radius: 50px;
-    box-shadow: 0 8px 30px rgba(15, 23, 42, 0.14), 0 2px 8px rgba(15, 23, 42, 0.06);
-    z-index: 1040;
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    border: 1px solid rgba(203, 213, 225, 0.85);
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    max-width: 95vw;
-}
-.floating-action-bar:hover {
-    box-shadow: 0 12px 36px rgba(15, 23, 42, 0.18), 0 4px 12px rgba(15, 23, 42, 0.08);
-    border-color: rgba(147, 197, 253, 0.9);
-}
-.floating-action-bar.hidden {
-    bottom: -120px;
-    opacity: 0;
-    pointer-events: none;
-    transform: translateX(-50%) scale(0.96);
-}
-
-.floating-pill-badge {
-    font-size: 0.76rem;
-    padding: 0.3rem 0.6rem;
+/* Action Toolbar Badges & Controls */
+.action-pill-badge {
+    font-size: 0.78rem;
+    padding: 0.35rem 0.65rem;
     font-weight: 600;
     display: inline-flex;
     align-items: center;
@@ -177,38 +147,9 @@ rsort($availableYears); // Descending order: 2026, 2025...
     border-radius: 50rem;
     line-height: 1.2;
 }
-.floating-pill-badge .counter-num {
+.action-pill-badge .counter-num {
     font-size: 0.85rem;
     font-weight: 800;
-}
-
-.floating-select-mode {
-    font-size: 0.78rem !important;
-    padding-top: 0.25rem !important;
-    padding-bottom: 0.25rem !important;
-    padding-left: 0.65rem !important;
-    padding-right: 1.75rem !important;
-    font-weight: 600 !important;
-    border-radius: 50rem !important;
-    border-color: #cbd5e1 !important;
-    max-width: 220px;
-    background-color: #f8fafc !important;
-    color: #334155 !important;
-}
-.floating-select-mode:focus {
-    border-color: #0d6efd !important;
-    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.15) !important;
-}
-
-.btn-floating-action {
-    font-size: 0.78rem !important;
-    padding: 0.3rem 0.8rem !important;
-    font-weight: 600 !important;
-    border-radius: 50rem !important;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    letter-spacing: -0.2px;
 }
 
 /* Custom Checkbox Size */
@@ -269,48 +210,14 @@ rsort($availableYears); // Descending order: 2026, 2025...
 
 /* Mobile Responsive Optimization */
 @media (max-width: 767.98px) {
-    .floating-action-bar {
-        left: 10px !important;
-        right: 10px !important;
-        bottom: 10px !important;
-        transform: none !important;
-        width: auto !important;
-        max-width: none !important;
-        border-radius: 18px !important;
-        padding: 8px 10px !important;
+    .header-responsive-step2 {
         flex-direction: column !important;
-        gap: 6px !important;
-        box-shadow: 0 8px 25px rgba(15, 23, 42, 0.18) !important;
+        align-items: stretch !important;
+        gap: 12px !important;
     }
-    .floating-action-bar.hidden {
-        bottom: -180px !important;
-        transform: none !important;
-    }
-    .floating-bar-info {
+    .header-responsive-step2 > div {
         width: 100% !important;
         justify-content: space-between !important;
-        gap: 6px !important;
-    }
-    .floating-bar-actions {
-        width: 100% !important;
-        display: flex !important;
-        flex-wrap: wrap !important;
-        gap: 6px !important;
-    }
-    .floating-bar-actions select {
-        width: 100% !important;
-        max-width: 100% !important;
-        font-size: 0.75rem !important;
-    }
-    .floating-bar-actions button {
-        flex: 1 1 45% !important;
-        font-size: 0.75rem !important;
-        padding: 5px 8px !important;
-        justify-content: center;
-    }
-    
-    #step2 {
-        padding-bottom: 90px !important;
     }
     
     .doc-card {
@@ -491,14 +398,42 @@ rsort($availableYears); // Descending order: 2026, 2025...
 <div id="step2" class="step-container step-hidden">
     
     <div class="card border-0 shadow-sm rounded-4 mb-4">
-        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center flex-wrap gap-2 sticky-top" style="z-index: 10;">
-            <div class="d-flex align-items-center gap-3">
-                <span class="badge bg-primary rounded-pill px-3 py-2 fw-bold" style="font-size: .85rem;">Langkah 2</span>
+        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center flex-wrap gap-2 sticky-top header-responsive-step2" style="z-index: 10;">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-semibold btn-back-step1">
+                    <i class="bi bi-arrow-left me-1"></i> Kembali
+                </button>
+                <div class="vr mx-1 opacity-25 d-none d-sm-block"></div>
+                <span class="badge bg-primary rounded-pill px-2.5 py-1.5 fw-bold" style="font-size: .8rem;">Langkah 2</span>
                 <h6 class="mb-0 fw-bold text-dark">Pilih Target Santri & Atur Urutan Berkas</h6>
             </div>
-            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-semibold" id="btnBackToStep1">
-                <i class="bi bi-arrow-left me-1"></i> Kembali ke Pilih Dokumen
-            </button>
+            
+            <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
+                <!-- Badges Info -->
+                <div class="d-flex align-items-center gap-1">
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-2.5 py-1.5 fw-bold" style="font-size: 0.78rem;">
+                        <i class="bi bi-people-fill me-1"></i><span class="count-santri-text">0</span> Santri
+                    </span>
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-2.5 py-1.5 fw-bold" style="font-size: 0.78rem;">
+                        <i class="bi bi-file-earmark-check-fill me-1"></i><span class="count-file-text">0</span> File
+                    </span>
+                </div>
+
+                <!-- Mode Merge -->
+                <select name="merge_mode" class="form-select form-select-sm rounded-pill fw-semibold border-secondary border-opacity-25 merge-mode-sync" style="width: auto; font-size: 0.8rem;">
+                    <option value="sekaligus">Gabung Semua (1 PDF Utuh)</option>
+                    <option value="individual">Pisah Per Santri (.zip)</option>
+                    <option value="save_storage">Simpan Langsung ke Server</option>
+                </select>
+
+                <!-- Action Buttons -->
+                <button type="submit" name="action" value="print" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold btn-action-print" disabled style="font-size: 0.8rem;">
+                    <i class="bi bi-printer-fill me-1"></i> Print
+                </button>
+                <button type="submit" name="action" value="merge" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold text-white shadow-sm btn-action-merge" disabled style="font-size: 0.8rem;">
+                    <i class="bi bi-file-earmark-pdf-fill me-1"></i> Merge PDF
+                </button>
+            </div>
         </div>
 
         <div class="card-body p-3 bg-light">
@@ -663,34 +598,39 @@ rsort($availableYears); // Descending order: 2026, 2025...
                 </tbody>
             </table>
         </div>
-    </div>
-</div>
 
-<!-- Floating Action Bar (Sleek Compact Dock) -->
-<div class="floating-action-bar hidden" id="actionBar">
-    <div class="d-flex align-items-center gap-1.5 floating-bar-info">
-        <span class="floating-pill-badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">
-            <i class="bi bi-people-fill text-primary"></i>
-            <span id="selectedCountSantri" class="counter-num">0</span> Santri
-        </span>
-        <span class="floating-pill-badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">
-            <i class="bi bi-file-earmark-check-fill text-success"></i>
-            <span id="selectedCountFile" class="counter-num">0</span> File
-        </span>
-    </div>
-    <div class="vr opacity-25 d-none d-md-block" style="height: 18px;"></div>
-    <div class="d-flex align-items-center gap-1.5 flex-wrap floating-bar-actions">
-        <select name="merge_mode" class="form-select form-select-sm floating-select-mode shadow-xs" id="mergeMode">
-            <option value="sekaligus">Gabung Semua (1 PDF)</option>
-            <option value="individual">Pisah Per Santri (.zip)</option>
-            <option value="save_storage">Simpan ke Storage Server</option>
-        </select>
-        <button type="submit" name="action" value="print" class="btn btn-outline-primary btn-floating-action shadow-xs" id="btnPrint" disabled>
-            <i class="bi bi-printer-fill"></i> Print
-        </button>
-        <button type="submit" name="action" value="merge" class="btn btn-primary btn-floating-action shadow-xs text-white" id="btnMerge" disabled>
-            <i class="bi bi-file-earmark-pdf-fill"></i> Merge PDF
-        </button>
+        <!-- Card Footer Action Toolbar (Bottom) -->
+        <div class="card-footer bg-white border-top py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-semibold btn-back-step1">
+                    <i class="bi bi-arrow-left me-1"></i> Kembali
+                </button>
+                <div class="vr mx-1 opacity-25 d-none d-sm-block"></div>
+                <div class="d-flex align-items-center gap-1">
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-2.5 py-1.5 fw-bold" style="font-size: 0.78rem;">
+                        <i class="bi bi-people-fill me-1"></i><span class="count-santri-text">0</span> Santri
+                    </span>
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-2.5 py-1.5 fw-bold" style="font-size: 0.78rem;">
+                        <i class="bi bi-file-earmark-check-fill me-1"></i><span class="count-file-text">0</span> File
+                    </span>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
+                <select name="merge_mode" class="form-select form-select-sm rounded-pill fw-semibold border-secondary border-opacity-25 merge-mode-sync" style="width: auto; font-size: 0.8rem;">
+                    <option value="sekaligus">Gabung Semua (1 PDF Utuh)</option>
+                    <option value="individual">Pisah Per Santri (.zip)</option>
+                    <option value="save_storage">Simpan Langsung ke Server</option>
+                </select>
+
+                <button type="submit" name="action" value="print" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold btn-action-print" disabled style="font-size: 0.8rem;">
+                    <i class="bi bi-printer-fill me-1"></i> Print
+                </button>
+                <button type="submit" name="action" value="merge" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold text-white shadow-sm btn-action-merge" disabled style="font-size: 0.8rem;">
+                    <i class="bi bi-file-earmark-pdf-fill me-1"></i> Merge PDF
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 </form>
@@ -707,7 +647,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnSelectAllDocs = document.getElementById('btnSelectAllDocs');
     const btnUnselectAllDocs = document.getElementById('btnUnselectAllDocs');
     const topSelectedDocsCount = document.getElementById('topSelectedDocsCount');
-    const btnBackToStep1 = document.getElementById('btnBackToStep1');
     const searchDocInput = document.getElementById('searchDocInput');
     
     // --- Step 2 Elements ---
@@ -718,13 +657,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const filterCompleteness = document.getElementById('filterCompleteness');
     const btnSelectCompleteOnly = document.getElementById('btnSelectCompleteOnly');
     const btnUnselectAllSantri = document.getElementById('btnUnselectAllSantri');
-    
-    // --- Action Bar ---
-    const actionBar = document.getElementById('actionBar');
-    const selectedCountSantri = document.getElementById('selectedCountSantri');
-    const selectedCountFile = document.getElementById('selectedCountFile');
-    const btnPrint = document.getElementById('btnPrint');
-    const btnMerge = document.getElementById('btnMerge');
     const mergeForm = document.getElementById('mergeForm');
 
     // Current selection state
@@ -967,7 +899,6 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => {
             step2.classList.remove('step-hidden');
             step2.classList.add('step-active');
-            actionBar.classList.remove('hidden');
         }, 120);
         
         globalSearchSantri.value = '';
@@ -982,15 +913,26 @@ document.addEventListener('DOMContentLoaded', function() {
     btnGoToStep2.addEventListener('click', proceedToStep2);
     if (btnTopGoToStep2) btnTopGoToStep2.addEventListener('click', proceedToStep2);
 
-    // Navigation Step 2 -> Step 1
-    btnBackToStep1.addEventListener('click', function() {
-        step2.classList.remove('step-active');
-        step2.classList.add('step-hidden');
-        actionBar.classList.add('hidden');
-        setTimeout(() => {
-            step1.classList.remove('step-hidden');
-            step1.classList.add('step-active');
-        }, 120);
+    // Navigation Step 2 -> Step 1 (All back buttons)
+    document.querySelectorAll('.btn-back-step1').forEach(btn => {
+        btn.addEventListener('click', function() {
+            step2.classList.remove('step-active');
+            step2.classList.add('step-hidden');
+            setTimeout(() => {
+                step1.classList.remove('step-hidden');
+                step1.classList.add('step-active');
+            }, 120);
+        });
+    });
+
+    // Synchronize Top & Bottom Merge Mode dropdowns
+    document.querySelectorAll('.merge-mode-sync').forEach(sel => {
+        sel.addEventListener('change', function() {
+            const val = this.value;
+            document.querySelectorAll('.merge-mode-sync').forEach(s => {
+                if (s !== this) s.value = val;
+            });
+        });
     });
 
     // Refresh Santri Table logic
@@ -1159,12 +1101,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        selectedCountSantri.textContent = santriCount;
-        selectedCountFile.textContent = fileCount;
+        document.querySelectorAll('.count-santri-text').forEach(el => el.textContent = santriCount);
+        document.querySelectorAll('.count-file-text').forEach(el => el.textContent = fileCount);
         
         const hasSelection = santriCount > 0;
-        btnPrint.disabled = !hasSelection;
-        btnMerge.disabled = !hasSelection;
+        document.querySelectorAll('.btn-action-print').forEach(btn => btn.disabled = !hasSelection);
+        document.querySelectorAll('.btn-action-merge').forEach(btn => btn.disabled = !hasSelection);
     }
 
     // Form Submission
